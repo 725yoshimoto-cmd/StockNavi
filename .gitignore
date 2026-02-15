@@ -1,0 +1,16 @@
+# must (講師指定)
+db.sqlite3
+__pycache__/
+**/__pycache__/
+
+# venv
+.venv/
+
+# python
+*.pyc
+
+# env (将来使う用)
+.env
+
+# uploads (使うなら)
+media/
