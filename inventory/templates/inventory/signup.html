@@ -1,0 +1,29 @@
+<h1>ユーザー登録</h1>
+
+<form method="post">
+  {% csrf_token %}
+
+  {{ form.non_field_errors }}
+
+  <p>
+    {{ form.username.label_tag }}<br>
+    {{ form.username }}
+    {{ form.username.errors }}
+  </p>
+
+  <p>
+    {{ form.password1.label_tag }}<br>
+    {{ form.password1 }}
+    {{ form.password1.errors }}
+  </p>
+
+  <p>
+    {{ form.password2.label_tag }}<br>
+    {{ form.password2 }}
+    {{ form.password2.errors }}
+  </p>
+
+  <button type="submit">登録</button>
+</form>
+
+<p><a href="/login/">ログインへ戻る</a></p>
