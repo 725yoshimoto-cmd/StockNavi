@@ -1,0 +1,5 @@
+<h1>在庫一覧</h1>
+
+{% for item in object_list %}
+    <p>{{ item.name }} / {{ item.quantity }}</p>
+{% endfor %}
