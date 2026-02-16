@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    # トップページにポートフォリオ画面を表示
+    path("", views.PortfolioView.as_view(), name="portfolio"),
+
+    # 在庫一覧ページ（ログイン必須）
     path("inventory/", views.InventoryListView.as_view(), name="inventory_list"),
 ]
