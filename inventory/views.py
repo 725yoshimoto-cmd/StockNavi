@@ -45,6 +45,13 @@ class InventoryListView(LoginRequiredMixin, ListView):
     model = InventoryItem
     template_name = "inventory/list.html"
 
+    def get_queryset(self):
+        """
+        ログインユーザーの household に紐づく在庫だけ表示する
+        """
+        return InventoryItem.objects.filter(household=self.request.user.household)
+
+
 
 # ----------------------------
 # ユーザー新規登録画面
