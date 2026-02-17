@@ -1,0 +1,9 @@
+<h1>在庫を追加</h1>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">登録</button>
+</form>
+
+<p><a href="/inventory/">一覧へ戻る</a></p>

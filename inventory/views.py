@@ -16,11 +16,17 @@ from django.views.generic import TemplateView
 # 新規データ作成用クラスベースビュー（ユーザー登録で使用）
 from django.views.generic import CreateView
 
+# 更新・削除用のクラスベースビュー
+from django.views.generic import UpdateView, DeleteView
+
 # 登録成功後の遷移先
 from django.urls import reverse_lazy
 
-# ★追加：未設定時に止める
+# 未設定時に止める
 from django.http import HttpResponseForbidden
+
+
+
 
 # ----------------------------
 # ★ 追加：カスタムユーザー登録フォームを読み込む
@@ -77,6 +83,40 @@ class InventoryCreateView(LoginRequiredMixin, CreateView):
         # ★ここで household を詰める
         form.instance.household = self.request.user.household
         return super().form_valid(form)
+
+# ----------------------------
+# 在庫を編集する画面（ログイン必須）
+# ----------------------------
+class InventoryUpdateView(LoginRequiredMixin, UpdateView):
+    """
+    在庫編集ページ
+    ポイント：
+    - get_queryset() で「自分の世帯の在庫だけ」に絞る（他世帯のURL直打ち対策）
+    """
+    model = InventoryItem
+    fields = ["name", "quantity"]
+    template_name = "inventory/item_form.html"
+    success_url = "/inventory/"
+
+    def get_queryset(self):
+        """
+        編集対象を「ログイン中ユーザーの世帯の在庫」に限定する
+        """
+        return InventoryItem.objects.filter(household=self.request.user.household)
+
+
+# ----------------------------
+# 在庫を削除する画面（ログイン必須）
+# ----------------------------
+class InventoryDeleteView(LoginRequiredMixin, DeleteView):
+    # 自分の世帯の在庫だけ編集できる    - get_queryset() で
+    model = InventoryItem
+    template_name = "inventory/item_confirm_delete.html"
+    success_url = "/inventory/"
+
+    def get_queryset(self):
+        # 自分の世帯の在庫だけ削除できる
+        return InventoryItem.objects.filter(household=self.request.user.household)
 
 # ----------------------------
 # ユーザー新規登録画面
