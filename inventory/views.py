@@ -19,6 +19,9 @@ from django.views.generic import CreateView
 # 登録成功後の遷移先
 from django.urls import reverse_lazy
 
+# ★追加：未設定時に止める
+from django.http import HttpResponseForbidden
+
 # ----------------------------
 # ★ 追加：カスタムユーザー登録フォームを読み込む
 # ----------------------------
@@ -51,7 +54,29 @@ class InventoryListView(LoginRequiredMixin, ListView):
         """
         return InventoryItem.objects.filter(household=self.request.user.household)
 
+# ----------------------------
+# 在庫を追加する画面（ログイン必須）
+# ----------------------------
+class InventoryCreateView(LoginRequiredMixin, CreateView):
+    model = InventoryItem
+    fields = ["name", "quantity"]  # 入力させたい項目
+    template_name = "inventory/item_form.html"
+    success_url = "/inventory/"  # 追加後に在庫一覧へ戻る
 
+    def form_valid(self, form):
+        """
+        保存前に household を自動セットする（ここが重要）
+        household未設定だと NOT NULL 制約で落ちるので、先に止める
+        """
+        # ★ガード：ユーザーの household が未設定なら保存させない
+        if not getattr(self.request.user, "household", None):
+            return HttpResponseForbidden(
+                "世帯（household）が未設定です。管理画面でユーザーに世帯を設定してください。"
+            )
+
+        # ★ここで household を詰める
+        form.instance.household = self.request.user.household
+        return super().form_valid(form)
 
 # ----------------------------
 # ユーザー新規登録画面
