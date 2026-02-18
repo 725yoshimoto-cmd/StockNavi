@@ -25,8 +25,9 @@ from django.urls import reverse_lazy
 # 未設定時に止める
 from django.http import HttpResponseForbidden
 
-
-
+#“世帯が未設定のユーザー” のガード（落ちないように）
+from django.shortcuts import redirect
+from django.contrib import messages
 
 # ----------------------------
 # ★ 追加：カスタムユーザー登録フォームを読み込む
@@ -46,11 +47,54 @@ from .models import InventoryItem
 class PortfolioView(TemplateView):
     template_name = "inventory/portfolio.html"
 
+# ----------------------------
+# 世帯未設定ユーザー向けの案内ページ
+# ----------------------------
+class HouseholdRequiredView(TemplateView):
+    template_name = "inventory/household_required.html"
+
+# ----------------------------
+# 世帯チェック（dispatch）は「ログイン済み」になってから見る
+# ----------------------------
+class HouseholdRequiredMixin:
+    """
+    ログイン済みユーザーに household が設定されていることを必須にするMixin
+    - 未ログインは LoginRequiredMixin に任せる（ここでは触らない）
+    - household未設定なら、ループしないページへ逃がす
+    """
+    def dispatch(self, request, *args, **kwargs):
+        # 未ログインなら household を見ない（AnonymousUser対策）
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        # household未設定なら操作させない
+        if not getattr(request.user, "household", None):
+            messages.error(request, "世帯が未設定のため操作できません。管理者に連絡してください。")
+            return redirect("/household-required/")  # ★ここに変更 # ★ /inventory/ にしない（ループ防止）
+
+        return super().dispatch(request, *args, **kwargs)
+
+# ----------------------------
+# ユーザー新規登録画面
+# ----------------------------
+class SignupView(CreateView):
+    """
+    新規登録ページ（サインアップ）
+    登録に成功したらログインページへ戻す
+    """
+    # ★ カスタムユーザー用フォームを使用する
+    form_class = CustomUserCreationForm
+
+    # 表示に使うテンプレート
+    template_name = "registration/signup.html"
+
+    # 登録成功後の遷移先（login のURL名へ）
+    success_url = reverse_lazy("login")
 
 # ----------------------------
 # 在庫一覧画面（ログイン必須）
 # ----------------------------
-class InventoryListView(LoginRequiredMixin, ListView):
+class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     model = InventoryItem
     template_name = "inventory/list.html"
 
@@ -63,12 +107,12 @@ class InventoryListView(LoginRequiredMixin, ListView):
 # ----------------------------
 # 在庫を追加する画面（ログイン必須）
 # ----------------------------
-class InventoryCreateView(LoginRequiredMixin, CreateView):
+class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     model = InventoryItem
     fields = ["name", "quantity"]  # 入力させたい項目
     template_name = "inventory/item_form.html"
     success_url = "/inventory/"  # 追加後に在庫一覧へ戻る
-
+ 
     def form_valid(self, form):
         """
         保存前に household を自動セットする（ここが重要）
@@ -87,7 +131,7 @@ class InventoryCreateView(LoginRequiredMixin, CreateView):
 # ----------------------------
 # 在庫を編集する画面（ログイン必須）
 # ----------------------------
-class InventoryUpdateView(LoginRequiredMixin, UpdateView):
+class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     """
     在庫編集ページ
     ポイント：
@@ -108,29 +152,13 @@ class InventoryUpdateView(LoginRequiredMixin, UpdateView):
 # ----------------------------
 # 在庫を削除する画面（ログイン必須）
 # ----------------------------
-class InventoryDeleteView(LoginRequiredMixin, DeleteView):
+class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     # 自分の世帯の在庫だけ編集できる    - get_queryset() で
     model = InventoryItem
     template_name = "inventory/item_confirm_delete.html"
     success_url = "/inventory/"
-
+    
     def get_queryset(self):
         # 自分の世帯の在庫だけ削除できる
         return InventoryItem.objects.filter(household=self.request.user.household)
 
-# ----------------------------
-# ユーザー新規登録画面
-# ----------------------------
-class SignupView(CreateView):
-    """
-    新規登録ページ（サインアップ）
-    登録に成功したらログインページへ戻す
-    """
-    # ★ カスタムユーザー用フォームを使用する
-    form_class = CustomUserCreationForm
-
-    # 表示に使うテンプレート
-    template_name = "registration/signup.html"
-
-    # 登録成功後の遷移先（login のURL名へ）
-    success_url = reverse_lazy("login")
