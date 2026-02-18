@@ -1,21 +1,13 @@
 <h1>在庫一覧</h1>
 
-<p><a href="/inventory/add/">＋ 在庫を追加</a></p>
-
-{% if messages %}
-  <ul>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-  </ul>
-{% endif %}
+<p><a href="{% url 'inventory_add' %}">＋在庫を追加</a></p>
 
 {% for item in object_list %}
   <p>
     {{ item.name }} / {{ item.quantity }}
-    | <a href="/inventory/{{ item.pk }}/edit/">編集</a>
-    | <a href="/inventory/{{ item.pk }}/delete/">削除</a>
+    <a href="{% url 'inventory_edit' item.pk %}">編集</a>
+    <a href="{% url 'inventory_delete' item.pk %}">削除</a>
   </p>
 {% empty %}
-  <p>在庫がまだありません。</p>
+  <p>在庫がありません</p>
 {% endfor %}
