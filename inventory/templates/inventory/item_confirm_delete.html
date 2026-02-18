@@ -1,10 +1,11 @@
 <h1>削除確認</h1>
 
-<p>「{{ object.name }}」を削除しますか？</p>
+<p>この在庫を削除しますか？</p>
+<p><strong>{{ object.name }}</strong>（{{ object.quantity }}）</p>
 
 <form method="post">
   {% csrf_token %}
   <button type="submit">削除する</button>
 </form>
 
-<p><a href="/inventory/">キャンセル</a></p>
+<p><a href="/inventory/">キャンセル（一覧に戻る）</a></p>
