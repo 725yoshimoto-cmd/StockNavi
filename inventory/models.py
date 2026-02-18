@@ -20,3 +20,24 @@ class InventoryItem(models.Model):
 
     def __str__(self):
         return self.name
+
+# ----------------------------
+# 在庫一覧画面（ログイン必須）
+# ----------------------------
+class Memo(models.Model):
+    # どの世帯のメモか
+    household = models.ForeignKey(
+        Household,
+        on_delete=models.CASCADE,   
+        related_name="memos"        
+    )
+
+    # 最小構成
+    title = models.CharField(max_length=100)
+    body = models.TextField(blank=True)
+    
+    # 作成日(任意だけど便利)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

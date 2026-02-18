@@ -42,6 +42,11 @@ from accounts.forms import CustomUserCreationForm
 from .models import InventoryItem
 
 # ----------------------------
+# メモ
+# ----------------------------
+from .models import InventoryItem, Memo
+
+# ----------------------------
 # ポートフォリオトップ画面
 # ----------------------------
 class PortfolioView(TemplateView):
@@ -168,3 +173,55 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
         # 自分の世帯の在庫だけ削除できる
         return InventoryItem.objects.filter(household=self.request.user.household)
 
+# ----------------------------
+# メモ一覧（ログイン必須）
+# ----------------------------
+class MemoListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
+    model = Memo
+    template_name = "memo/list.html"
+
+    def get_queryset(self):
+        # 自分の世帯のメモだけ表示
+        return Memo.objects.filter(household=self.request.user.household).order_by("-created_at")
+
+
+# ----------------------------
+# メモ追加（ログイン必須）
+# ----------------------------
+class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
+    model = Memo
+    fields = ["title", "body"]
+    template_name = "memo/form.html"
+    success_url = "/memo/"
+
+    def form_valid(self, form):
+        # 保存前に household を自動セット
+        form.instance.household = self.request.user.household
+        return super().form_valid(form)
+
+
+# ----------------------------
+# メモ編集（ログイン必須）
+# ----------------------------
+class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
+    model = Memo
+    fields = ["title", "body"]
+    template_name = "memo/form.html"
+    success_url = "/memo/"
+
+    def get_queryset(self):
+        # 他世帯のメモは編集できない（pk直打ち対策）
+        return Memo.objects.filter(household=self.request.user.household)
+
+
+# ----------------------------
+# メモ削除（ログイン必須）
+# ----------------------------
+class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
+    model = Memo
+    template_name = "memo/confirm_delete.html"
+    success_url = "/memo/"
+
+    def get_queryset(self):
+        # 他世帯のメモは削除できない（pk直打ち対策）
+        return Memo.objects.filter(household=self.request.user.household)

@@ -25,6 +25,14 @@ urlpatterns = [
     
     # 在庫削除ページ
     path("inventory/<int:pk>/delete/", views.InventoryDeleteView.as_view(), name="inventory_delete"),
+
+    # ----------------------------
+    # メモ機能
+    # ----------------------------
+    path("memo/", views.MemoListView.as_view(), name="memo_list"),
+    path("memo/add/", views.MemoCreateView.as_view(), name="memo_add"),
+    path("memo/<int:pk>/edit/", views.MemoUpdateView.as_view(), name="memo_edit"),
+    path("memo/<int:pk>/delete/", views.MemoDeleteView.as_view(), name="memo_delete"),
 ]
 
 
