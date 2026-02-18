@@ -70,9 +70,15 @@ class HouseholdRequiredMixin:
         # household未設定なら操作させない
         if not getattr(request.user, "household", None):
             messages.error(request, "世帯が未設定のため操作できません。管理者に連絡してください。")
-            return redirect("/household-required/")  # ★ここに変更 # ★ /inventory/ にしない（ループ防止）
+            return redirect("/no-household/")  # ★ここに変更 # ★ /inventory/ にしない（ループ防止）
 
         return super().dispatch(request, *args, **kwargs)
+
+# ----------------------------
+# 案内画面
+# ----------------------------
+class NoHouseholdView(TemplateView):
+    template_name = "inventory/no_household.html"
 
 # ----------------------------
 # ユーザー新規登録画面

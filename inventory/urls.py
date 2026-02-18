@@ -11,6 +11,9 @@ urlpatterns = [
     # 新規登録ページ
     path("signup/", views.SignupView.as_view(), name="signup"),
 
+    # 案内ページ
+    path("no-household/", views.NoHouseholdView.as_view(), name="no_household"),
+
     # 在庫一覧ページ（ログイン必須）
     path("inventory/", views.InventoryListView.as_view(), name="inventory_list"),
     
