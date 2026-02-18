@@ -1,3 +1,11 @@
+{% if messages %}
+  <ul>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
 <h1>StockNavi</h1>
 <p>備蓄管理アプリ</p>
 
