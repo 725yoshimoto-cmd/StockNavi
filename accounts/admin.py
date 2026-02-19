@@ -2,6 +2,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser, Household
+from .models import Invitation
+
+admin.site.register(Invitation)
 
 
 # Household（世帯）も管理画面で追加/編集できるようにする

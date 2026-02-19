@@ -27,3 +27,33 @@ class CustomUser(AbstractUser):
         related_name="users",
         verbose_name="所属世帯",
     )
+
+class Invitation(models.Model):
+    """
+    世帯への招待モデル
+    """
+
+    household = models.ForeignKey(
+        Household,
+        on_delete=models.CASCADE,
+        related_name="invitations"
+    )
+
+    invited_user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="received_invitations"
+    )
+
+    invited_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="sent_invitations"
+    )
+
+    is_accepted = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.household.name} → {self.invited_user.username}"
