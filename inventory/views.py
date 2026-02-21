@@ -29,6 +29,9 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.contrib import messages
 
+# 在庫集計(合計・件数)
+from django.db.models import Sum, Count
+
 # ----------------------------
 # ★ 追加：カスタムユーザー登録フォームを読み込む
 # ----------------------------
@@ -111,10 +114,27 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
 
     def get_queryset(self):
         """
-        ログインユーザーの household に紐づく在庫だけ表示する
+        ログインユーザーの世帯に紐づく在庫だけ表示する
         """
-        return InventoryItem.objects.filter(household=self.request.user.household)
+        return InventoryItem.objects.filter(
+            household=self.request.user.household
+        )
 
+    def get_context_data(self, **kwargs):
+        """
+        テンプレートへ追加の集計データを渡す
+        """
+        context = super().get_context_data(**kwargs)
+
+        queryset = self.get_queryset()
+
+        context["total_items"] = queryset.count()
+        context["total_quantity"] = (
+            queryset.aggregate(total=Sum("quantity"))["total"] or 0
+        )
+
+        return context
+    
 # ----------------------------
 # 在庫を追加する画面（ログイン必須）
 # ----------------------------
