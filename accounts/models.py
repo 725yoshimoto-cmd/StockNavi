@@ -1,5 +1,7 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
 
 class Household(models.Model):
     """
@@ -21,12 +23,13 @@ class CustomUser(AbstractUser):
     """
     household = models.ForeignKey(
         Household,
-        on_delete=models.SET_NULL, #世帯が消えてもユーザーを消さない
+        on_delete=models.SET_NULL,  # 世帯が消えてもユーザーを消さない
         null=True,
-        blank=True, #まずは未所属でもOKにして進める
+        blank=True,  # まずは未所属でもOKにして進める
         related_name="users",
         verbose_name="所属世帯",
     )
+
 
 class Invitation(models.Model):
     """
@@ -39,11 +42,7 @@ class Invitation(models.Model):
         related_name="invitations"
     )
 
-    invited_user = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name="received_invitations"
-    )
+    invited_email = models.EmailField("招待メールアドレス")
 
     invited_by = models.ForeignKey(
         CustomUser,
@@ -51,9 +50,31 @@ class Invitation(models.Model):
         related_name="sent_invitations"
     )
 
+    token = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True
+    )
+
     is_accepted = models.BooleanField(default=False)
+
+    accepted_user = models.ForeignKey(
+        CustomUser,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="accepted_invitations"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["household", "invited_email"],
+                name="uniq_household_invited_email",
+            )
+        ]
+
     def __str__(self):
-        return f"{self.household.name} → {self.invited_user.username}"
+        return f"{self.household.name} → {self.invited_email}"

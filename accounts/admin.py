@@ -1,21 +1,13 @@
 # accounts/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Household
-from .models import Invitation
+from .models import CustomUser, Household, Invitation
 
-admin.site.register(Invitation)
-
-
-# Household（世帯）も管理画面で追加/編集できるようにする
-@admin.register(Household)
-class HouseholdAdmin(admin.ModelAdmin):
-    list_display = ("id", "name")  # 一覧でIDと世帯名を見える化
-    search_fields = ("name",)
-
+# ----------------------------
+# CustomUser 管理画面設定
+# ----------------------------
 
 # CustomUser（カスタムユーザー）を管理画面で扱う設定
-@admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     """
     Django標準のUserAdminをベースに、
@@ -35,3 +27,17 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = UserAdmin.add_fieldsets + (
         ("世帯情報", {"fields": ("household",)}),
     )
+
+
+# ----------------------------
+# モデル登録（ここが重要）
+# ----------------------------
+# ユーザー（CustomUser）を管理画面に出す（UserAdmin付き）
+admin.site.register(CustomUser, CustomUserAdmin)
+
+# 世帯（Household）
+admin.site.register(Household)
+
+# 招待（Invitation）
+admin.site.register(Invitation)
+

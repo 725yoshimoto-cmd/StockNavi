@@ -31,14 +31,14 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'inventory',
-    'accounts',
+    "accounts",                 # ← いちばん上寄り推奨
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "inventory",
 ]
 
 MIDDLEWARE = [
@@ -124,5 +124,5 @@ LOGIN_URL = "/login/"          # LoginRequiredMixin の飛び先
 LOGIN_REDIRECT_URL = "/inventory/"   # ログイン成功後の戻り先（今のままでOK）
 LOGOUT_REDIRECT_URL = "/login/"      # ログアウト後
 
-#Django標準ユーザーを拡張したカスタムユーザー。
+
 AUTH_USER_MODEL = "accounts.CustomUser"
