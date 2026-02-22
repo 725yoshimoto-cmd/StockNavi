@@ -1,3 +1,7 @@
+{% extends "base.html" %}
+{% block title %}在庫{% endblock %}
+{% block content %}
+
 <h2>在庫集計</h2>
 
 <p>登録アイテム数：{{ total_items }} 件</p>
@@ -18,3 +22,5 @@
 {% empty %}
   <p>在庫がありません</p>
 {% endfor %}
+
+{% endblock %}

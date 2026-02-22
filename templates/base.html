@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}StockNavi{% endblock %}</title>
+  <style>
+    .btn { display:inline-block; padding:8px 12px; border:1px solid #333; border-radius:8px; text-decoration:none; }
+    .btn-danger { border-color:#b00; }
+    .wrap { max-width: 900px; margin: 20px auto; padding: 0 12px; }
+    .nav a { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <a class="btn" href="/inventory/">在庫</a>
+      <a class="btn" href="/memo/">メモ</a>
+      <a class="btn" href="/admin/">管理</a>
+      <a class="btn" href="/logout/">ログアウト</a>
+    </div>
+    <hr>
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}削除{% endblock %}
+{% block title %}削除確認{% endblock %}
 {% block content %}
 
 <h1>削除確認</h1>
@@ -9,9 +9,11 @@
 
 <form method="post">
   {% csrf_token %}
-  <button type="submit">削除する</button>
+  <button class="btn btn-danger" type="submit">削除する</button>
 </form>
 
-<p><a href="{% url 'memo_list' %}">キャンセル</a></p>
+<p>
+  <a class="btn" href="{% url 'memo_list' %}">キャンセル</a>
+</p>
 
 {% endblock %}

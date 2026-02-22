@@ -1,17 +1,19 @@
+{% extends "base.html" %}
+{% block title %}メモ{% endblock %}
+{% block content %}
+
 <h1>メモ一覧</h1>
 
 <p><a href="{% url 'memo_add' %}">＋メモを追加</a></p>
 
 {% for memo in object_list %}
-  <div style="border:1px solid #ccc; padding:8px; margin:8px 0;">
-    <h3>{{ memo.title }}</h3>
-    <p>{{ memo.body|linebreaksbr }}</p>
-
+  <p>
+    <strong>{{ memo.title }}</strong>
     <a href="{% url 'memo_edit' memo.pk %}">編集</a>
     <a href="{% url 'memo_delete' memo.pk %}">削除</a>
-  </div>
+  </p>
 {% empty %}
   <p>メモがありません</p>
 {% endfor %}
 
-<p><a href="/inventory/">在庫へ戻る</a></p>
+{% endblock %}
