@@ -223,15 +223,21 @@ class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView
 # 在庫を削除する画面（ログイン必須）
 # ----------------------------
 class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
-    # 自分の世帯の在庫だけ編集できる    - get_queryset() で
-    model = InventoryItem
-    template_name = "inventory/item_confirm_delete.html"
-    success_url = "/inventory/"
-    
-    def get_queryset(self):
-        # 自分の世帯の在庫だけ削除できる
-        return InventoryItem.objects.filter(household=self.request.user.household)
+    """
+    在庫削除ページ
 
+    ポイント：
+    - テンプレート名を明示して衝突事故を防ぐ
+    - get_queryset() で自分の世帯の在庫だけ削除できるようにする
+    """
+    model = InventoryItem
+    template_name = "inventory/inventory_confirm_delete.html"  # ★スクショの期待名に合わせる
+    success_url = "/inventory/"
+
+    def get_queryset(self):
+        """削除対象を自分の世帯の在庫に限定"""
+        return InventoryItem.objects.filter(household=self.request.user.household)
+    
 # ----------------------------
 # メモ一覧（ログイン必須）
 # ----------------------------
@@ -289,12 +295,22 @@ class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
 # 分類（Category）一覧（ログイン必須）
 # ----------------------------
 class CategoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
+    """
+    分類一覧ページ
+
+    役割：
+    - ログイン中ユーザーの世帯のカテゴリだけ一覧表示する
+    """
     model = Category
-    template_name = "category/list.html"
+    template_name = "category/list.html"  # ★必ずこれ
 
     def get_queryset(self):
-        return Category.objects.filter(household=self.request.user.household).order_by("name")
-
+        """
+        ★表示対象を自分の世帯のカテゴリに限定する
+        """
+        return Category.objects.filter(
+            household=self.request.user.household
+        ).order_by("name")
 
 # ----------------------------
 # 分類（Category）追加（ログイン必須）
@@ -335,9 +351,19 @@ class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView)
 # 分類（Category）削除（ログイン必須）
 # ----------------------------
 class CategoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
+    """
+    カテゴリ削除ページ
+
+    ポイント：
+    - テンプレート名の衝突を防ぐため、template_name を明示する
+    - Category を削除すると、InventoryItem.category は SET_NULL で未分類になる
+    """
     model = Category
-    template_name = "category/confirm_delete.html"
+    template_name = "category/category_confirm_delete.html"  # ★明示
     success_url = "/category/"
 
     def get_queryset(self):
+        """
+        ★削除対象を「自分の世帯のカテゴリ」に限定する
+        """
         return Category.objects.filter(household=self.request.user.household)

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}削除{% endblock %}
+{% block content %}
+
+<!--
+カテゴリ削除確認ページ（category/confirm_delete.html）
+
+ポイント：
+- Category を削除すると、紐づいている InventoryItem.category は NULL になる
+  （models.py で on_delete=SET_NULL のため）
+- 在庫データは削除されないが、カテゴリ表示が「未分類」になるので注意喚起する
+-->
+
+<h1>削除確認</h1>
+
+<p>この分類を削除しますか？</p>
+<p><strong>{{ object.name }}</strong></p>
+
+<!-- ★注意喚起：SET_NULL の挙動をユーザーに伝える -->
+<p style="color:#b00;">
+  ※この分類を削除すると、この分類が付いている在庫は「未分類」になります。
+  在庫データ自体は削除されません。
+</p>
+
+<form method="post">
+  {% csrf_token %}
+
+  <!-- 削除は危険操作なので btn-danger を付ける -->
+  <button class="btn btn-danger" type="submit">
+    削除する
+  </button>
+
+</form>
+
+<p><a href="{% url 'category_list' %}">キャンセル</a></p>
+
+{% endblock %}

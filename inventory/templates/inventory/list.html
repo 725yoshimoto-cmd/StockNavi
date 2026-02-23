@@ -11,9 +11,15 @@
 - 在庫を一覧表示し、カテゴリ未設定の場合は「未分類」と表示する
 - 一覧の先頭に「在庫を追加」リンクを置く
 -->
-<p>LIST PAGE OK</p>
 
 <h1>在庫一覧</h1>
+<!--
+一覧の集計表示
+- View側で total_items / total_quantity を渡しているのでここで表示できる
+-->
+<p>
+  合計：{{ total_items }}件 / 数量合計：{{ total_quantity }}
+</p>
 
 <!-- 在庫追加リンク（urls.py の name="inventory_add" を参照） -->
 <p><a href="{% url 'inventory_add' %}">＋在庫を追加</a></p>

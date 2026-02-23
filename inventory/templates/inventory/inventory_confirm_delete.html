@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}在庫削除{% endblock %}
+
+{% block content %}
+<!--
+在庫削除確認ページ
+ファイル場所：
+inventory/templates/inventory/inventory_confirm_delete.html
+-->
+
+<h1>削除確認</h1>
+
+<p>この在庫を削除しますか？</p>
+<p><strong>{{ object.name }}</strong></p>
+
+<form method="post">
+  {% csrf_token %}
+  <button class="btn btn-danger" type="submit">削除する</button>
+</form>
+
+<p><a href="{% url 'inventory_list' %}">キャンセル</a></p>
+
+{% endblock %}
