@@ -3,7 +3,12 @@
 # ----------------------------
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import InventoryItem, Memo, Category
+
+# ----------------------------
+# 自分のアプリのモデル
+# ----------------------------
+from .models import InventoryItem, Category, StorageLocation, Memo
+from .mixins import HouseholdRequiredMixin  # 既に使ってるやつ
 
 # ログイン必須にするためのMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -26,9 +31,6 @@ from django.urls import reverse_lazy
 # URL名（name="no_household"）からURL文字列を作るために使う
 from django.urls import reverse
 
-# 未設定時に止める
-from django.http import HttpResponseForbidden
-
 #“世帯が未設定のユーザー” のガード（落ちないように）
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -46,15 +48,6 @@ from django.utils.http import urlencode  # なくてもOKだが後で便利
 # ※ デフォルトのUserCreationFormは使わない
 from accounts.forms import CustomUserCreationForm
 
-# ----------------------------
-# 自分のアプリのモデル
-# ----------------------------
-from .models import InventoryItem
-
-# ----------------------------
-# メモ
-# ----------------------------
-from .models import InventoryItem, Memo
 
 # ----------------------------
 # ポートフォリオトップ画面
@@ -152,7 +145,7 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
        
-        # プルダウン表示用：自分の世帯カテゴリだけ
+        # プルダウン用カテゴリ（自分の世帯だけ）
         context["categories"] = Category.objects.filter(
             household=self.request.user.household
         ).order_by("name")
@@ -177,7 +170,7 @@ class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView
     """
     model = InventoryItem
     # 入力させたい項目だけ表示（categoryはプルダウンになる）
-    fields = ["category", "name", "quantity"]  # 入力させたい項目
+    fields = ["category", "storage_location", "name", "quantity"]  # 入力させたい項目
     template_name = "inventory/item_form.html"
     
     # success_url は reverse_lazy 推奨（URL変更にも強い）
@@ -190,25 +183,31 @@ class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView
         """
         # ★ガード：ユーザーの household が未設定なら保存させない
         if not getattr(self.request.user, "household", None):
-            return HttpResponseForbidden(
-                "世帯（household）が未設定です。管理画面でユーザーに世帯を設定してください。"
-            )
+            return redirect("no_household")
 
         # ★ここで household を詰める
         form.instance.household = self.request.user.household
         
         return super().form_valid(form)
 
-def get_form(self, form_class=None):
-    """
-    ★追加時もカテゴリ候補を自分の世帯だけに絞る
-    - これをしないと、他世帯のカテゴリがプルダウンに出てしまう事故が起きる
-    """
-    form = super().get_form(form_class)
-    form.fields["category"].queryset = Category.objects.filter(
-        household=self.request.user.household
-    )
-    return form
+    def get_form(self, form_class=None):
+        """
+        ★追加時もカテゴリ候補を自分の世帯だけに絞る
+        - これをしないと、他世帯のカテゴリがプルダウンに出てしまう事故が起きる
+        """
+        form = super().get_form(form_class)
+
+        # カテゴリ候補を自世帯だけ
+        form.fields["category"].queryset = Category.objects.filter(
+            household=self.request.user.household
+        )
+
+        # 保管場所候補を自世帯だけ（★追加）
+        form.fields["storage_location"].queryset = StorageLocation.objects.filter(
+            household=self.request.user.household
+        )
+
+        return form
     
 # ----------------------------
 # 在庫を編集する画面（ログイン必須）
@@ -219,7 +218,7 @@ class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView
     - household未設定ユーザー対策：dispatch()で早期ガード（安全）
     """
     model = InventoryItem
-    fields = ["category", "name", "quantity"]
+    fields = ["category", "storage_location", "name", "quantity"]
     template_name = "inventory/item_form.html"
     success_url = "/inventory/"
 
@@ -234,9 +233,15 @@ class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView
         ★編集時もカテゴリ候補を自分の世帯だけに絞る
         """
         form = super().get_form(form_class)
+
         form.fields["category"].queryset = Category.objects.filter(
             household=self.request.user.household
         )
+
+        form.fields["storage_location"].queryset = StorageLocation.objects.filter(
+            household=self.request.user.household
+        )
+
         return form
 
 # ----------------------------
@@ -258,59 +263,6 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
         """削除対象を自分の世帯の在庫に限定"""
         return InventoryItem.objects.filter(household=self.request.user.household)
     
-# ----------------------------
-# メモ一覧（ログイン必須）
-# ----------------------------
-class MemoListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
-    model = Memo
-    template_name = "memo/list.html"
-
-    def get_queryset(self):
-        # 自分の世帯のメモだけ表示
-        return Memo.objects.filter(household=self.request.user.household).order_by("-created_at")
-
-
-# ----------------------------
-# メモ追加（ログイン必須）
-# ----------------------------
-class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
-    model = Memo
-    fields = ["title", "body"]
-    template_name = "memo/form.html"
-    success_url = "/memo/"
-
-    def form_valid(self, form):
-        # 保存前に household を自動セット
-        form.instance.household = self.request.user.household
-        return super().form_valid(form)
-
-
-# ----------------------------
-# メモ編集（ログイン必須）
-# ----------------------------
-class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
-    model = Memo
-    fields = ["title", "body"]
-    template_name = "memo/form.html"
-    success_url = "/memo/"
-
-    def get_queryset(self):
-        # 他世帯のメモは編集できない（pk直打ち対策）
-        return Memo.objects.filter(household=self.request.user.household)
-
-
-# ----------------------------
-# メモ削除（ログイン必須）
-# ----------------------------
-class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
-    model = Memo
-    template_name = "memo/confirm_delete.html"
-    success_url = "/memo/"
-
-    def get_queryset(self):
-        # 他世帯のメモは削除できない（pk直打ち対策）
-        return Memo.objects.filter(household=self.request.user.household)
-
 # ----------------------------
 # 分類（Category）一覧（ログイン必須）
 # ----------------------------
@@ -387,3 +339,119 @@ class CategoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView)
         ★削除対象を「自分の世帯のカテゴリ」に限定する
         """
         return Category.objects.filter(household=self.request.user.household)
+
+
+# ----------------------------
+# 保管場所（StorageLocation）
+# ----------------------------
+class StorageLocationListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
+    """
+    自分の世帯（household）の保管場所だけを一覧表示する
+    """
+    model = StorageLocation
+    template_name = "inventory/storage_location_list.html"  # ←命名事故を防ぐため明示
+    context_object_name = "locations"
+
+    def get_queryset(self):
+        # ★事故防止：必ず世帯で絞る（他世帯混入・URL直打ち対策の基本）
+        return StorageLocation.objects.filter(household=self.request.user.household).order_by("name")
+
+
+class StorageLocationCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
+    """
+    保管場所を追加する
+    - form_valid() で household を自動セット（世帯ひも付け漏れ防止）
+    """
+    model = StorageLocation
+    fields = ["name"]  # 必要に応じて増やす（最短は name だけ）
+    template_name = "inventory/storage_location_form.html"
+    success_url = reverse_lazy("inventory:storage_location_list")
+
+    def form_valid(self, form):
+        # ★重要：保存前に世帯を自動セット（他世帯混入・NULL事故防止）
+        form.instance.household = self.request.user.household
+        return super().form_valid(form)
+
+
+class StorageLocationUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
+    """
+    保管場所を編集する
+    - get_queryset() で自世帯のみに限定（他世帯URL直打ち対策）
+    """
+    model = StorageLocation
+    fields = ["name"]
+    template_name = "inventory/storage_location_form.html"
+    success_url = reverse_lazy("inventory:storage_location_list")
+
+    def get_queryset(self):
+        # ★超重要：URL直打ちで他世帯の pk を渡されても 404 にする
+        return StorageLocation.objects.filter(household=self.request.user.household)
+
+
+class StorageLocationDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
+    """
+    保管場所を削除する
+    - get_queryset() で自世帯のみに限定（他世帯URL直打ち対策）
+    """
+    model = StorageLocation
+    template_name = "inventory/storage_location_confirm_delete.html"
+    success_url = reverse_lazy("inventory:storage_location_list")
+
+    def get_queryset(self):
+        # ★超重要：他世帯の削除を絶対させない
+        return StorageLocation.objects.filter(household=self.request.user.household)
+
+    
+# ----------------------------
+# メモ一覧（ログイン必須）
+# ----------------------------
+class MemoListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
+    model = Memo
+    template_name = "memo/list.html"
+
+    def get_queryset(self):
+        # 自分の世帯のメモだけ表示
+        return Memo.objects.filter(household=self.request.user.household).order_by("-created_at")
+
+
+# ----------------------------
+# メモ追加（ログイン必須）
+# ----------------------------
+class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
+    model = Memo
+    fields = ["title", "body"]
+    template_name = "memo/form.html"
+    success_url = "/memo/"
+
+    def form_valid(self, form):
+        # 保存前に household を自動セット
+        form.instance.household = self.request.user.household
+        return super().form_valid(form)
+
+
+# ----------------------------
+# メモ編集（ログイン必須）
+# ----------------------------
+class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
+    model = Memo
+    fields = ["title", "body"]
+    template_name = "memo/form.html"
+    success_url = "/memo/"
+
+    def get_queryset(self):
+        # 他世帯のメモは編集できない（pk直打ち対策）
+        return Memo.objects.filter(household=self.request.user.household)
+
+
+# ----------------------------
+# メモ削除（ログイン必須）
+# ----------------------------
+class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
+    model = Memo
+    template_name = "memo/confirm_delete.html"
+    success_url = "/memo/"
+
+    def get_queryset(self):
+        # 他世帯のメモは削除できない（pk直打ち対策）
+        return Memo.objects.filter(household=self.request.user.household)
+

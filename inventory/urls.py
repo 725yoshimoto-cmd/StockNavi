@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = "inventory"
+
 urlpatterns = [
     # トップページにポートフォリオ画面を表示
     path("", views.PortfolioView.as_view(), name="portfolio"),
@@ -26,14 +28,7 @@ urlpatterns = [
     # 在庫削除ページ
     path("inventory/<int:pk>/delete/", views.InventoryDeleteView.as_view(), name="inventory_delete"),
 
-    # ----------------------------
-    # メモ機能
-    # ----------------------------
-    path("memo/", views.MemoListView.as_view(), name="memo_list"),
-    path("memo/add/", views.MemoCreateView.as_view(), name="memo_add"),
-    path("memo/<int:pk>/edit/", views.MemoUpdateView.as_view(), name="memo_edit"),
-    path("memo/<int:pk>/delete/", views.MemoDeleteView.as_view(), name="memo_delete"),
-
+    
     # ----------------------------
     # 分類（Category）
     # ----------------------------
@@ -41,6 +36,24 @@ urlpatterns = [
     path("category/add/", views.CategoryCreateView.as_view(), name="category_add"),
     path("category/<int:pk>/edit/", views.CategoryUpdateView.as_view(), name="category_edit"),
     path("category/<int:pk>/delete/", views.CategoryDeleteView.as_view(), name="category_delete"),
+
+
+    # ----------------------------
+    # 保管場所（StorageLocation）
+    # ----------------------------
+    path("storage-location/", views.StorageLocationListView.as_view(), name="storage_location_list"),
+    path("storage-location/add/", views.StorageLocationCreateView.as_view(), name="storage_location_add"),
+    path("storage-location/<int:pk>/edit/", views.StorageLocationUpdateView.as_view(), name="storage_location_edit"),
+    path("storage-location/<int:pk>/delete/", views.StorageLocationDeleteView.as_view(), name="storage_location_delete"),
+   
+   
+    # ----------------------------
+    # メモ機能
+    # ----------------------------
+    path("memo/", views.MemoListView.as_view(), name="memo_list"),
+    path("memo/add/", views.MemoCreateView.as_view(), name="memo_add"),
+    path("memo/<int:pk>/edit/", views.MemoUpdateView.as_view(), name="memo_edit"),
+    path("memo/<int:pk>/delete/", views.MemoDeleteView.as_view(), name="memo_delete"),
 ]
 
 

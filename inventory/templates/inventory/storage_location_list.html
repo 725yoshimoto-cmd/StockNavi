@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>保管場所一覧</h1>
+
+  <p><a href="{% url 'inventory:storage_location_add' %}">＋保管場所を追加</a></p>
+
+  {% if locations %}
+    <ul>
+      {% for loc in locations %}
+        <li>
+          {{ loc.name }}
+          |
+          <a href="{% url 'inventory:storage_location_edit' loc.pk %}">編集</a>
+          |
+          <a href="{% url 'inventory:storage_location_delete' loc.pk %}">削除</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>まだ保管場所が登録されていません。</p>
+  {% endif %}
+{% endblock %}
