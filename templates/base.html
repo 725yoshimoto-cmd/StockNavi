@@ -38,20 +38,15 @@
 
 <body>
   <div class="wrap">
-
-    <!--
-      共通ナビゲーション
-      - urlタグでURLを生成（urls.pyのname変更に強い）
-      - 「管理」はアプリ内のカテゴリ管理へ
-      - adminは必要なら残す
-    -->
-    <div class="nav">
-      <a class="btn" href="{% url 'inventory_list' %}">在庫</a>
-      <a class="btn" href="{% url 'memo_list' %}">メモ</a>
-      <a class="btn" href="{% url 'category_list' %}">管理</a>
-      <a class="btn" href="/logout/">ログアウト</a>
-      <a class="btn" href="/admin/">admin</a>
-    </div>
+    
+<!-- ナビゲーション：全ページ共通のメニュー -->
+<div class="nav">
+  <a class="btn" href="/inventory/">在庫</a>
+  <a class="btn" href="/category/">分類</a> <!-- ★追加：カテゴリ管理 -->
+  <a class="btn" href="/memo/">メモ</a>
+  <a class="btn" href="/admin/">管理</a>
+  <a class="btn" href="/logout/">ログアウト</a>
+</div>
 
     <hr>
 
