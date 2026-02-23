@@ -41,9 +41,10 @@
     
 <!-- ナビゲーション：全ページ共通のメニュー -->
 <div class="nav">
-  <a class="btn" href="/inventory/">在庫</a>
-  <a class="btn" href="/category/">分類</a> <!-- ★追加：カテゴリ管理 -->
-  <a class="btn" href="/memo/">メモ</a>
+  <a class="btn" href="{% url 'inventory:inventory_list' %}">在庫</a>
+  <a class="btn" href="{% url 'inventory:category_list' %}">分類</a>
+  <a class="btn" href="{% url 'inventory:storage_location_list' %}">保管場所</a>
+  <a class="btn" href="{% url 'inventory:memo_list' %}">メモ</a>
   <a class="btn" href="/admin/">管理</a>
   <a class="btn" href="/logout/">ログアウト</a>
 </div>

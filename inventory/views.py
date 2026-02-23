@@ -379,14 +379,14 @@ class StorageLocationUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, Upda
     - get_queryset() で自世帯のみに限定（他世帯URL直打ち対策）
     """
     model = StorageLocation
-    fields = ["name"]
+    fields = ["name"]  # 最短は name のみ。必要なら後で増やす
     template_name = "inventory/storage_location_form.html"
     success_url = reverse_lazy("inventory:storage_location_list")
 
-    def get_queryset(self):
-        # ★超重要：URL直打ちで他世帯の pk を渡されても 404 にする
-        return StorageLocation.objects.filter(household=self.request.user.household)
-
+    def form_valid(self, form):
+        # ★重要：保存前に世帯を自動セット
+        form.instance.household = self.request.user.household
+        return super().form_valid(form)
 
 class StorageLocationDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """

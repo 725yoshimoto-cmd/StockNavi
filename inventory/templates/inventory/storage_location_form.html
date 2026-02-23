@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>保管場所を追加</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">登録</button>
+  </form>
+
+  <p><a href="{% url 'inventory:storage_location_list' %}">一覧に戻る</a></p>
+{% endblock %}
