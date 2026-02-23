@@ -23,6 +23,9 @@ from django.views.generic import UpdateView, DeleteView
 # 登録成功後の遷移先
 from django.urls import reverse_lazy
 
+# URL名（name="no_household"）からURL文字列を作るために使う
+from django.urls import reverse
+
 # 未設定時に止める
 from django.http import HttpResponseForbidden
 
@@ -70,22 +73,23 @@ class HouseholdRequiredView(TemplateView):
 # ----------------------------
 class HouseholdRequiredMixin:
     """
-    ログイン済みユーザーに household が設定されていることを必須にするMixin
-    - 未ログインは LoginRequiredMixin に任せる（ここでは触らない）
-    - household未設定なら、ループしないページへ逃がす
-    """
-    def dispatch(self, request, *args, **kwargs):
-        # 未ログインなら household を見ない（AnonymousUser対策）
-        if not request.user.is_authenticated:
-            return super().dispatch(request, *args, **kwargs)
+    household 未設定ユーザーを弾くMixin
 
-        # household未設定なら操作させない
+    目的：
+    - request.user.household が未設定のユーザーが各機能ページに来た場合、
+      DB検索や保存処理に入る前に案内ページへ誘導する（エラー画面を出さない）
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        dispatch は CBV の入口（GET/POST 共通で最初に通る）
+        """
+        # ★household が未設定なら案内ページへ
         if not getattr(request.user, "household", None):
-            messages.error(request, "世帯が未設定のため操作できません。管理者に連絡してください。")
-            return redirect("/no-household/")  # ★ここに変更 # ★ /inventory/ にしない（ループ防止）
+            return redirect(reverse("no_household"))
 
         return super().dispatch(request, *args, **kwargs)
-
+    
 # ----------------------------
 # 案内画面
 # ----------------------------
@@ -117,19 +121,18 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     在庫一覧ページ
 
       役割：
-    - 自分の世帯の在庫だけ表示
-    - カテゴリで絞り込み（GETパラメータ）
-    - 件数/総数量の集計を表示
+    - ログインユーザーの世帯(household)の在庫だけを表示
+    - GETパラメータ (?category=) があればカテゴリで絞り込み
+    - 表示中データの件数・数量合計を集計してテンプレへ渡す
     """
     model = InventoryItem
     template_name = "inventory/list.html"
 
     def get_queryset(self):
         """
-          ★表示対象を「自分の世帯の在庫」に限定し、
-        さらに ?category= の指定があればカテゴリで絞る
-        - 他世帯の在庫が混ざる事故防止
-        - URL直打ち・不正アクセス対策にもなる
+        ★一覧に表示する在庫データを返す
+        1) まず自分の世帯に限定
+        2) category が指定されていれば絞り込む
         """
         qs = InventoryItem.objects.filter(household=self.request.user.household)
 
@@ -142,24 +145,22 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         """
-        ★テンプレートに渡す追加データを作る
-               - categories：絞り込み用カテゴリ一覧
-        - selected_category：現在選択中のカテゴリID
-        - total_items / total_quantity：表示中の在庫に対する集計 
-        - template_check：list.htmlが使われているか確認するためのデバッグ印
-
+        ★テンプレへ渡す追加データ
+        - categories：プルダウン用（自世帯カテゴリのみ）
+        - selected_category：現在選択中のカテゴリID（selected用）
+        - total_items / total_quantity：表示中データの集計
         """
         context = super().get_context_data(**kwargs)
        
-        # 絞り込み用カテゴリ（自分の世帯だけ）
+        # プルダウン表示用：自分の世帯カテゴリだけ
         context["categories"] = Category.objects.filter(
             household=self.request.user.household
         ).order_by("name")
 
-        # 現在選択中のカテゴリ（テンプレで selected に使う）
+        # 選択中カテゴリ（テンプレ側の selected に使う）
         context["selected_category"] = self.request.GET.get("category", "")
 
-        # 表示中の在庫に対する集計（絞り込み後の queryset で計算）
+        # 集計（絞り込み後の queryset を対象にする）
         queryset = self.get_queryset()
         context["total_items"] = queryset.count()
         context["total_quantity"] = queryset.aggregate(total=Sum("quantity"))["total"] or 0
