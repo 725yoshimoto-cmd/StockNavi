@@ -33,6 +33,9 @@ from django.contrib import messages
 # 在庫集計(合計・件数)
 from django.db.models import Sum, Count
 
+# 「カテゴリ一覧を渡す」と「GETで絞る」
+from django.utils.http import urlencode  # なくてもOKだが後で便利
+
 # ----------------------------
 # ★ 追加：カスタムユーザー登録フォームを読み込む
 # ----------------------------
@@ -113,34 +116,50 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     """
     在庫一覧ページ
 
-    役割：
-    - ログイン中ユーザーの世帯(household)に紐づく在庫だけを一覧表示する
-    - 一覧の集計（件数・総数量）もテンプレートへ渡す
+      役割：
+    - 自分の世帯の在庫だけ表示
+    - カテゴリで絞り込み（GETパラメータ）
+    - 件数/総数量の集計を表示
     """
     model = InventoryItem
     template_name = "inventory/list.html"
 
     def get_queryset(self):
         """
-        ★表示対象を「ログインユーザーの世帯の在庫」に限定する
+          ★表示対象を「自分の世帯の在庫」に限定し、
+        さらに ?category= の指定があればカテゴリで絞る
         - 他世帯の在庫が混ざる事故防止
         - URL直打ち・不正アクセス対策にもなる
         """
-        return InventoryItem.objects.filter(household=self.request.user.household)
+        qs = InventoryItem.objects.filter(household=self.request.user.household)
 
+        # --- カテゴリ絞り込み（URL例：/inventory/?category=3）---
+        category_id = self.request.GET.get("category")
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+
+        return qs
+    
     def get_context_data(self, **kwargs):
         """
         ★テンプレートに渡す追加データを作る
+               - categories：絞り込み用カテゴリ一覧
+        - selected_category：現在選択中のカテゴリID
+        - total_items / total_quantity：表示中の在庫に対する集計 
         - template_check：list.htmlが使われているか確認するためのデバッグ印
-        - total_items：在庫の件数
-        - total_quantity：数量の合計
+
         """
         context = super().get_context_data(**kwargs)
+       
+        # 絞り込み用カテゴリ（自分の世帯だけ）
+        context["categories"] = Category.objects.filter(
+            household=self.request.user.household
+        ).order_by("name")
 
-        # --- デバッグ用：list.htmlが使われているか確認 ---
-        context["template_check"] = "LIST_TEMPLATE_IS_WORKING"
+        # 現在選択中のカテゴリ（テンプレで selected に使う）
+        context["selected_category"] = self.request.GET.get("category", "")
 
-        # --- 集計用：このページに表示している在庫データの合計 ---
+        # 表示中の在庫に対する集計（絞り込み後の queryset で計算）
         queryset = self.get_queryset()
         context["total_items"] = queryset.count()
         context["total_quantity"] = queryset.aggregate(total=Sum("quantity"))["total"] or 0

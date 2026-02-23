@@ -13,6 +13,31 @@
 -->
 
 <h1>在庫一覧</h1>
+<!-- ----------------------------
+カテゴリ絞り込みフォーム
+- method="get" にするとURLに ?category= が付く
+- selected_category と categories を使ってプルダウンを作る
+----------------------------- -->
+<form method="get">
+  <label for="category">カテゴリ：</label>
+  <select name="category" id="category">
+    <option value="">すべて</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}"
+        {% if selected_category|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>
+        {{ c.name }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <button class="btn" type="submit">絞り込み</button>
+
+  <!-- 絞り込み解除（categoryパラメータ無しで /inventory/ に戻す） -->
+  <a class="btn" href="{% url 'inventory_list' %}">解除</a>
+</form>
+
+<hr>
+
 <!--
 一覧の集計表示
 - View側で total_items / total_quantity を渡しているのでここで表示できる
