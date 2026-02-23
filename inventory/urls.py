@@ -33,6 +33,14 @@ urlpatterns = [
     path("memo/add/", views.MemoCreateView.as_view(), name="memo_add"),
     path("memo/<int:pk>/edit/", views.MemoUpdateView.as_view(), name="memo_edit"),
     path("memo/<int:pk>/delete/", views.MemoDeleteView.as_view(), name="memo_delete"),
+
+    # ----------------------------
+    # 分類（Category）
+    # ----------------------------
+    path("category/", views.CategoryListView.as_view(), name="category_list"),
+    path("category/add/", views.CategoryCreateView.as_view(), name="category_add"),
+    path("category/<int:pk>/edit/", views.CategoryUpdateView.as_view(), name="category_edit"),
+    path("category/<int:pk>/delete/", views.CategoryDeleteView.as_view(), name="category_delete"),
 ]
 
 

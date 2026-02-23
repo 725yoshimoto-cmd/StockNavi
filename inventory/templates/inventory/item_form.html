@@ -1,4 +1,8 @@
-<h1>在庫を追加</h1>
+{% extends "base.html" %}
+{% block title %}在庫登録{% endblock %}
+{% block content %}
+
+<h1>在庫を追加 / 編集</h1>
 
 <form method="post">
   {% csrf_token %}
@@ -6,4 +10,6 @@
   <button type="submit">登録</button>
 </form>
 
-<p><a href="/inventory/">一覧へ戻る</a></p>
+<p><a href="{% url 'inventory_list' %}">一覧へ戻る</a></p>
+
+{% endblock %}

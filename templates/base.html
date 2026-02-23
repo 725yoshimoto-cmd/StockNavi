@@ -3,23 +3,61 @@
 <head>
   <meta charset="utf-8">
   <title>{% block title %}StockNavi{% endblock %}</title>
+
   <style>
-    .btn { display:inline-block; padding:8px 12px; border:1px solid #333; border-radius:8px; text-decoration:none; }
-    .btn-danger { border-color:#b00; }
-    .wrap { max-width: 900px; margin: 20px auto; padding: 0 12px; }
+    /* 共通ボタン */
+    .btn {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #000; /* ★文字色を明示（白背景で見えない事故防止） */
+    }
+
+    /* 危険操作用（削除など） */
+    .btn-danger { border-color: #b00; }
+
+    /* 画面幅を整える枠 */
+    .wrap {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 12px;
+    }
+
+    /* ナビのリンク間隔 */
     .nav a { margin-right: 10px; }
+
+    /* ★ナビが他要素に埋もれてクリックできない時の保険 */
+    .nav {
+      position: relative;
+      z-index: 10;
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
+
+    <!--
+      共通ナビゲーション
+      - urlタグでURLを生成（urls.pyのname変更に強い）
+      - 「管理」はアプリ内のカテゴリ管理へ
+      - adminは必要なら残す
+    -->
     <div class="nav">
-      <a class="btn" href="/inventory/">在庫</a>
-      <a class="btn" href="/memo/">メモ</a>
-      <a class="btn" href="/admin/">管理</a>
+      <a class="btn" href="{% url 'inventory_list' %}">在庫</a>
+      <a class="btn" href="{% url 'memo_list' %}">メモ</a>
+      <a class="btn" href="{% url 'category_list' %}">管理</a>
       <a class="btn" href="/logout/">ログアウト</a>
+      <a class="btn" href="/admin/">admin</a>
     </div>
+
     <hr>
+
+    <!-- ★各ページの中身が差し込まれる場所（ここが無いと真っ白になりやすい） -->
     {% block content %}{% endblock %}
+
   </div>
 </body>
 </html>

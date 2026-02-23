@@ -1,26 +1,40 @@
 {% extends "base.html" %}
+
 {% block title %}在庫{% endblock %}
+
 {% block content %}
+<!--
+在庫一覧ページ（inventory/list.html）
 
-<h2>在庫集計</h2>
-
-<p>登録アイテム数：{{ total_items }} 件</p>
-<p>総在庫数量：{{ total_quantity }} 個</p>
-
-<hr>
+目的：
+- base.html を継承して、全ページ共通のナビ（在庫/メモ/管理/ログアウト）を表示する
+- 在庫を一覧表示し、カテゴリ未設定の場合は「未分類」と表示する
+- 一覧の先頭に「在庫を追加」リンクを置く
+-->
+<p>LIST PAGE OK</p>
 
 <h1>在庫一覧</h1>
 
+<!-- 在庫追加リンク（urls.py の name="inventory_add" を参照） -->
 <p><a href="{% url 'inventory_add' %}">＋在庫を追加</a></p>
 
 {% for item in object_list %}
   <p>
+    <!-- カテゴリ表示：FKなので name を表示（未設定なら未分類） -->
+    {% if item.category %}
+      【{{ item.category.name }}】
+    {% else %}
+      【未分類】
+    {% endif %}
+
     {{ item.name }} / {{ item.quantity }}
+
     <a href="{% url 'inventory_edit' item.pk %}">編集</a>
     <a href="{% url 'inventory_delete' item.pk %}">削除</a>
   </p>
+
 {% empty %}
-  <p>在庫がありません</p>
+  <p>在庫がまだありません。</p>
 {% endfor %}
 
 {% endblock %}

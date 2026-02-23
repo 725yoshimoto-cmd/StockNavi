@@ -1,42 +1,73 @@
 from django.db import models
-
-# accountsアプリのHouseholdモデル（世帯）を参照する
 from accounts.models import Household
 
 
-class InventoryItem(models.Model):
-    # どの世帯の在庫か？（1つの世帯に在庫がたくさん紐づく）
+class Category(models.Model):
+    """
+    Category（カテゴリ）マスタ
+    - 世帯ごとにカテゴリを持てる（他世帯のカテゴリは見えない想定）
+    """
     household = models.ForeignKey(
         Household,
-        on_delete=models.CASCADE,   # 世帯が削除されたら、その世帯の在庫も削除
-        related_name="items"        # household.items で在庫一覧を取れる（任意だけど便利）
+        on_delete=models.CASCADE,
+        related_name="categories",
     )
+    name = models.CharField("カテゴリ名", max_length=50)
 
-    # 在庫名
-    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    # 数量（デフォルト0）
-    quantity = models.IntegerField(default=0)
+    class Meta:
+        # 同じ世帯で同名カテゴリを重複させない（例：食料が2つできない）
+        constraints = [
+            models.UniqueConstraint(
+                fields=["household", "name"],
+                name="uniq_household_category_name",
+            )
+        ]
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
 
-# ----------------------------
-# 在庫一覧画面（ログイン必須）
-# ----------------------------
-class Memo(models.Model):
-    # どの世帯のメモか
+
+class InventoryItem(models.Model):
+    """
+    InventoryItem（在庫）
+    """
     household = models.ForeignKey(
         Household,
-        on_delete=models.CASCADE,   
-        related_name="memos"        
+        on_delete=models.CASCADE,
+        related_name="items"
     )
 
-    # 最小構成
-    title = models.CharField(max_length=100)
-    body = models.TextField(blank=True)
-    
-    # 作成日(任意だけど便利)
+    # ★カテゴリ（最初は未設定でも登録できるように null/blank OK にする）
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="items",
+        verbose_name="カテゴリ",
+    )
+
+    name = models.CharField("在庫名", max_length=100)
+    quantity = models.IntegerField("数量", default=0)
+
+    def __str__(self):
+        return self.name
+
+
+class Memo(models.Model):
+    """
+    Memo（メモ）
+    """
+    household = models.ForeignKey(
+        Household,
+        on_delete=models.CASCADE,
+        related_name="memos"
+    )
+    title = models.CharField("タイトル", max_length=100)
+    body = models.TextField("本文", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
