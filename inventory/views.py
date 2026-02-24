@@ -120,43 +120,60 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     """
     model = InventoryItem
     template_name = "inventory/list.html"
-
+    context_object_name = "items"
+    
     def get_queryset(self):
         """
         ★一覧に表示する在庫データを返す
         1) まず自分の世帯に限定
         2) category が指定されていれば絞り込む
         """
-        qs = InventoryItem.objects.filter(household=self.request.user.household)
+        household = self.request.user.household
 
-        # --- カテゴリ絞り込み（URL例：/inventory/?category=3）---
+        # ① まず世帯で必ず絞る（最重要）
+        qs = (
+            InventoryItem.objects
+            .filter(household=household)  # ★最重要：他世帯を絶対に混ぜない
+            .select_related("category", "storage_location")  # 表示で参照するならN+1対策（任意）
+            .order_by("-id")
+        )
+
+        # ② category 絞り込み（URL例：/inventory/?category=3）---
         category_id = self.request.GET.get("category")
         if category_id:
             qs = qs.filter(category_id=category_id)
+
+        # ③ storage 絞り込み（今回追加）---
+        storage_id = self.request.GET.get("storage")
+        if storage_id:
+            # householdで絞ったqsに対してfilterするので安全
+            qs = qs.filter(storage_location_id=storage_id)
 
         return qs
     
     def get_context_data(self, **kwargs):
         """
-        ★テンプレへ渡す追加データ
-        - categories：プルダウン用（自世帯カテゴリのみ）
-        - selected_category：現在選択中のカテゴリID（selected用）
-        - total_items / total_quantity：表示中データの集計
+        一覧画面で使う選択肢を渡す：
+        - Category候補（世帯内のみ）
+        - StorageLocation候補（世帯内のみ）
+        - 現在選択中のGET値（selected保持）
         """
         context = super().get_context_data(**kwargs)
-       
+        household = self.request.user.household
+        
         # プルダウン用カテゴリ（自分の世帯だけ）
         context["categories"] = Category.objects.filter(
             household=self.request.user.household
         ).order_by("name")
 
-        # 選択中カテゴリ（テンプレ側の selected に使う）
-        context["selected_category"] = self.request.GET.get("category", "")
+        # 追加：保管場所候補（世帯内のみ）
+        context["storages"] = StorageLocation.objects.filter(
+            household=household
+            ).order_by("name")
 
-        # 集計（絞り込み後の queryset を対象にする）
-        queryset = self.get_queryset()
-        context["total_items"] = queryset.count()
-        context["total_quantity"] = queryset.aggregate(total=Sum("quantity"))["total"] or 0
+        # 既存/追加：選択状態保持（テンプレでselectedに使う）
+        context["selected_category"] = self.request.GET.get("category", "")
+        context["selected_storage"] = self.request.GET.get("storage", "")
 
         return context
         
@@ -296,7 +313,7 @@ class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView)
     model = Category
     fields = ["name"]
     template_name = "category/form.html"
-    success_url = "/category/"
+    success_url = reverse_lazy("inventory:category_list")
 
     def form_valid(self, form):
         """
@@ -313,7 +330,7 @@ class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView)
     model = Category
     fields = ["name"]
     template_name = "category/form.html"
-    success_url = "/category/"
+    success_url = reverse_lazy("inventory:category_list")
 
     def get_queryset(self):
         return Category.objects.filter(household=self.request.user.household)
@@ -331,15 +348,14 @@ class CategoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView)
     - Category を削除すると、InventoryItem.category は SET_NULL で未分類になる
     """
     model = Category
-    template_name = "category/category_confirm_delete.html"  # ★明示
-    success_url = "/category/"
+    template_name = "category/category_confirm_delete.html"
+    success_url = reverse_lazy("inventory:category_list")  # ★ここが重要
 
     def get_queryset(self):
         """
         ★削除対象を「自分の世帯のカテゴリ」に限定する
         """
         return Category.objects.filter(household=self.request.user.household)
-
 
 # ----------------------------
 # 保管場所（StorageLocation）
@@ -379,14 +395,15 @@ class StorageLocationUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, Upda
     - get_queryset() で自世帯のみに限定（他世帯URL直打ち対策）
     """
     model = StorageLocation
-    fields = ["name"]  # 最短は name のみ。必要なら後で増やす
-    template_name = "inventory/storage_location_form.html"
+    template_name = "inventory/storage_location_confirm_delete.html"
     success_url = reverse_lazy("inventory:storage_location_list")
-
-    def form_valid(self, form):
-        # ★重要：保存前に世帯を自動セット
-        form.instance.household = self.request.user.household
-        return super().form_valid(form)
+    fields = ["name"]
+    
+    def get_queryset(self):
+        # ★超重要：他世帯データ削除を防ぐ
+        return StorageLocation.objects.filter(
+            household=self.request.user.household
+        )
 
 class StorageLocationDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """
@@ -421,7 +438,7 @@ class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     model = Memo
     fields = ["title", "body"]
     template_name = "memo/form.html"
-    success_url = "/memo/"
+    success_url = reverse_lazy("inventory:memo_list")
 
     def form_valid(self, form):
         # 保存前に household を自動セット
@@ -436,7 +453,7 @@ class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     model = Memo
     fields = ["title", "body"]
     template_name = "memo/form.html"
-    success_url = "/memo/"
+    success_url = reverse_lazy("inventory:memo_list")
 
     def get_queryset(self):
         # 他世帯のメモは編集できない（pk直打ち対策）
@@ -449,7 +466,7 @@ class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
 class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     model = Memo
     template_name = "memo/confirm_delete.html"
-    success_url = "/memo/"
+    success_url = reverse_lazy("inventory:memo_list")
 
     def get_queryset(self):
         # 他世帯のメモは削除できない（pk直打ち対策）

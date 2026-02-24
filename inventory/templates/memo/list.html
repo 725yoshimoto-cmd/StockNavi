@@ -4,13 +4,13 @@
 
 <h1>メモ一覧</h1>
 
-<p><a href="{% url 'memo_add' %}">＋メモを追加</a></p>
+<p><a href="{% url 'inventory:memo_add' %}">＋メモを追加</a></p>
 
 {% for memo in object_list %}
   <p>
     <strong>{{ memo.title }}</strong>
-    <a href="{% url 'memo_edit' memo.pk %}">編集</a>
-    <a href="{% url 'memo_delete' memo.pk %}">削除</a>
+    <a href="{% url 'inventory:memo_edit' memo.pk %}">編集</a>
+    <a href="{% url 'inventory:memo_delete' memo.pk %}">削除</a>
   </p>
 {% empty %}
   <p>メモがありません</p>

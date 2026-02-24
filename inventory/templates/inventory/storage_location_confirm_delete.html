@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>保管場所を削除</h1>
+
+  <p>「{{ object.name }}」を削除します。よろしいですか？</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">削除する</button>
+  </form>
+
+  <p>
+    <a href="{% url 'inventory:storage_location_list' %}">キャンセル</a>
+  </p>
+{% endblock %}

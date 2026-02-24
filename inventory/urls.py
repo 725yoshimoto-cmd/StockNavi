@@ -4,9 +4,6 @@ from . import views
 app_name = "inventory"
 
 urlpatterns = [
-    # トップページにポートフォリオ画面を表示
-    path("", views.PortfolioView.as_view(), name="portfolio"),
-
     # household未設定の案内ページ
     path("household-required/", views.HouseholdRequiredView.as_view(), name="household_required"),
 
@@ -16,18 +13,13 @@ urlpatterns = [
     # 案内ページ
     path("no-household/", views.NoHouseholdView.as_view(), name="no_household"),
 
-    # 在庫一覧ページ（ログイン必須）
-    path("inventory/", views.InventoryListView.as_view(), name="inventory_list"),
-    
-    # 在庫追加ページ
-    path("inventory/add/", views.InventoryCreateView.as_view(), name="inventory_add"),
-    
-    # 在庫編集ページ
-    path("inventory/<int:pk>/edit/", views.InventoryUpdateView.as_view(), name="inventory_edit"),
-    
-    # 在庫削除ページ
-    path("inventory/<int:pk>/delete/", views.InventoryDeleteView.as_view(), name="inventory_delete"),
-
+    # ----------------------------
+    # 在庫（inventory）一覧、追加、編集、削除
+    # ----------------------------   
+    path("", views.InventoryListView.as_view(), name="inventory_list"),
+    path("add/", views.InventoryCreateView.as_view(), name="inventory_add"),
+    path("<int:pk>/edit/", views.InventoryUpdateView.as_view(), name="inventory_edit"),
+    path("<int:pk>/delete/", views.InventoryDeleteView.as_view(), name="inventory_delete"),
     
     # ----------------------------
     # 分類（Category）
@@ -37,15 +29,13 @@ urlpatterns = [
     path("category/<int:pk>/edit/", views.CategoryUpdateView.as_view(), name="category_edit"),
     path("category/<int:pk>/delete/", views.CategoryDeleteView.as_view(), name="category_delete"),
 
-
     # ----------------------------
     # 保管場所（StorageLocation）
     # ----------------------------
     path("storage-location/", views.StorageLocationListView.as_view(), name="storage_location_list"),
     path("storage-location/add/", views.StorageLocationCreateView.as_view(), name="storage_location_add"),
     path("storage-location/<int:pk>/edit/", views.StorageLocationUpdateView.as_view(), name="storage_location_edit"),
-    path("storage-location/<int:pk>/delete/", views.StorageLocationDeleteView.as_view(), name="storage_location_delete"),
-   
+    path("storage-location/<int:pk>/delete/", views.StorageLocationDeleteView.as_view(), name="storage_location_delete"), 
    
     # ----------------------------
     # メモ機能

@@ -13,13 +13,13 @@
 <h1>分類一覧</h1>
 
 <!-- 分類追加リンク -->
-<p><a href="{% url 'category_add' %}">＋分類を追加</a></p>
+<a href="{% url 'inventory:category_add' %}">＋分類を追加</a>
 
 {% for c in object_list %}
   <p>
     {{ c.name }}
-    <a href="{% url 'category_edit' c.pk %}">編集</a>
-    <a href="{% url 'category_delete' c.pk %}">削除</a>
+    <a href="{% url 'inventory:category_edit' c.pk %}">編集</a>
+    <a href="{% url 'inventory:category_delete' c.pk %}">削除</a>
   </p>
 {% empty %}
   <p>分類がありません</p>

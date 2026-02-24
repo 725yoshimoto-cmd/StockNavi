@@ -19,13 +19,33 @@
 - selected_category と categories を使ってプルダウンを作る
 ----------------------------- -->
 <form method="get">
-  <label for="category">カテゴリ：</label>
-  <select name="category" id="category">
+
+  <!-- 分類 -->
+  <label>分類</label>
+  <select name="category">
     <option value="">すべて</option>
     {% for c in categories %}
       <option value="{{ c.id }}"
-        {% if selected_category|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>
+        {% if selected_category == c.id|stringformat:"s" %}
+          selected
+        {% endif %}
+      >
         {{ c.name }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <!-- 保管場所（今回追加） -->
+  <label>保管場所</label>
+  <select name="storage">
+    <option value="">すべて</option>
+    {% for s in storages %}
+      <option value="{{ s.id }}"
+        {% if selected_storage == s.id|stringformat:"s" %}
+          selected
+        {% endif %}
+      >
+        {{ s.name }}
       </option>
     {% endfor %}
   </select>
@@ -33,7 +53,7 @@
   <button class="btn" type="submit">絞り込み</button>
 
   <!-- 絞り込み解除（categoryパラメータ無しで /inventory/ に戻す） -->
-  <a class="btn" href="{% url 'inventory_list' %}">解除</a>
+  <a class="btn" href="{% url 'inventory:inventory_list' %}">解除</a>
 </form>
 
 <hr>
@@ -47,7 +67,7 @@
 </p>
 
 <!-- 在庫追加リンク（urls.py の name="inventory_add" を参照） -->
-<p><a href="{% url 'inventory_add' %}">＋在庫を追加</a></p>
+<p><a href="{% url 'inventory:inventory_add' %}">＋在庫を追加</a></p>
 
 {% for item in object_list %}
   <p>
@@ -59,9 +79,15 @@
     {% endif %}
 
     {{ item.name }} / {{ item.quantity }}
+   
+    {% if item.storage_location %}
+    （{{ item.storage_location.name }}）
+    {% else %}
+      （保管場所未設定）
+    {% endif %}
 
-    <a href="{% url 'inventory_edit' item.pk %}">編集</a>
-    <a href="{% url 'inventory_delete' item.pk %}">削除</a>
+    <a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
+    <a href="{% url 'inventory:inventory_delete' item.pk %}">削除</a>
   </p>
 
 {% empty %}
