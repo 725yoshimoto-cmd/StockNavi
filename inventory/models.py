@@ -59,6 +59,23 @@ class Category(models.Model):
             )
         ]
         ordering = ["name"]
+    # 分類ごとの目標量（例：36）:contentReference[oaicite:7]{index=7}
+    goal_amount = models.FloatField(default=0)
+
+    # 目標の単位（L or 個）:contentReference[oaicite:8]{index=8}
+    GOAL_UNIT_CHOICES = [
+        ("L", "L"),
+        ("PCS", "個"),
+    ]
+    goal_unit = models.CharField(max_length=10, choices=GOAL_UNIT_CHOICES, default="PCS")
+
+    # 分類カラー（円グラフ等の表示で利用）:contentReference[oaicite:9]{index=9}
+    COLOR_CHOICES = [
+        ("red", "赤"), ("pink", "ピンク"), ("orange", "オレンジ"), ("yellow", "黄色"),
+        ("lime", "黄緑"), ("green", "緑"), ("sky", "水色"), ("blue", "青"),
+        ("navy", "紺"), ("purple", "紫"), ("brown", "茶色"), ("gray", "グレー"),
+    ]
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default="gray")
 
     def __str__(self):
         return self.name

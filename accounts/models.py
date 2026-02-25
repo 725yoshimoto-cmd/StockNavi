@@ -11,6 +11,9 @@ class Household(models.Model):
     name = models.CharField("世帯名", max_length=50)
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
 
+    # 目標備蓄日数（画面設計図：3/7/14/カスタム）:contentReference[oaicite:6]{index=6}
+    target_days = models.PositiveIntegerField(default=3)
+
     def __str__(self):
         return self.name
 
