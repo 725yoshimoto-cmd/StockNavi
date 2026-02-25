@@ -31,7 +31,13 @@ class InventoryItem(models.Model):
 
     name = models.CharField("在庫名", max_length=100)
     quantity = models.IntegerField("数量", default=0)
+    
+    # 画面設計図の「内容量」：内容量 × 個数で集計するために追加
+    # 例）水 2L、缶詰 1個 など
+    # 既存データがあっても落ちないよう default を入れる
+    content_amount = models.FloatField(default=1.0)
 
+    # もし unit を今すぐ増やすと工数増えるので、今回は最小で content_amount のみ追加
     def __str__(self):
         return self.name
     

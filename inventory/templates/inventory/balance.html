@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>備蓄バランス確認</h1>
+
+<p>目標：{{ target_days }}日分</p>
+
+<form method="get">
+  <label>保管場所：</label>
+  <select name="storage">
+    <option value="">すべて</option>
+    {% for s in storages %}
+      <option value="{{ s.id }}" {% if storage_id|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>
+        {{ s.name }}
+      </option>
+    {% endfor %}
+  </select>
+  <button type="submit">絞り込む</button>
+</form>
+
+<hr>
+
+<table border="1" cellpadding="6">
+  <thead>
+    <tr>
+      <th>分類</th>
+      <th>目標</th>
+      <th>現在</th>
+      <th>達成度</th>
+      <th>割合</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>{{ r.name }}</td>
+        <td>{{ r.goal_amount }} {{ r.goal_unit }}</td>
+        <td>{{ r.current_amount|floatformat:1 }} {{ r.goal_unit }}</td>
+        <td>{{ r.achievement_percent|floatformat:0 }} %</td>
+        <td>{{ r.share_percent|floatformat:0 }} %</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p>合計：{{ total|floatformat:1 }}</p>
+
+{% endblock %}

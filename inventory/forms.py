@@ -4,8 +4,14 @@ from .models import InventoryItem, Category
 class InventoryItemForm(forms.ModelForm):
     class Meta:
         model = InventoryItem
-        fields = ["category", "name", "quantity"]
-
+        fields = [
+            "name",
+            "category",
+            "storage_location",
+            "content_amount",  # ← 追加
+            "quantity",
+        ]
+        
     def __init__(self, *args, **kwargs):
         household = kwargs.pop("household", None)
         super().__init__(*args, **kwargs)

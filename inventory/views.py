@@ -41,6 +41,10 @@ from django.db.models import Sum, Count
 # 「カテゴリ一覧を渡す」と「GETで絞る」
 from django.utils.http import urlencode  # なくてもOKだが後で便利
 
+# バランス確認
+from .models import StorageLocation
+from .services.balance import calc_category_amounts
+
 # ----------------------------
 # ★ 追加：カスタムユーザー登録フォームを読み込む
 # ----------------------------
@@ -279,7 +283,34 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
     def get_queryset(self):
         """削除対象を自分の世帯の在庫に限定"""
         return InventoryItem.objects.filter(household=self.request.user.household)
-    
+
+# ----------------------------
+# バランス確認（Balance）（ログイン必須）
+# ----------------------------
+class BalanceView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
+    template_name = "inventory/balance.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        household = self.request.user.household
+        storage_id = self.request.GET.get("storage") or None
+
+        rows, total = calc_category_amounts(household, storage_id)
+
+        storages = StorageLocation.objects.filter(
+            household=household
+        ).order_by("name")
+
+        ctx.update({
+            "target_days": household.target_days,
+            "storage_id": storage_id,
+            "storages": storages,
+            "rows": rows,
+            "total": total,
+        })
+        return ctx
+        
 # ----------------------------
 # 分類（Category）一覧（ログイン必須）
 # ----------------------------

@@ -38,6 +38,11 @@ urlpatterns = [
     path("storage-location/<int:pk>/delete/", views.StorageLocationDeleteView.as_view(), name="storage_location_delete"), 
    
     # ----------------------------
+    # バランス確認（Balance）
+    # ----------------------------
+    path("balance/", views.BalanceView.as_view(), name="balance"),
+
+    # ----------------------------
     # メモ機能
     # ----------------------------
     path("memo/", views.MemoListView.as_view(), name="memo_list"),
