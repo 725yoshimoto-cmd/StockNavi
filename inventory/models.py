@@ -1,6 +1,6 @@
 from django.db import models
 from accounts.models import Household
-
+from django.conf import settings  # ← 追加（上部）
 
 class InventoryItem(models.Model):
     """
@@ -104,6 +104,14 @@ class Memo(models.Model):
         on_delete=models.CASCADE,
         related_name="memos"
     )
+
+    # ★ 追加（作成者）
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="memos"
+    )
+
     title = models.CharField("タイトル", max_length=100)
     body = models.TextField("本文", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

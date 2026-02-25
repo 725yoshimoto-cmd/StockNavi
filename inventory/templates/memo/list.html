@@ -1,19 +1,54 @@
 {% extends "base.html" %}
-{% block title %}メモ{% endblock %}
-{% block content %}
 
+{% block title %}メモ{% endblock %}
+
+{% block content %}
 <h1>メモ一覧</h1>
 
-<p><a href="{% url 'inventory:memo_add' %}">＋メモを追加</a></p>
+<p>
+  <a class="btn" href="{% url 'inventory:memo_add' %}">＋メモを追加</a>
+</p>
+
+<hr>
 
 {% for memo in object_list %}
-  <p>
+  <div style="margin-bottom: 16px;">
     <strong>{{ memo.title }}</strong>
-    <a href="{% url 'inventory:memo_edit' memo.pk %}">編集</a>
-    <a href="{% url 'inventory:memo_delete' memo.pk %}">削除</a>
-  </p>
-{% empty %}
-  <p>メモがありません</p>
-{% endfor %}
 
+    {# ある場合だけ表示（フィールドが無いときに落ちないよう保険） #}
+    <div style="font-size: 12px; margin-top: 4px;">
+      {% if memo.updated_at %}更新: {{ memo.updated_at|date:"Y-m-d H:i" }}{% endif %}
+      {% if memo.created_at %} / 作成: {{ memo.created_at|date:"Y-m-d H:i" }}{% endif %}
+    {# --- ここから「作成者」と「本文」安全表示 --- #}
+
+    {# 作成者：存在する候補だけ順番に表示（無ければ何も出さない） #}
+    {% if memo.user %}
+      / 作成者: {{ memo.user }}
+    {% elif memo.author %}
+      / 作成者: {{ memo.author }}
+    {% elif memo.owner %}
+      / 作成者: {{ memo.owner }}
+    {% endif %}
+
+    {# 本文：存在する候補だけ表示 #}
+    {% if memo.content %}
+      <p>{{ memo.content|linebreaksbr }}</p>
+    {% elif memo.body %}
+      <p>{{ memo.body|linebreaksbr }}</p>
+    {% elif memo.text %}
+      <p>{{ memo.text|linebreaksbr }}</p>
+    {% elif memo.note %}
+      <p>{{ memo.note|linebreaksbr }}</p>
+    {% endif %}
+
+    {# --- ここまで --- #}
+
+    <p>
+      <a class="btn" href="{% url 'inventory:memo_edit' memo.pk %}">編集</a>
+      <a class="btn btn-danger" href="{% url 'inventory:memo_delete' memo.pk %}">削除</a>
+    </p>
+  </div>
+{% empty %}
+  <p>メモがまだありません。</p>
+{% endfor %}
 {% endblock %}

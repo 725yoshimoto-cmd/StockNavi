@@ -441,10 +441,11 @@ class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     success_url = reverse_lazy("inventory:memo_list")
 
     def form_valid(self, form):
-        # 保存前に household を自動セット
+        # household を自動セット（NOT NULL対策）
         form.instance.household = self.request.user.household
+        # 作成者を自動セット
+        form.instance.user = self.request.user
         return super().form_valid(form)
-
 
 # ----------------------------
 # メモ編集（ログイン必須）
@@ -459,6 +460,12 @@ class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
         # 他世帯のメモは編集できない（pk直打ち対策）
         return Memo.objects.filter(household=self.request.user.household)
 
+    def form_valid(self, form):
+        print("★ MemoCreateView.form_valid called")  # ←確認用（あとで消す）
+        print("★ user household =", getattr(self.request.user, "household", None))
+        form.instance.household = self.request.user.household
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
 # ----------------------------
 # メモ削除（ログイン必須）
