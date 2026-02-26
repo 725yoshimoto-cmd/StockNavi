@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+  .progress-wrap { width: 180px; background: #eee; border-radius: 999px; overflow: hidden; }
+  .progress-bar { height: 10px; background: #4caf50; }
+  .progress-text { font-size: 12px; }
+</style>
+
 <h1>備蓄バランス確認</h1>
 
 <p>目標：{{ target_days }}日分</p>
@@ -20,6 +26,9 @@
 
 <hr>
 
+<h2>分類別の割合</h2>
+<canvas id="balancePie" width="400" height="400"></canvas>
+
 <table border="1" cellpadding="6">
   <thead>
     <tr>
@@ -36,6 +45,12 @@
         <td>{{ r.name }}</td>
         <td>{{ r.goal_amount }} {{ r.goal_unit }}</td>
         <td>{{ r.current_amount|floatformat:1 }} {{ r.goal_unit }}</td>
+        <td>
+            <div class="progress-text">{{ r.achievement_percent|floatformat:0 }} %</div>
+            <div class="progress-wrap">
+                <div class="progress-bar" style="width: {% if r.achievement_percent > 100 %}100{% else %}{{ r.achievement_percent|floatformat:0 }}{% endif %}%;"></div>
+            </div>
+        </td>
         <td>{{ r.achievement_percent|floatformat:0 }} %</td>
         <td>{{ r.share_percent|floatformat:0 }} %</td>
       </tr>
@@ -44,5 +59,48 @@
 </table>
 
 <p>合計：{{ total|floatformat:1 }}</p>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Djangoテンプレの rows から配列を作る
+  const labels = [
+    {% for r in rows %}
+      "{{ r.name }}",
+    {% endfor %}
+  ];
+
+  const data = [
+    {% for r in rows %}
+      {{ r.share_percent|floatformat:2 }},
+    {% endfor %}
+  ];
+
+  // 色は、まずはカテゴリの color を文字で持っているので簡易にCSS色へ変換
+  // 今回は安全に "gray" fallback を用意しておく
+  const colors = [
+    {% for r in rows %}
+      "{{ r.color|default:'gray' }}",
+    {% endfor %}
+  ];
+
+  const ctx = document.getElementById("balancePie");
+  if (ctx) {
+    new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: colors,
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { position: "bottom" }
+        }
+      }
+    });
+  }
+</script>
 
 {% endblock %}
