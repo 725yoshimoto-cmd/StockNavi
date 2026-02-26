@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="h5 mb-3">アラート設定</h1>
+
+<form id="alertSettingForm" method="post" action="{% url 'accounts:alert_setting' %}">
+  {% csrf_token %}
+
+  <div class="mb-3">
+    <label class="form-label">個数アラート（◯個以下で通知）</label>
+    {{ form.quantity_threshold }}
+    <div class="form-text">例：1 → 1個以下で通知</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">期限アラート（残り◯日以内で通知）</label>
+    {{ form.expiry_days }}
+    <div class="form-text">例：30 → 30日以内で通知</div>
+  </div>
+
+  <button class="btn btn-primary w-100" type="submit">保存</button>
+</form>
+
+<!-- トースト（Bootstrap想定） -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="saveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-body" id="toastBody">保存しました</div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const form = document.getElementById("alertSettingForm");
+    const toastEl = document.getElementById("saveToast");
+    const toastBody = document.getElementById("toastBody");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault(); // ← 画面遷移を止める（これが「遷移なし」の要）
+
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch(form.action, {
+          method: "POST",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          body: formData
+        });
+
+        // 保存失敗（バリデーションなど）
+        if (!res.ok) {
+          toastBody.textContent = "入力内容を確認してください";
+          new bootstrap.Toast(toastEl).show();
+          return;
+        }
+
+        // 保存成功
+        const data = await res.json();
+        toastBody.textContent = data.message || "保存しました";
+        new bootstrap.Toast(toastEl).show();
+
+      } catch (err) {
+        // 通信エラーなど
+        toastBody.textContent = "通信エラーが発生しました";
+        new bootstrap.Toast(toastEl).show();
+      }
+    });
+  })();
+</script>
+
+{% endblock %}
