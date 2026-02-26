@@ -71,13 +71,34 @@ class Invitation(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["household", "invited_email"],
-                name="uniq_household_invited_email",
-            )
-        ]
+class Meta:
+    constraints = [
+        models.UniqueConstraint(
+            fields=["household", "invited_email"],
+            name="uniq_household_invited_email",
+        )
+    ]
 
     def __str__(self):
         return f"{self.household.name} → {self.invited_email}"
+
+class AlertSetting(models.Model):
+    """
+    世帯ごとのアラート判定基準
+    - quantity_threshold: 個数アラートの閾値（例: 1個以下）
+    - expiry_days: 期限アラートの閾値（例: 30日以内）
+    """
+    household = models.OneToOneField(
+        "accounts.Household",
+        on_delete=models.CASCADE,
+        related_name="alert_setting",
+    )
+
+    quantity_threshold = models.PositiveIntegerField(default=1)
+    expiry_days = models.PositiveIntegerField(default=30)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"AlertSetting(household={self.household_id})"
+    

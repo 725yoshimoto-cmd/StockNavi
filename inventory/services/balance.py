@@ -62,4 +62,7 @@ def calc_category_amounts(household, storage_location_id=None):
     # 不足しているもの（達成度が低い順）を上に
     rows.sort(key=lambda x: x["achievement_percent"])
     
+    # 達成度が低い順に並び替え（不足を上に）
+    rows.sort(key=lambda x: x["achievement_percent"])
+
     return rows, total
