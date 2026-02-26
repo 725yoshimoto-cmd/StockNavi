@@ -1,14 +1,16 @@
 # accounts/views.py
+
+# Django基本
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views import View
 
+# 自アプリ
 from .forms import AlertSettingForm
 from .models import AlertSetting
 
-# すでにプロジェクトで使っている HouseholdRequiredMixin を流用
-# ※置き場所が違うなら import はあなたの実装に合わせてOK
+# 既存：世帯必須のMixin（プロジェクトにあるやつ）
 from inventory.mixins import HouseholdRequiredMixin
 
 
@@ -54,8 +56,7 @@ class AlertSettingView(LoginRequiredMixin, HouseholdRequiredMixin, View):
 
         # 保存
         form.save()
+        
+        # 成功レスポンス（トースト表示用）
+        return JsonResponse({"ok": True, "message": "アラート設定を保存しました"})
 
-        # 成功レスポンス
-        return JsonResponse({"ok": True, "message": "アラート設定を保存しました"})from django.shortcuts import render
-
-# Create your views here.
