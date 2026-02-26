@@ -71,17 +71,17 @@ class Invitation(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-class Meta:
-    constraints = [
-        models.UniqueConstraint(
-            fields=["household", "invited_email"],
-            name="uniq_household_invited_email",
-        )
-    ]
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["household", "invited_email"],
+                name="uniq_household_invited_email",
+            )
+        ]
 
     def __str__(self):
         return f"{self.household.name} → {self.invited_email}"
-
+    
 class AlertSetting(models.Model):
     """
     世帯ごとのアラート判定基準
