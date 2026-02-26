@@ -9,7 +9,7 @@
 
 <h1>備蓄バランス確認</h1>
 
-<p>目標：{{ target_days }}日分</p>
+<h2>目標：{{ target_days }}日分の備蓄バランス</h2>
 
 <form method="get">
   <label>保管場所：</label>
@@ -46,9 +46,14 @@
         <td>{{ r.goal_amount }} {{ r.goal_unit }}</td>
         <td>{{ r.current_amount|floatformat:1 }} {{ r.goal_unit }}</td>
         <td>
-            <div class="progress-text">{{ r.achievement_percent|floatformat:0 }} %</div>
+            <div class="progress-text">
+                {{ r.achievement_percent|floatformat:0 }} %
+            </div>
             <div class="progress-wrap">
-                <div class="progress-bar" style="width: {% if r.achievement_percent > 100 %}100{% else %}{{ r.achievement_percent|floatformat:0 }}{% endif %}%;"></div>
+                <div class="progress-bar"
+                    style="width: {% if r.achievement_percent > 100 %}100{% else %}{{ r.achievement_percent|floatformat:0 }}{% endif %}%;
+                            background-color: {% if r.achievement_percent < 100 %}#f44336{% else %}#4caf50{% endif %};">
+                </div>
             </div>
         </td>
         <td>{{ r.achievement_percent|floatformat:0 }} %</td>
