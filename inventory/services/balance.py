@@ -59,4 +59,7 @@ def calc_category_amounts(household, storage_location_id=None):
     for r in rows:
         r["share_percent"] = 0.0 if total <= 0 else (r["current_amount"] / total) * 100
 
+    # 不足しているもの（達成度が低い順）を上に
+    rows.sort(key=lambda x: x["achievement_percent"])
+    
     return rows, total
