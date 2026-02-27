@@ -192,11 +192,17 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         today = timezone.localdate()
 
         # ④ 世帯のアラート設定を取得（無ければNone）
-        alert_setting = AlertSetting.objects.filter(household=household).first()
-
-        # 閾値を安全に取り出す（Noneでも落ちない）
-        quantity_threshold = getattr(alert_setting, "quantity_threshold", None)
-        expiry_days = getattr(alert_setting, "expiry_days", None)
+        alert_setting, created = AlertSetting.objects.get_or_create(
+            household=household,
+            defaults={
+                "quantity_threshold": 1,   # 初期値（設計書通り）
+                "expiry_days": 30,         # 初期値（設計書通り）
+            }
+        )
+        
+       # 閾値を取得
+        quantity_threshold = alert_setting.quantity_threshold
+        expiry_days = alert_setting.expiry_days
 
         # Templateは「表示」だけにしたいので、判定はここで完結させる
         # ⑤ 各在庫にアラート判定を付与（※絞り込み後のqsに対して判定する）            result = judge_alert(
