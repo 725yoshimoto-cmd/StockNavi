@@ -52,6 +52,18 @@ from .services.balance import calc_category_amounts
 # ※ デフォルトのUserCreationFormは使わない
 from accounts.forms import CustomUserCreationForm
 
+# ----------------------------
+# ★ 追加：アラート判定ユーティリティを読み込む
+# ----------------------------
+# 在庫1件ごとの赤/青判定を共通化して再利用しやすくする
+from inventory.utils import judge_alert
+
+# ----------------------------
+# ★ 追加：世帯ごとの閾値（AlertSetting）を取得する
+# ----------------------------
+# 「世帯で1つだけ」の設定値を在庫一覧の判定基準として使う
+from accounts.models import AlertSetting
+
 
 # ----------------------------
 # ポートフォリオトップ画面
@@ -128,30 +140,47 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     
     def get_queryset(self):
         """
-        ★一覧に表示する在庫データを返す
-        1) まず自分の世帯に限定
-        2) category が指定されていれば絞り込む
-        """
-        household = self.request.user.household
+        一覧取得＋アラート判定付与
 
-        # ① まず世帯で必ず絞る（最重要）
-        qs = (
-            InventoryItem.objects
-            .filter(household=household)  # ★最重要：他世帯を絶対に混ぜない
-            .select_related("category", "storage_location")  # 表示で参照するならN+1対策（任意）
-            .order_by("-id")
+        手順：
+        1. 世帯で在庫を絞る
+        2. 今日の日付を取得
+        3. AlertSetting取得
+        4. 各itemにフラグを付与
+        """
+
+        # ① 世帯で在庫を絞り込む（他世帯の混入防止）
+        qs = InventoryItem.objects.filter(
+            household=self.request.user.household
         )
 
-        # ② category 絞り込み（URL例：/inventory/?category=3）---
-        category_id = self.request.GET.get("category")
-        if category_id:
-            qs = qs.filter(category_id=category_id)
+        # ② 今日の日付を取得（タイムゾーン安全）
+        today = timezone.localdate()
 
-        # ③ storage 絞り込み（今回追加）---
-        storage_id = self.request.GET.get("storage")
-        if storage_id:
-            # householdで絞ったqsに対してfilterするので安全
-            qs = qs.filter(storage_location_id=storage_id)
+        # ③ 世帯のアラート設定を取得
+        alert_setting = AlertSetting.objects.filter(
+            household=self.request.user.household
+        ).first()
+
+        # ④ 閾値を安全に取り出す（Noneでも落ちないようにする）
+        quantity_threshold = getattr(alert_setting, "quantity_threshold", None)
+        expiry_days = getattr(alert_setting, "expiry_days", None)
+
+        # ④ 各在庫にアラート判定を付与
+        # Templateは「表示」だけにしたいので、判定はここで完結させる
+        for item in qs:
+            result = judge_alert(
+                quantity=item.quantity,
+                expiry_date=item.expiry_date,  # ←あなたのフィールド名に合わせる
+                today=today,
+                quantity_threshold=quantity_threshold,
+                expiry_days=expiry_days,
+            )
+            
+            # テンプレで使えるように属性を生やす
+            item.is_alert_red = result.is_red
+            item.is_alert_blue = result.is_blue
+            item.days_left = result.days_left
 
         return qs
     
