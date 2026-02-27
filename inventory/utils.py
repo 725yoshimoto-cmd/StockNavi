@@ -8,17 +8,20 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class AlertResult:
-    """在庫1件のアラート判定結果（テンプレ表示用）"""
+    """
+    在庫一覧表示用のアラート判定結果
+    - is_red : 赤字＋🔔（最優先）
+    - is_blue: 青字＋🔔
+    - days_left: 期限までの残日数（expiry_dateが無い場合はNone）
+    """
     is_red: bool
     is_blue: bool
-    days_left: Optional[int]  # expiry_date が無い場合は None
+    days_left: Optional[int]
 
-
-def calc_days_left(expiry_date: Optional[date], today: date) -> Optional[int]:
+def _calc_days_left(expiry_date: Optional[date], today: date) -> Optional[int]:
     """
-    期限までの残日数を返す。
-    - expiry_date が None のときは None
-    - 今日が 2026-02-27、期限が 2026-02-28 なら 1
+    期限までの残日数を返す
+    例）今日=2/27、期限=2/28 → 1
     """
     if not expiry_date:
         return None
@@ -34,22 +37,22 @@ def judge_alert(
     expiry_days: Optional[int],
 ) -> AlertResult:
     """
-    赤/青の判定を一箇所にまとめる（ビューやテンプレにロジックを散らさない）
-    優先順位：赤 > 青
+    赤/青のアラート判定を行う（赤優先）
+
+    仕様：
+    - 赤：quantity==0 かつ expiry_date < 今日
+    - 青：quantity <= quantity_threshold または days_left <= expiry_days（ただし赤優先）
+    - expiry_dateがNoneの場合、期限判定はしない（落ちない）
+    - 閾値がNoneの場合、その条件は判定しない（落ちない）
     """
 
-    days_left = calc_days_left(expiry_date, today)
+    days_left = _calc_days_left(expiry_date, today)
+    
+    # 赤判定（最優先）
+    # expiry_date が無い場合は赤にしない
+    is_red = bool(expiry_date) and (quantity == 0) and (expiry_date < today)
 
-    # ----------------------------
-    # 赤：個数0 AND 期限切れ（expiry_date が無いなら赤にはしない）
-    # ----------------------------
-    is_red = bool(expiry_date) and quantity == 0 and expiry_date < today
-
-    # ----------------------------
-    # 青：赤でない AND（個数少ない OR 期限が近い）
-    # - 閾値が未設定(None)なら、その条件は判定しない
-    # - expiry_date が無いなら、期限条件は判定しない
-    # ----------------------------
+    # 青判定（赤の時は出さない）
     is_low_stock = (quantity_threshold is not None) and (quantity <= quantity_threshold)
 
     is_expiring_soon = (

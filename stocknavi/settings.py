@@ -120,9 +120,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_URL = "/login/"          # LoginRequiredMixin の飛び先
-LOGIN_REDIRECT_URL = "/inventory/"   # ログイン成功後の戻り先（今のままでOK）
-LOGOUT_REDIRECT_URL = "/login/"      # ログアウト後
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/inventory/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"    # ログアウト後
 
 
 AUTH_USER_MODEL = "accounts.CustomUser"

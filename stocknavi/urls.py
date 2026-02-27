@@ -5,9 +5,15 @@ from django.urls import path, include
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    # 既存（あなたのinventory配下が動いているので残す）
+    # inventory
     path("inventory/", include("inventory.urls")),
 
-    # ★追加（アラート設定用）
+    # accounts（あなたの alert-setting を残す）
     path("accounts/", include("accounts.urls")),
+
+    # ----------------------------
+    # ★追加：Django標準の認証URL
+    # ----------------------------
+    # /accounts/login/ , /accounts/logout/ などが使えるようになる
+    path("accounts/", include("django.contrib.auth.urls")),
 ]
