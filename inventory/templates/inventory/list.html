@@ -78,7 +78,28 @@
       【未分類】
     {% endif %}
 
-    {{ item.name }} / {{ item.quantity }}
+    <!--★ アラート表示（赤優先）-->
+    {% if item.is_alert_red %}
+      <span style="color: red; font-weight: bold;">🔔</span>
+    {% elif item.is_alert_blue %}
+      <span style="color: blue; font-weight: bold;">🔔</span>
+    {% endif %}
+
+    <span
+      {% if item.is_alert_red %}
+        style="color: red; font-weight: bold;"
+      {% elif item.is_alert_blue %}
+        style="color: blue; font-weight: bold;"
+      {% endif %}
+    >
+      {{ item.name }}
+    </span>
+    /
+    {{ item.quantity }}
+
+    {% if item.days_left is not None %}
+     <small>（あと{{ item.days_left }}日）</small>
+    {% endif %}
    
     {% if item.storage_location %}
     （{{ item.storage_location.name }}）

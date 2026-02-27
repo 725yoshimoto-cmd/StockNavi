@@ -203,7 +203,7 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         for item in qs:
             result = judge_alert(
                 quantity=item.quantity,
-                expiry_date=None,  # ★期限フィールド未実装なら一旦None（落ちない応急処置）
+                expiry_date=item.expiry_date,  # ★期限フィールド未実装なら一旦None（落ちない応急処置）
                 today=today,
                 quantity_threshold=quantity_threshold,
                 expiry_days=expiry_days,
