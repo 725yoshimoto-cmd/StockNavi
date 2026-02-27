@@ -45,6 +45,9 @@ from django.utils.http import urlencode  # なくてもOKだが後で便利
 from .models import StorageLocation
 from .services.balance import calc_category_amounts
 
+# ★ 追加：今日の日付（タイムゾーン安全）を扱うため
+from django.utils import timezone
+
 # ----------------------------
 # ★ 追加：カスタムユーザー登録フォームを読み込む
 # ----------------------------
@@ -129,61 +132,86 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     """
     在庫一覧ページ
 
-      役割：
+    役割：
     - ログインユーザーの世帯(household)の在庫だけを表示
-    - GETパラメータ (?category=) があればカテゴリで絞り込み
-    - 表示中データの件数・数量合計を集計してテンプレへ渡す
+    - GETパラメータ (?category=, ?storage=) があれば絞り込み
+    - 各在庫にアラート判定フラグを付与してテンプレへ渡す
     """
     model = InventoryItem
     template_name = "inventory/list.html"
     context_object_name = "items"
-    
+
     def get_queryset(self):
+    
+        # ★追加：ログインユーザーの世帯を変数に入れて使い回す
+        household = self.request.user.household
+        
         """
         一覧取得＋アラート判定付与
-
         手順：
         1. 世帯で在庫を絞る
-        2. 今日の日付を取得
-        3. AlertSetting取得
-        4. 各itemにフラグを付与
+        2. GETパラメータがあれば絞り込み
+        3. 今日の日付を取得
+        4. AlertSetting取得
+        5. 各itemにフラグを付与
         """
-
+        
         # ① 世帯で在庫を絞り込む（他世帯の混入防止）
         qs = InventoryItem.objects.filter(
             household=self.request.user.household
         )
 
-        # ② 今日の日付を取得（タイムゾーン安全）
+        # ★ 追加：GETパラメータがあれば絞り込み（先に反映してから判定する）
+        # ?category= の値（カテゴリID）を取得
+        category_id = self.request.GET.get("category")
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+
+        # ?storage= の値（保管場所ID）を取得
+        storage_id = self.request.GET.get("storage")
+        if storage_id:
+            qs = qs.filter(storage_location_id=storage_id)
+
+        # ② GETパラメータがあれば絞り込み（テンプレのUIと整合させる）
+        category_id = self.request.GET.get("category")
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+
+        storage_id = self.request.GET.get("storage")
+        if storage_id:
+            qs = qs.filter(storage_location_id=storage_id)
+
+        # ※表示順が必要ならここで統一（例）
+        # qs = qs.order_by("expiry_date", "category__name")
+
+        # ③ 今日の日付を取得（タイムゾーン安全）
         today = timezone.localdate()
 
-        # ③ 世帯のアラート設定を取得
-        alert_setting = AlertSetting.objects.filter(
-            household=self.request.user.household
-        ).first()
+        # ④ 世帯のアラート設定を取得（無ければNone）
+        alert_setting = AlertSetting.objects.filter(household=household).first()
 
-        # ④ 閾値を安全に取り出す（Noneでも落ちないようにする）
+        # 閾値を安全に取り出す（Noneでも落ちない）
         quantity_threshold = getattr(alert_setting, "quantity_threshold", None)
         expiry_days = getattr(alert_setting, "expiry_days", None)
 
-        # ④ 各在庫にアラート判定を付与
         # Templateは「表示」だけにしたいので、判定はここで完結させる
+        # ⑤ 各在庫にアラート判定を付与（※絞り込み後のqsに対して判定する）            result = judge_alert(
         for item in qs:
             result = judge_alert(
                 quantity=item.quantity,
-                expiry_date=item.expiry_date,  # ←あなたのフィールド名に合わせる
+                expiry_date=None,  # ★期限フィールド未実装なら一旦None（落ちない応急処置）
                 today=today,
                 quantity_threshold=quantity_threshold,
                 expiry_days=expiry_days,
             )
-            
+
             # テンプレで使えるように属性を生やす
             item.is_alert_red = result.is_red
             item.is_alert_blue = result.is_blue
             item.days_left = result.days_left
 
         return qs
-    
+
     def get_context_data(self, **kwargs):
         """
         一覧画面で使う選択肢を渡す：
@@ -193,18 +221,18 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
         household = self.request.user.household
-        
+
         # プルダウン用カテゴリ（自分の世帯だけ）
         context["categories"] = Category.objects.filter(
-            household=self.request.user.household
+            household=household
         ).order_by("name")
 
-        # 追加：保管場所候補（世帯内のみ）
+        # 保管場所候補（世帯内のみ）
         context["storages"] = StorageLocation.objects.filter(
             household=household
-            ).order_by("name")
+        ).order_by("name")
 
-        # 既存/追加：選択状態保持（テンプレでselectedに使う）
+        # 選択状態保持（テンプレでselectedに使う）
         context["selected_category"] = self.request.GET.get("category", "")
         context["selected_storage"] = self.request.GET.get("storage", "")
 
