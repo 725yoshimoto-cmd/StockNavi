@@ -67,6 +67,10 @@ from inventory.utils import judge_alert
 # 「世帯で1つだけ」の設定値を在庫一覧の判定基準として使う
 from accounts.models import AlertSetting
 
+# ----------------------------
+# ★追加：在庫フォーム（期限入力対応）
+# ----------------------------
+from .forms import InventoryItemForm
 
 # ----------------------------
 # ポートフォリオトップ画面
@@ -247,9 +251,9 @@ class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView
     - get_form() で Category の候補を「自分の世帯だけ」に絞る（他世帯カテゴリ混入防止）
     """
     model = InventoryItem
-    # 入力させたい項目だけ表示（categoryはプルダウンになる）
-    fields = ["category", "storage_location", "name", "quantity"]  # 入力させたい項目
+    form_class = InventoryItemForm  # ★追加：この1行がポイント
     template_name = "inventory/item_form.html"
+
     
     # success_url は reverse_lazy 推奨（URL変更にも強い）
     success_url = reverse_lazy("inventory_list")  # ← urls.py の name に合わせてね
@@ -296,7 +300,7 @@ class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView
     - household未設定ユーザー対策：dispatch()で早期ガード（安全）
     """
     model = InventoryItem
-    fields = ["category", "storage_location", "name", "quantity"]
+    form_class = InventoryItemForm  # ★fieldsの代わりにこれ
     template_name = "inventory/item_form.html"
     success_url = "/inventory/"
 

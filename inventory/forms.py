@@ -1,19 +1,23 @@
+# inventory/forms.py
 from django import forms
-from .models import InventoryItem, Category
+from .models import InventoryItem
+
 
 class InventoryItemForm(forms.ModelForm):
+    """
+    在庫登録/編集フォーム
+    - expiry_date はスマホで入力しやすいように date picker にする
+    """
     class Meta:
         model = InventoryItem
         fields = [
-            "name",
             "category",
             "storage_location",
-            "content_amount",  # ← 追加
+            "name",
             "quantity",
+            "content_amount",
+            "expiry_date",
         ]
-        
-    def __init__(self, *args, **kwargs):
-        household = kwargs.pop("household", None)
-        super().__init__(*args, **kwargs)
-        if household:
-            self.fields["category"].queryset = Category.objects.filter(household=household)
+        widgets = {
+            "expiry_date": forms.DateInput(attrs={"type": "date"}),
+        }

@@ -37,6 +37,12 @@ class InventoryItem(models.Model):
     # 既存データがあっても落ちないよう default を入れる
     content_amount = models.FloatField(default=1.0)
 
+    # ★追加：期限日（アラート判定用）
+    expiry_date = models.DateField(
+        "賞味期限",
+        null=True,   # 既存データがあるため必須にしない
+        blank=True   # フォーム未入力を許可
+    )
     # もし unit を今すぐ増やすと工数増えるので、今回は最小で content_amount のみ追加
     def __str__(self):
         return self.name
