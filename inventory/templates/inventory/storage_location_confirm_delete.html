@@ -1,5 +1,5 @@
+{# inventory/templates/inventory/storage_location_confirm_delete.html #}
 {% extends "base.html" %}
-
 {% block content %}
   <h1>保管場所を削除</h1>
 
@@ -10,7 +10,5 @@
     <button type="submit">削除する</button>
   </form>
 
-  <p>
-    <a href="{% url 'inventory:storage_location_list' %}">キャンセル</a>
-  </p>
+  <a href="{% url 'inventory:storage_location_list' %}">キャンセル</a>
 {% endblock %}
