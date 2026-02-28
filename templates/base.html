@@ -5,63 +5,46 @@
   <title>{% block title %}StockNavi{% endblock %}</title>
 
   <style>
-    /* 共通ボタン */
     .btn {
       display: inline-block;
       padding: 8px 12px;
       border: 1px solid #333;
       border-radius: 8px;
       text-decoration: none;
-      color: #000; /* ★文字色を明示（白背景で見えない事故防止） */
+      color: #000;
     }
-
-    /* 危険操作用（削除など） */
     .btn-danger { border-color: #b00; }
-
-    /* 画面幅を整える枠 */
     .wrap {
       max-width: 900px;
       margin: 20px auto;
       padding: 0 12px;
     }
-
-    /* ナビのリンク間隔 */
     .nav a { margin-right: 10px; }
-
-    /* ★ナビが他要素に埋もれてクリックできない時の保険 */
-    .nav {
-      position: relative;
-      z-index: 10;
-    }
+    .nav { position: relative; z-index: 10; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
 
-{% if user.is_authenticated %}
-  <nav>
-    <!-- ★ ナビ：ログイン中だけ全ページ共通のメニュー -->
-    <div class="nav">
-      <a class="btn" href="{% url 'inventory:inventory_list' %}">在庫</a>
-      <a class="btn" href="{% url 'inventory:balance' %}">バランス確認</a>
-      <a class="btn" href="{% url 'inventory:category_list' %}">分類</a>
-      <a class="btn" href="{% url 'inventory:storage_location_list' %}">保管場所</a>
-      <a class="btn" href="{% url 'inventory:memo_list' %}">メモ</a>
-      <a class="btn" href="{% url 'accounts:mypage' %}">マイページ</a>
-      <a class="btn" href="/admin/">管理</a>
-    </div>
+    {% if user.is_authenticated %}
+      <nav>
+        <div class="nav">
+          <a class="btn" href="{% url 'inventory:inventory_list' %}">在庫</a>
+          <a class="btn" href="{% url 'inventory:balance' %}">バランス確認</a>
+          <a class="btn" href="{% url 'inventory:category_list' %}">分類</a>
+          <a class="btn" href="{% url 'inventory:storage_location_list' %}">保管場所</a>
+          <a class="btn" href="{% url 'inventory:memo_list' %}">メモ</a>
+          <a class="btn" href="{% url 'accounts:mypage' %}">マイページ</a>
+          <a class="btn" href="/admin/">管理</a>
+        </div>
+      </nav>
+      <hr>
+    {% endif %}
 
-        <hr>
+    <!-- ★本文はログイン状態に関係なく必ず描画する -->
+    {% block content %}{% endblock %}
 
-        <!-- ★各ページの中身が差し込まれる場所（ここが無いと真っ白になりやすい） -->
-        {% block content %}{% endblock %}
-
-    </div>
-  </nav>
-{% endif %}
-{% if user.is_authenticated %}
-  <a href="{% url 'accounts:mypage' %}">マイページ</a>
-{% endif %}
+  </div>
 </body>
 </html>
