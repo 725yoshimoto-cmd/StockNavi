@@ -78,22 +78,16 @@
       【未分類】
     {% endif %}
 
-    <!--★ アラート表示（赤優先）-->
+    {# ★ アラート表示（赤優先） #}
     {% if item.is_alert_red %}
-      <span style="color: red; font-weight: bold;">🔔</span>
-    {% elif item.is_alert_blue %}
-      <span style="color: blue; font-weight: bold;">🔔</span>
+      <span class="badge badge-danger">期限切れ / 期限間近</span>
+
+    {% elif item.is_alert_blue and item.days_left is not None %}
+      {# days_left が取れているときだけ表示（Noneのときは出さない） #}
+      <span class="badge badge-info">残り {{ item.days_left }} 日</span>
     {% endif %}
 
-    <span
-      {% if item.is_alert_red %}
-        style="color: red; font-weight: bold;"
-      {% elif item.is_alert_blue %}
-        style="color: blue; font-weight: bold;"
-      {% endif %}
-    >    
-      {{ item.name }}
-    </span>
+    <span>{{ item.name }}</span>
     /
     {{ item.quantity }}
 
@@ -121,4 +115,19 @@
   <p>在庫がまだありません。</p>
 {% endfor %}
 
+<style>
+  .badge{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:999px;
+    font-size:12px;
+    border:1px solid #ddd;
+    background:#fff;
+    margin-right:6px;
+  }
+  .badge-danger{ border-color:#e88; }
+  .badge-info{ border-color:#6aa; }
+</style>
+
 {% endblock %}
+

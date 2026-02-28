@@ -1,12 +1,8 @@
-# ----------------------------
 # Django標準の便利機能の読み込み
-# ----------------------------
 from django.shortcuts import render
 from django.http import HttpResponse
 
-# ----------------------------
 # 自分のアプリのモデル
-# ----------------------------
 from .models import InventoryItem, Category, StorageLocation, Memo
 from .mixins import HouseholdRequiredMixin  # 既に使ってるやつ
 
@@ -48,29 +44,25 @@ from .services.balance import calc_category_amounts
 # ★ 追加：今日の日付（タイムゾーン安全）を扱うため
 from django.utils import timezone
 
-# ----------------------------
 # ★ 追加：カスタムユーザー登録フォームを読み込む
-# ----------------------------
 # accountsアプリで作成したフォームを使用する
 # ※ デフォルトのUserCreationFormは使わない
 from accounts.forms import CustomUserCreationForm
 
-# ----------------------------
 # ★ 追加：アラート判定ユーティリティを読み込む
-# ----------------------------
 # 在庫1件ごとの赤/青判定を共通化して再利用しやすくする
 from inventory.utils import judge_alert
 
-# ----------------------------
 # ★ 追加：世帯ごとの閾値（AlertSetting）を取得する
-# ----------------------------
 # 「世帯で1つだけ」の設定値を在庫一覧の判定基準として使う
 from accounts.models import AlertSetting
 
-# ----------------------------
 # ★追加：在庫フォーム（期限入力対応）
-# ----------------------------
 from .forms import InventoryItemForm
+
+# アラート判定
+from datetime import date, timedelta
+
 
 # ----------------------------
 # ポートフォリオトップ画面
@@ -134,95 +126,87 @@ class SignupView(CreateView):
 # ----------------------------
 class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     """
-    在庫一覧ページ
+    在庫一覧ページ（スマホ前提）
 
     役割：
-    - ログインユーザーの世帯(household)の在庫だけを表示
+    - ログインユーザーの世帯の在庫だけ表示（他世帯混入防止）
     - GETパラメータ (?category=, ?storage=) があれば絞り込み
-    - 各在庫にアラート判定フラグを付与してテンプレへ渡す
+    - 各在庫に「アラート判定結果（赤/青/残日数）」を付与してテンプレへ渡す
+
+    ※提出直前のため、設定テーブル(AlertSetting)は追加せず
+      しきい値は固定値で判定する（DB変更なし・差分小）
     """
     model = InventoryItem
     template_name = "inventory/list.html"
     context_object_name = "items"
 
-def get_queryset(self):
-    """
-    一覧取得＋アラート判定付与
-    手順：
-    1. 世帯で在庫を絞る
-    2. GETパラメータがあれば絞り込み
-    3. 今日の日付を取得
-    4. AlertSetting取得
-    5. 各itemにフラグを付与
-    """
-    household = self.request.user.household
-
-    # ① 世帯で在庫を絞り込む（他世帯の混入防止）
-    qs = (
-        InventoryItem.objects
-        .filter(household=household)
-        .select_related("storage_location", "category")  # テンプレ表示が多いのでN+1予防（安全）
-    )
-
-    # ② GETパラメータがあれば絞り込み（※1回だけにする）
-    category_id = self.request.GET.get("category")
-    if category_id:
-        qs = qs.filter(category_id=category_id)
-
-    storage_id = self.request.GET.get("storage")
-    if storage_id:
-        qs = qs.filter(storage_location_id=storage_id)
-
-    # ③ 今日の日付を取得（タイムゾーン安全）
-    today = timezone.localdate()
-
-    # ④ 世帯のアラート設定を取得（無ければ作る）
-    alert_setting, _ = AlertSetting.objects.get_or_create(
-        household=household,
-        defaults={
-            "quantity_threshold": 1,
-            "expiry_days": 30,
-        }
-    )
-    quantity_threshold = alert_setting.quantity_threshold
-    expiry_days = alert_setting.expiry_days
-
-    # ⑤ 各在庫にアラート判定を付与（Templateは表示だけ）
-    for item in qs:
-        result = judge_alert(
-            quantity=item.quantity,
-            expiry_date=item.expiry_date,
-            today=today,
-            quantity_threshold=quantity_threshold,
-            expiry_days=expiry_days,
-        )
-        item.is_alert_red = result.is_red
-        item.is_alert_blue = result.is_blue
-        item.days_left = result.days_left
-
-    return qs
-
-def get_context_data(self, **kwargs):
+    def get_queryset(self):
         """
-        一覧画面で使う選択肢を渡す：
-        - Category候補（世帯内のみ）
-        - StorageLocation候補（世帯内のみ）
-        - 現在選択中のGET値（selected保持）
+        一覧取得 + アラート判定付与（DB変更なし）
+
+        手順：
+        1) 世帯で在庫を絞る
+        2) GETパラメータがあれば絞り込み
+        3) 今日の日付を取得（timezone安全）
+        4) アラート判定の「しきい値」を固定値で用意
+        5) 各 item にアラート結果を付与（テンプレは表示だけ）
+        """
+        household = self.request.user.household
+
+        # 1) 世帯で在庫を絞り込む（他世帯混入防止）
+        qs = (
+            InventoryItem.objects
+            .filter(household=household)
+            .select_related("storage_location", "category")  # N+1対策（安全）
+        )
+
+        # 2) GETパラメータによる絞り込み（分類）
+        category_id = self.request.GET.get("category")
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+
+        # 2) GETパラメータによる絞り込み（保管場所）
+        storage_id = self.request.GET.get("storage")
+        if storage_id:
+            qs = qs.filter(storage_location_id=storage_id)
+
+        # 3) 今日の日付（タイムゾーン安全）
+        today = timezone.localdate()
+
+        # 4) しきい値（DB変更なし・固定値）
+        # ※あとで「設定一覧」から変更できるようにしたくなったら
+        #   AlertSettingモデルを追加してここを差し替える
+        quantity_threshold = 1   # 数量が1以下なら注意（例）
+        expiry_days = 30         # 期限が30日以内なら注意（例）
+
+        # 5) 各在庫にアラート判定を付与（テンプレは表示だけ）
+        for item in qs:
+            result = judge_alert(
+                quantity=item.quantity,
+                expiry_date=item.expiry_date,
+                today=today,
+                quantity_threshold=quantity_threshold,
+                expiry_days=expiry_days,
+            )
+
+            # テンプレで参照する属性を付与（DBには保存しない）
+            item.is_alert_red = result.is_red
+            item.is_alert_blue = result.is_blue
+            item.days_left = result.days_left
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        """
+        一覧画面で使う選択肢を渡す（フィルタ用プルダウン）
         """
         context = super().get_context_data(**kwargs)
         household = self.request.user.household
 
-        # プルダウン用カテゴリ（自分の世帯だけ）
-        context["categories"] = Category.objects.filter(
-            household=household
-        ).order_by("name")
+        context["categories"] = Category.objects.filter(household=household).order_by("name")
+        context["storages"] = StorageLocation.objects.filter(household=household).order_by("name")
 
-        # 保管場所候補（世帯内のみ）
-        context["storages"] = StorageLocation.objects.filter(
-            household=household
-        ).order_by("name")
-
-        # 選択状態保持（テンプレでselectedに使う）
+        # 選択状態保持（テンプレで selected に使う）
         context["selected_category"] = self.request.GET.get("category", "")
         context["selected_storage"] = self.request.GET.get("storage", "")
 
