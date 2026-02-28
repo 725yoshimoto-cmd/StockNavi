@@ -60,3 +60,18 @@ class AlertSettingView(LoginRequiredMixin, HouseholdRequiredMixin, View):
         # 成功レスポンス（トースト表示用）
         return JsonResponse({"ok": True, "message": "アラート設定を保存しました"})
 
+# ----------------------------
+# ★ マイページ
+# ----------------------------
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+
+class MyPageView(LoginRequiredMixin, TemplateView):
+    """
+    マイページ
+    - 世帯情報表示
+    - アラート設定への導線
+    - ログアウト導線
+    """
+    template_name = "accounts/mypage.html"

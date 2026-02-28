@@ -145,84 +145,64 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     template_name = "inventory/list.html"
     context_object_name = "items"
 
-    def get_queryset(self):
-    
-        # ★追加：ログインユーザーの世帯を変数に入れて使い回す
-        household = self.request.user.household
-        
-        """
-        一覧取得＋アラート判定付与
-        手順：
-        1. 世帯で在庫を絞る
-        2. GETパラメータがあれば絞り込み
-        3. 今日の日付を取得
-        4. AlertSetting取得
-        5. 各itemにフラグを付与
-        """
-        
-        # ① 世帯で在庫を絞り込む（他世帯の混入防止）
-        qs = InventoryItem.objects.filter(
-            household=self.request.user.household
+def get_queryset(self):
+    """
+    一覧取得＋アラート判定付与
+    手順：
+    1. 世帯で在庫を絞る
+    2. GETパラメータがあれば絞り込み
+    3. 今日の日付を取得
+    4. AlertSetting取得
+    5. 各itemにフラグを付与
+    """
+    household = self.request.user.household
+
+    # ① 世帯で在庫を絞り込む（他世帯の混入防止）
+    qs = (
+        InventoryItem.objects
+        .filter(household=household)
+        .select_related("storage_location", "category")  # テンプレ表示が多いのでN+1予防（安全）
+    )
+
+    # ② GETパラメータがあれば絞り込み（※1回だけにする）
+    category_id = self.request.GET.get("category")
+    if category_id:
+        qs = qs.filter(category_id=category_id)
+
+    storage_id = self.request.GET.get("storage")
+    if storage_id:
+        qs = qs.filter(storage_location_id=storage_id)
+
+    # ③ 今日の日付を取得（タイムゾーン安全）
+    today = timezone.localdate()
+
+    # ④ 世帯のアラート設定を取得（無ければ作る）
+    alert_setting, _ = AlertSetting.objects.get_or_create(
+        household=household,
+        defaults={
+            "quantity_threshold": 1,
+            "expiry_days": 30,
+        }
+    )
+    quantity_threshold = alert_setting.quantity_threshold
+    expiry_days = alert_setting.expiry_days
+
+    # ⑤ 各在庫にアラート判定を付与（Templateは表示だけ）
+    for item in qs:
+        result = judge_alert(
+            quantity=item.quantity,
+            expiry_date=item.expiry_date,
+            today=today,
+            quantity_threshold=quantity_threshold,
+            expiry_days=expiry_days,
         )
+        item.is_alert_red = result.is_red
+        item.is_alert_blue = result.is_blue
+        item.days_left = result.days_left
 
-        # ★ 追加：GETパラメータがあれば絞り込み（先に反映してから判定する）
-        # ?category= の値（カテゴリID）を取得
-        category_id = self.request.GET.get("category")
-        if category_id:
-            qs = qs.filter(category_id=category_id)
+    return qs
 
-        # ?storage= の値（保管場所ID）を取得
-        storage_id = self.request.GET.get("storage")
-        if storage_id:
-            qs = qs.filter(storage_location_id=storage_id)
-
-        # ② GETパラメータがあれば絞り込み（テンプレのUIと整合させる）
-        category_id = self.request.GET.get("category")
-        if category_id:
-            qs = qs.filter(category_id=category_id)
-
-        storage_id = self.request.GET.get("storage")
-        if storage_id:
-            qs = qs.filter(storage_location_id=storage_id)
-
-        # ※表示順が必要ならここで統一（例）
-        # qs = qs.order_by("expiry_date", "category__name")
-
-        # ③ 今日の日付を取得（タイムゾーン安全）
-        today = timezone.localdate()
-
-        # ④ 世帯のアラート設定を取得（無ければNone）
-        alert_setting, created = AlertSetting.objects.get_or_create(
-            household=household,
-            defaults={
-                "quantity_threshold": 1,   # 初期値（設計書通り）
-                "expiry_days": 30,         # 初期値（設計書通り）
-            }
-        )
-        
-       # 閾値を取得
-        quantity_threshold = alert_setting.quantity_threshold
-        expiry_days = alert_setting.expiry_days
-
-        # Templateは「表示」だけにしたいので、判定はここで完結させる
-        # ⑤ 各在庫にアラート判定を付与（※絞り込み後のqsに対して判定する）            result = judge_alert(
-        for item in qs:
-            result = judge_alert(
-                quantity=item.quantity,
-                expiry_date=item.expiry_date,  # ★期限フィールド未実装なら一旦None（落ちない応急処置）
-                today=today,
-                quantity_threshold=quantity_threshold,
-                expiry_days=expiry_days,
-            )
-
-            # テンプレで使えるように属性を生やす
-            item.is_alert_red = result.is_red
-            item.is_alert_blue = result.is_blue
-            item.days_left = result.days_left
-
-        return qs
-
-    def get_context_data(self, **kwargs):
+def get_context_data(self, **kwargs):
         """
         一覧画面で使う選択肢を渡す：
         - Category候補（世帯内のみ）
@@ -262,7 +242,7 @@ class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView
 
     
     # success_url は reverse_lazy 推奨（URL変更にも強い）
-    success_url = reverse_lazy("inventory_list")  # ← urls.py の name に合わせてね
+    success_url = reverse_lazy("inventory:inventory_list")  # ← urls.py の name に合わせてね
 
     def form_valid(self, form):
         """
@@ -577,3 +557,8 @@ class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
         # 他世帯のメモは削除できない（pk直打ち対策）
         return Memo.objects.filter(household=self.request.user.household)
 
+# ----------------------------
+# マイページ
+# ----------------------------
+class MyPageView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/mypage.html"

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>マイページ</h2>
+
+<p><strong>世帯名：</strong> {{ user.household.name }}</p>
+<p><strong>目標日数：</strong> {{ user.household.target_days }} 日</p>
+
+<hr>
+
+<p>
+  <a href="{% url 'accounts:alert_setting' %}">アラート設定</a>
+</p>
+
+<p>
+  <a href="{% url 'logout' %}">ログアウト</a>
+</p>
+
+{% endblock %}

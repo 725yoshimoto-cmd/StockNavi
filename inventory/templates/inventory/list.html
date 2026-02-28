@@ -91,25 +91,31 @@
       {% elif item.is_alert_blue %}
         style="color: blue; font-weight: bold;"
       {% endif %}
-    >
+    >    
       {{ item.name }}
     </span>
     /
     {{ item.quantity }}
 
-    {% if item.days_left is not None %}
-     <small>（あと{{ item.days_left }}日）</small>
+    {# ★追加：賞味期限の表示（未設定なら非表示でOK） #}
+    {% if item.expiry_date %}
+      <small>（賞味期限：{{ item.expiry_date|date:"Y-m-d" }}）</small>
     {% endif %}
-   
+
+    {# あと何日（Viewでdays_left付与済み想定） #}
+    {% if item.days_left is not None %}
+      <small>（あと{{ item.days_left }}日）</small>
+    {% endif %}
+
     {% if item.storage_location %}
-    （{{ item.storage_location.name }}）
+      （{{ item.storage_location.name }}）
     {% else %}
       （保管場所未設定）
     {% endif %}
 
     <a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
     <a href="{% url 'inventory:inventory_delete' item.pk %}">削除</a>
-  </p>
+    </p>
 
 {% empty %}
   <p>在庫がまだありません。</p>

@@ -8,7 +8,7 @@ urlpatterns = [
     # inventory
     path("inventory/", include("inventory.urls")),
 
-    # accounts（あなたの alert-setting を残す）
+    # accounts（あなたの alert_setting を残す）
     path("accounts/", include("accounts.urls")),
 
     # ----------------------------
