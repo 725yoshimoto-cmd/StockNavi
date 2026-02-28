@@ -29,82 +29,54 @@
 </div>
 
 <script>
-  // DOMが読み込まれてから動かす（スマホでも安全）
-  document.addEventListener("DOMContentLoaded", () => {
-    // ★ formを必ず取得（これが無いと form.addEventListener で落ちる）
-    const form = document.getElementById("alertSettingForm");
+/* ===== ① showMessage が無い場合の保険（必ず動く） ===== */
+if (typeof window.showMessage !== "function") {
+  window.showMessage = function (msg) {
+    alert(msg);
+  };
+}
 
-    // ★ Toast用の要素（IDはあなたのHTMLに合わせている想定）
-    // もしIDが違う場合は、alert_setting.html内の実際のIDに合わせてここだけ直す
-    const toastEl = document.getElementById("saveToast");
-    const toastBody = document.getElementById("toastBody");
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("alertSettingForm");
+  if (!form) return;
 
-    // もし form が取れないなら、ここで止める（デバッグに役立つ）
-    if (!form) {
-      console.error("alertSettingForm が見つかりません");
-      return;
+  /* ===== ② 同じイベントを二重登録しない保険 ===== */
+  if (form.dataset.bound === "1") return;
+  form.dataset.bound = "1";
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    /* ★ ③ 連打・二重送信防止（送信中はロック） */
+    if (form.dataset.sending === "1") return;
+    form.dataset.sending = "1";
+
+    const url = form.action;
+    const fd = new FormData(form);
+
+    const saveBtn = form.querySelector("button[type='submit'], input[type='submit']");
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        body: fd,
+      });
+
+      const data = await res.json();
+      console.log("alert save status:", res.status, "body:", data);
+
+      window.showMessage(data.message || "保存しました");
+    } catch (err) {
+      console.error(err);
+      window.showMessage("通信エラーが発生しました");
+    } finally {
+      form.dataset.sending = "0";
+      if (saveBtn) saveBtn.disabled = false;
     }
-
-    // メッセージ表示：Bootstrap ToastがあればToast、無ければalertで代替
-    function showMessage(msg) {
-      // toast要素があり、かつ bootstrap が使える場合のみToast
-      if (toastEl && toastBody && window.bootstrap && bootstrap.Toast) {
-        toastBody.textContent = msg;
-        new bootstrap.Toast(toastEl).show();
-      } else {
-        // 提出直前の保険：Bootstrap無しでも必ず表示される
-        alert(msg);
-      }
-    }
-
-    // CSRFトークンをCookieから取る（Djangoの定番）
-    function getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(";").shift();
-      return null;
-    }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const formData = new FormData(form);
-      const csrftoken = getCookie("csrftoken");
-
-      try {
-        const res = await fetch(form.action, {
-          method: "POST",
-          headers: {
-            "X-Requested-With": "XMLHttpRequest",
-            "X-CSRFToken": csrftoken,
-          },
-          body: formData,
-        });
-
-        // レスポンス本文をまずテキストで読む（JSONでもHTMLでも落ちない）
-        const text = await res.text();
-        console.log("alert save status:", res.status, "body:", text);
-
-        // 失敗（403/404/500など）
-        if (!res.ok) {
-          showMessage("入力内容を確認してください");
-          return;
-        }
-
-        // 成功：JSONなら message を表示、JSONでなくても「保存しました」
-        try {
-          const data = JSON.parse(text);
-          showMessage(data.message || "保存しました");
-        } catch {
-          showMessage("保存しました");
-        }
-
-      } catch (err) {
-        console.error(err);
-        showMessage("通信エラーが発生しました");
-      }
-    });
   });
+});
 </script>
 
 {% endblock %}
