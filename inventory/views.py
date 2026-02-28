@@ -357,7 +357,13 @@ class BalanceView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
             "total": total,
         })
         return ctx
-        
+
+# ----------------------------
+# 設定一覧（ログイン必須）
+# ----------------------------
+class SettingsListView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
+    template_name = "inventory/settings/index.html"
+                
 # ----------------------------
 # 分類（Category）一覧（ログイン必須）
 # ----------------------------

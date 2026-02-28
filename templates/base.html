@@ -28,16 +28,30 @@
   <div class="wrap">
 
     {% if user.is_authenticated %}
-      <nav>
-        <div class="nav">
-          <a class="btn" href="{% url 'inventory:inventory_list' %}">在庫</a>
-          <a class="btn" href="{% url 'inventory:balance' %}">バランス確認</a>
-          <a class="btn" href="{% url 'inventory:category_list' %}">分類</a>
-          <a class="btn" href="{% url 'inventory:storage_location_list' %}">保管場所</a>
-          <a class="btn" href="{% url 'inventory:memo_list' %}">メモ</a>
-          <a class="btn" href="{% url 'accounts:mypage' %}">マイページ</a>
-          <a class="btn" href="/admin/">管理</a>
-        </div>
+      <nav class="app-nav">
+        <a href="{% url 'inventory:inventory_list' %}"
+          class="{% if request.resolver_match.url_name == 'inventory_list' %}is-active{% endif %}">
+          在庫
+        </a>
+
+        <a href="{% url 'inventory:balance' %}"
+          class="{% if request.resolver_match.url_name == 'balance' %}is-active{% endif %}">
+          バランス
+        </a>
+
+        <a href="{% url 'inventory:memo_list' %}"
+          class="{% if request.resolver_match.url_name|default:''|slice:':4' == 'memo' %}is-active{% endif %}">
+          メモ
+        </a>
+
+        <a href="{% url 'inventory:settings' %}"
+          class="{% if request.resolver_match.url_name == 'settings' %}is-active{% endif %}">
+          設定一覧
+        </a>
+        
+        <a href="{% url 'accounts:mypage' %}">
+          マイページ
+        </a>
       </nav>
       <hr>
     {% endif %}

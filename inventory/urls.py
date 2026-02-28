@@ -50,6 +50,11 @@ urlpatterns = [
     path("memo/add/", views.MemoCreateView.as_view(), name="memo_add"),
     path("memo/<int:pk>/edit/", views.MemoUpdateView.as_view(), name="memo_edit"),
     path("memo/<int:pk>/delete/", views.MemoDeleteView.as_view(), name="memo_delete"),
+
+    # ----------------------------
+    # 設定一覧
+    # ----------------------------
+    path("settings/", views.SettingsListView.as_view(), name="settings"),
 ]
 
 
