@@ -1,133 +1,147 @@
 {% extends "base.html" %}
-
 {% block title %}在庫{% endblock %}
-
 {% block content %}
-<!--
-在庫一覧ページ（inventory/list.html）
-
-目的：
-- base.html を継承して、全ページ共通のナビ（在庫/メモ/管理/ログアウト）を表示する
-- 在庫を一覧表示し、カテゴリ未設定の場合は「未分類」と表示する
-- 一覧の先頭に「在庫を追加」リンクを置く
--->
 
 <h1>在庫一覧</h1>
-<!-- ----------------------------
-カテゴリ絞り込みフォーム
-- method="get" にするとURLに ?category= が付く
-- selected_category と categories を使ってプルダウンを作る
------------------------------ -->
-<form method="get">
 
-  <!-- 分類 -->
+<form method="get">
   <label>分類</label>
   <select name="category">
     <option value="">すべて</option>
     {% for c in categories %}
-      <option value="{{ c.id }}"
-        {% if selected_category == c.id|stringformat:"s" %}
-          selected
-        {% endif %}
-      >
+      <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:"s" %}selected{% endif %}>
         {{ c.name }}
       </option>
     {% endfor %}
   </select>
 
-  <!-- 保管場所（今回追加） -->
   <label>保管場所</label>
   <select name="storage">
     <option value="">すべて</option>
     {% for s in storages %}
-      <option value="{{ s.id }}"
-        {% if selected_storage == s.id|stringformat:"s" %}
-          selected
-        {% endif %}
-      >
+      <option value="{{ s.id }}" {% if selected_storage == s.id|stringformat:"s" %}selected{% endif %}>
         {{ s.name }}
       </option>
     {% endfor %}
   </select>
 
   <button class="btn" type="submit">絞り込み</button>
-
-  <!-- 絞り込み解除（categoryパラメータ無しで /inventory/ に戻す） -->
   <a class="btn" href="{% url 'inventory:inventory_list' %}">解除</a>
 </form>
 
 <hr>
 
-<!--
-一覧の集計表示
-- View側で total_items / total_quantity を渡しているのでここで表示できる
--->
-<p>
-  合計：{{ total_items }}件 / 数量合計：{{ total_quantity }}
-</p>
-
-<!-- 在庫追加リンク（urls.py の name="inventory_add" を参照） -->
+<p>合計：{{ total_items }}件 / 数量合計：{{ total_quantity }}</p>
 <p><a href="{% url 'inventory:inventory_add' %}">＋在庫を追加</a></p>
 
-{% for item in object_list %}
-  <p>
-    <!-- カテゴリ表示：FKなので name を表示（未設定なら未分類） -->
-    {% if item.category %}
-      【{{ item.category.name }}】
-    {% else %}
-      【未分類】
-    {% endif %}
-
-    {# ★ アラート表示（赤優先） #}
-    {% if item.is_alert_red %}
-      <span class="badge badge-danger">期限切れ / 期限間近</span>
-
-    {% elif item.is_alert_blue and item.days_left is not None %}
-      {# days_left が取れているときだけ表示（Noneのときは出さない） #}
-      <span class="badge badge-info">残り {{ item.days_left }} 日</span>
-    {% endif %}
-
-    <span>{{ item.name }}</span>
-    /
-    {{ item.quantity }}
-
-    {# ★追加：賞味期限の表示（未設定なら非表示でOK） #}
-    {% if item.expiry_date %}
-      <small>（賞味期限：{{ item.expiry_date|date:"Y-m-d" }}）</small>
-    {% endif %}
-
-    {# あと何日（Viewでdays_left付与済み想定） #}
-    {% if item.days_left is not None %}
-      <small>（あと{{ item.days_left }}日）</small>
-    {% endif %}
-
-    {% if item.storage_location %}
-      （{{ item.storage_location.name }}）
-    {% else %}
-      （保管場所未設定）
-    {% endif %}
-
-    <a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
-    <a href="{% url 'inventory:inventory_delete' item.pk %}">削除</a>
-    </p>
-
-{% empty %}
-  <p>在庫がまだありません。</p>
-{% endfor %}
-
+<!--見た目（CSS）は「1回だけ」ここに置く-->
 <style>
-  .badge{
+  .item-card{
+    border:1px solid #ddd;
+    border-radius:12px;
+    padding:10px 12px;
+    margin:10px 0;
+    background:#fff;
+  }
+  .row-top{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:6px;
+  }
+  .cat-tag{
     display:inline-block;
     padding:2px 8px;
     border-radius:999px;
     font-size:12px;
     border:1px solid #ddd;
-    background:#fff;
-    margin-right:6px;
+    vertical-align:middle;
   }
-  .badge-danger{ border-color:#e88; }
-  .badge-info{ border-color:#6aa; }
+  .alert-icon{
+    display:inline-block;
+    font-size:14px;
+    vertical-align:middle;
+  }
+  .alert-red{ color:#d00; font-weight:700; }
+  .alert-blue{ color:#06c; font-weight:700; }
+  .item-name{
+    font-weight:700;
+    font-size:16px;
+    line-height:1.2;
+  }
+  .meta{
+    font-size:12px;
+    color:#333;
+    margin-top:6px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 10px;
+  }
+  .meta span{
+    background:#f7f7f7;
+    border:1px solid #eee;
+    border-radius:999px;
+    padding:2px 8px;
+  }
+  .actions{
+    margin-top:8px;
+    display:flex;
+    gap:10px;
+  }
+  .actions a{ font-size:13px; }
 </style>
 
-{% endblock %}
+<!--在庫一覧（カード表示）-->
+{% for item in items %}
+  <div class="item-card">
 
+    <div class="row-top">
+      {% if item.category %}
+        <span class="cat-tag" style="background: {{ item.category.color|default:'#f1e8ff' }};">
+          {{ item.category.name }}
+        </span>
+      {% else %}
+        <span class="cat-tag" style="background:#eee;">未分類</span>
+      {% endif %}
+
+      {% if item.is_alert_red %}
+        <span class="alert-icon alert-red" title="アラート（在庫0 または 期限0日）">🔔</span>
+      {% elif item.is_alert_blue %}
+        <span class="alert-icon alert-blue" title="注意（設定した個数・期限内）">🔔</span>
+      {% endif %}
+
+      <span class="item-name">{{ item.name }}</span>
+    </div>
+
+    <div class="meta">
+      <span>数量：{{ item.quantity }}</span>
+
+      {% if item.expiry_date %}
+        <span>賞味期限：{{ item.expiry_date }}</span>
+      {% else %}
+        <span>賞味期限：未設定</span>
+      {% endif %}
+
+      {% if item.days_left is not None %}
+        <span>残り：{{ item.days_left }}日</span>
+      {% endif %}
+
+      {% if item.storage_location %}
+        <span>保管：{{ item.storage_location.name }}</span>
+      {% else %}
+        <span>保管：未設定</span>
+      {% endif %}
+    </div>
+
+    <div class="actions">
+      <a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
+      <a href="{% url 'inventory:inventory_delete' item.pk %}">削除</a>
+    </div>
+
+  </div>
+{% empty %}
+  <p>在庫がありません</p>
+{% endfor %}
+
+{% endblock %}

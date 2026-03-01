@@ -3,9 +3,14 @@
 <h1>設定一覧</h1>
 
 <ul>
-  <li>分類/目標</li>
-  <li> 保管場所</li>
-  <li>アラート</li>
+  {# 分類：今ある（category/list.html があるのでURLがあるはず） #}
+  <li><a href="{% url 'inventory:category_list' %}">分類/目標</a></li>
+
+  {# 保管場所：storage_location_list.html があるのでURLがあるはず #}
+  <li><a href="{% url 'inventory:storage_location_list' %}">保管場所</a></li>
+
+  {# アラート：URL名が未確定なので「仮リンクをやめて」エラー回避 #}
+  <li>アラート（準備中）</li>
 </ul>
 
 {% endblock %}

@@ -81,13 +81,17 @@ class Category(models.Model):
     ]
     goal_unit = models.CharField(max_length=10, choices=GOAL_UNIT_CHOICES, default="PCS")
 
-    # 分類カラー（円グラフ等の表示で利用）:contentReference[oaicite:9]{index=9}
-    COLOR_CHOICES = [
-        ("red", "赤"), ("pink", "ピンク"), ("orange", "オレンジ"), ("yellow", "黄色"),
-        ("lime", "黄緑"), ("green", "緑"), ("sky", "水色"), ("blue", "青"),
-        ("navy", "紺"), ("purple", "紫"), ("brown", "茶色"), ("gray", "グレー"),
-    ]
-    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default="gray")
+    # ----------------------------
+    # 分類カラー（HEX 形式） 例: "#ff0000"
+    # - フロントで色選択できるようにする
+    # - default を入れておくと既存データでも migration で事故らない
+    # ----------------------------
+    color = models.CharField(
+        max_length=7,
+        blank=True,
+        default="#f1e8ff",  # 既定色（薄い紫）
+        help_text="例：#ffcc00"
+    )
 
     def __str__(self):
         return self.name

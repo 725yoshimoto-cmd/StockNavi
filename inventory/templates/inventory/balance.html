@@ -65,9 +65,14 @@
 
 <p>合計：{{ total|floatformat:1 }}</p>
 
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-  // Djangoテンプレの rows から配列を作る
+  // ----------------------------
+  // Djangoテンプレから配列を作成
+  // ----------------------------
   const labels = [
     {% for r in rows %}
       "{{ r.name }}",
@@ -80,15 +85,22 @@
     {% endfor %}
   ];
 
-  // 色は、まずはカテゴリの color を文字で持っているので簡易にCSS色へ変換
-  // 今回は安全に "gray" fallback を用意しておく
-  const colors = [
+  // ----------------------------
+  // 色：DBの color をそのまま使う
+  // r.color が空のときは fallback
+  // ----------------------------
+  const bgColors = [
     {% for r in rows %}
-      "{{ r.color|default:'gray' }}",
+      "{{ r.color|default:'#f1e8ff' }}",
     {% endfor %}
   ];
 
+  // canvas取得（id="balancePie" を想定）
   const ctx = document.getElementById("balancePie");
+
+  // ----------------------------
+  // Chart 初期化（= new Chart が初期化コード）
+  // ----------------------------
   if (ctx) {
     new Chart(ctx, {
       type: "pie",
@@ -96,7 +108,9 @@
         labels: labels,
         datasets: [{
           data: data,
-          backgroundColor: colors,
+          backgroundColor: bgColors,
+          borderColor: "#fff",
+          borderWidth: 1,
         }]
       },
       options: {
@@ -107,5 +121,6 @@
     });
   }
 </script>
+
 
 {% endblock %}

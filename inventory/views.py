@@ -38,7 +38,6 @@ from django.db.models import Sum, Count
 from django.utils.http import urlencode  # なくてもOKだが後で便利
 
 # バランス確認
-from .models import StorageLocation
 from .services.balance import calc_category_amounts
 
 # ★ 追加：今日の日付（タイムゾーン安全）を扱うため
@@ -49,13 +48,12 @@ from django.utils import timezone
 # ※ デフォルトのUserCreationFormは使わない
 from accounts.forms import CustomUserCreationForm
 
-# ★ 追加：アラート判定ユーティリティを読み込む
-# 在庫1件ごとの赤/青判定を共通化して再利用しやすくする
-from inventory.utils import judge_alert
-
 # ★ 追加：世帯ごとの閾値（AlertSetting）を取得する
 # 「世帯で1つだけ」の設定値を在庫一覧の判定基準として使う
-from accounts.models import AlertSetting
+try:
+    from accounts.models import AlertSetting
+except Exception:
+    AlertSetting = None
 
 # ★追加：在庫フォーム（期限入力対応）
 from .forms import InventoryItemForm
@@ -128,89 +126,127 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     """
     在庫一覧ページ（スマホ前提）
 
-    役割：
-    - ログインユーザーの世帯の在庫だけ表示（他世帯混入防止）
-    - GETパラメータ (?category=, ?storage=) があれば絞り込み
-    - 各在庫に「アラート判定結果（赤/青/残日数）」を付与してテンプレへ渡す
+    このクラスの役割：
+    ① ログイン中ユーザーの「世帯」に属する在庫だけ表示する
+       → 他世帯のデータ混入を防ぐ（セキュリティ）
+    ② GETパラメータ (?category=, ?storage=) があれば絞り込み
+    ③ 各在庫に「アラート判定結果（赤/青）」と「残日数」を付与して
+       テンプレートに渡す
 
-    ※提出直前のため、設定テーブル(AlertSetting)は追加せず
-      しきい値は固定値で判定する（DB変更なし・差分小）
+    ※ データベースには保存せず、
+       表示用の一時的な属性を item に追加している
     """
     model = InventoryItem
     template_name = "inventory/list.html"
-    context_object_name = "items"
+    context_object_name = "items"   # テンプレ側で {% for item in items %} と書ける
 
+    # ① 一覧の取得（データ取得部分）
     def get_queryset(self):
         """
-        一覧取得 + アラート判定付与（DB変更なし）
-
-        手順：
-        1) 世帯で在庫を絞る
-        2) GETパラメータがあれば絞り込み
-        3) 今日の日付を取得（timezone安全）
-        4) アラート判定の「しきい値」を固定値で用意
-        5) 各 item にアラート結果を付与（テンプレは表示だけ）
+        在庫データを取得する部分。
+        ここでは「どの在庫を表示するか」だけを決める。
         """
+        # ログイン中ユーザーの世帯を取得
         household = self.request.user.household
-
-        # 1) 世帯で在庫を絞り込む（他世帯混入防止）
+                
+        # 世帯でフィルタ（他世帯混入防止）
         qs = (
             InventoryItem.objects
             .filter(household=household)
-            .select_related("storage_location", "category")  # N+1対策（安全）
+            .select_related("storage_location", "category")  # パフォーマンス最適化
         )
 
-        # 2) GETパラメータによる絞り込み（分類）
+
+        # GETパラメータによる絞り込み（分類）
         category_id = self.request.GET.get("category")
         if category_id:
             qs = qs.filter(category_id=category_id)
 
-        # 2) GETパラメータによる絞り込み（保管場所）
+        # GETパラメータによる絞り込み（保管場所）
         storage_id = self.request.GET.get("storage")
         if storage_id:
             qs = qs.filter(storage_location_id=storage_id)
-
-        # 3) 今日の日付（タイムゾーン安全）
-        today = timezone.localdate()
-
-        # 4) しきい値（DB変更なし・固定値）
-        # ※あとで「設定一覧」から変更できるようにしたくなったら
-        #   AlertSettingモデルを追加してここを差し替える
-        quantity_threshold = 1   # 数量が1以下なら注意（例）
-        expiry_days = 30         # 期限が30日以内なら注意（例）
-
-        # 5) 各在庫にアラート判定を付与（テンプレは表示だけ）
-        for item in qs:
-            result = judge_alert(
-                quantity=item.quantity,
-                expiry_date=item.expiry_date,
-                today=today,
-                quantity_threshold=quantity_threshold,
-                expiry_days=expiry_days,
-            )
-
-            # テンプレで参照する属性を付与（DBには保存しない）
-            item.is_alert_red = result.is_red
-            item.is_alert_blue = result.is_blue
-            item.days_left = result.days_left
 
         return qs
 
     def get_context_data(self, **kwargs):
         """
-        一覧画面で使う選択肢を渡す（フィルタ用プルダウン）
+        テンプレート表示用の追加情報を作る場所。
+        - 絞り込みフォームの選択肢（categories, storages）
+        - 選択状態（selected_category, selected_storage）
+        - 集計（total_items, total_quantity）
+        - アラート判定（days_left, is_alert_red, is_alert_blue）
+        を context に詰める。
         """
-        context = super().get_context_data(**kwargs)
+
+        # まず親クラスの context を取得（これが超重要）
+        ctx = super().get_context_data(**kwargs)
+
         household = self.request.user.household
+         
+        # 絞り込みフォーム用の選択肢
+        ctx["categories"] = Category.objects.filter(household=household).order_by("name")
+        ctx["storages"] = StorageLocation.objects.filter(household=household).order_by("name")
 
-        context["categories"] = Category.objects.filter(household=household).order_by("name")
-        context["storages"] = StorageLocation.objects.filter(household=household).order_by("name")
+        # 今選ばれている値（テンプレの selected 用）
+        ctx["selected_category"] = self.request.GET.get("category", "")
+        ctx["selected_storage"] = self.request.GET.get("storage", "")
 
-        # 選択状態保持（テンプレで selected に使う）
-        context["selected_category"] = self.request.GET.get("category", "")
-        context["selected_storage"] = self.request.GET.get("storage", "")
+        # 一覧（items）を取り出す
+        # context_object_name="items" の場合は ctx["items"]
+        # 念のため object_list も拾えるようにする
+        items = ctx.get("items") or ctx.get("object_list") or []
+    
+        # 集計（件数 / 数量合計）
+        ctx["total_items"] = len(items)
+        ctx["total_quantity"] = sum((i.quantity or 0) for i in items)
+        
+        # アラート判定
+        # （赤：在庫0 または 期限まで0日）
+        # （青：在庫<=1 または 期限まで30日以内）※固定値
+        today = timezone.localdate() # 今日の日付（タイムゾーン安全）
+        quantity_threshold = 1   # 数量が1以下なら「注意」
+        expiry_days_threshold = 30  # 期限が30日以内なら「注意」
 
-        return context
+        # 各在庫アイテムごとに判定を付与
+        for item in items:
+            
+            # 残り日数を計算（expiry_date がない場合は None）
+            days_left = None
+            if item.expiry_date:
+                # 今日との差分（日数）
+                days_left = (item.expiry_date - today).days
+
+            # テンプレで使えるように一時属性を追加
+            item.days_left = days_left
+            
+            # 赤アラート判定（最優先）
+            # 条件：
+            # ① 在庫が0
+            # ② 期限まで0日
+            is_red = (
+                item.quantity == 0
+                or (days_left is not None and days_left <= 0)
+            )
+            
+            # 青アラート判定（赤じゃない時だけ）
+            is_blue = False
+            if not is_red:
+                qty_hit = item.quantity <= quantity_threshold
+
+                day_hit = (
+                    days_left is not None
+                    and days_left <= expiry_days_threshold
+                )
+
+                # どちらかに該当すれば青
+                is_blue = qty_hit or day_hit
+                
+            # テンプレで参照する属性を追加
+            item.is_alert_red = is_red
+            item.is_alert_blue = is_blue
+
+        return ctx
         
 # ----------------------------
 # 在庫を追加する画面（ログイン必須）
@@ -373,19 +409,25 @@ class CategoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
 # 分類（Category）追加（ログイン必須）
 # ----------------------------
 class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
+    model = Category
     """
     カテゴリ追加ページ
     - household はユーザーに入力させず、自動でログインユーザーの世帯をセットする
     - 他世帯カテゴリを誤作成する事故を防ぐ
     """
-    model = Category
-    fields = ["name"]
+    
+    # ----------------------------
+    # フォームに表示する項目
+    # - name: 分類名
+    # - color: 分類カラー（今回追加）
+    # ----------------------------
+    fields = ["name", "color"]
     template_name = "category/form.html"
     success_url = reverse_lazy("inventory:category_list")
 
     def form_valid(self, form):
         """
-        保存前に household を自動セットする
+        保存前に household を自動セットする（世帯ひも付け漏れ防止）
         """
         form.instance.household = self.request.user.household
         return super().form_valid(form)
@@ -396,11 +438,12 @@ class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView)
 # ----------------------------
 class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     model = Category
-    fields = ["name"]
+    fields = ["name", "color"]
     template_name = "category/form.html"
     success_url = reverse_lazy("inventory:category_list")
 
     def get_queryset(self):
+        # 他世帯のカテゴリを編集できない
         return Category.objects.filter(household=self.request.user.household)
 
 

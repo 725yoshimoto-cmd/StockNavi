@@ -1,15 +1,47 @@
+{# templates/category/form.html #}
 {% extends "base.html" %}
-{% block title %}分類{% endblock %}
 {% block content %}
 
 <h1>分類</h1>
 
 <form method="post">
   {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">保存</button>
+
+  <!-- ----------------------------
+       分類名
+       ---------------------------- -->
+  <div>
+    <label for="{{ form.name.id_for_label }}">カテゴリ名：</label>
+    {{ form.name }}
+    {% if form.name.errors %}
+      <div style="color:red;">{{ form.name.errors }}</div>
+    {% endif %}
+  </div>
+
+  <!-- ----------------------------
+       分類カラー（HTML5 color picker）
+       - form.color.value が None のときもあるので default を用意
+       ---------------------------- -->
+  <div style="margin-top:12px;">
+    <label for="id_color">カラー：</label>
+    <input
+      type="color"
+      id="id_color"
+      name="color"
+      value="{{ form.color.value|default:'#f1e8ff' }}"
+    >
+    {% if form.color.errors %}
+      <div style="color:red;">{{ form.color.errors }}</div>
+    {% endif %}
+  </div>
+
+  <div style="margin-top:16px;">
+    <button type="submit">保存</button>
+  </div>
 </form>
 
-<p><a href="{% url 'inventory:category_list' %}">一覧へ戻る</a></p>
+<p style="margin-top:16px;">
+  <a href="{% url 'inventory:category_list' %}">一覧へ戻る</a>
+</p>
 
 {% endblock %}

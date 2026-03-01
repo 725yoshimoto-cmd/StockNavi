@@ -8,6 +8,8 @@
 目的：
 - 自分の世帯のカテゴリを一覧表示する
 - 「分類を追加」へ導線を置く
+- 分類カラー（Category.color）を色チップで見える化する
+  ※DBにcolorが無い/空でも落ちないよう fallback を用意
 -->
 
 <h1>分類一覧</h1>
@@ -17,7 +19,29 @@
 
 {% for c in object_list %}
   <p>
+    <!-- ----------------------------
+         色チップ（Category.color を表示）
+         - display:inline-block で丸い点にする
+         - color が空のときは default 色にする
+         ---------------------------- -->
+    <span
+      style="
+        display:inline-block;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 1px solid #ccc;
+        background: {{ c.color|default:'#f1e8ff' }};
+        vertical-align: middle;
+        margin-right: 6px;
+      "
+      title="{{ c.color|default:'#f1e8ff' }}"
+    ></span>
+
+    <!-- 分類名 -->
     {{ c.name }}
+
+    <!-- 編集 / 削除 -->
     <a href="{% url 'inventory:category_edit' c.pk %}">編集</a>
     <a href="{% url 'inventory:category_delete' c.pk %}">削除</a>
   </p>
