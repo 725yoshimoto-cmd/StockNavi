@@ -454,23 +454,20 @@ class InventoryHistoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListV
 class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     template_name = "inventory/bulk_delete_confirm.html"
 
-    def post(self, request):
-        household = request.user.household
-        ids = request.POST.getlist("selected_ids")
+    def post(self, request, *args, **kwargs):
+        selected_ids = request.POST.getlist("selected_ids")
 
-        if not ids:
-            return redirect("inventory:inventory_list")
+        # ✅ 追加：チェック無しガード
+        if not selected_ids:
+            messages.warning(request, "削除する在庫を選択してください。")
+            return redirect(reverse("inventory:inventory_list") + "?select_mode=1")
 
         items = InventoryItem.objects.filter(
-            household=household,
-            id__in=ids
+            household=request.user.household,
+            id__in=selected_ids
         )
 
-        return render(request, self.template_name, {
-            "items": items,
-            "ids": ids
-        })
-
+        return render(request, "inventory/bulk_delete_confirm.html", {"items": items})
 
 # ----------------------------
 # 在庫を一括削除（実行）
@@ -489,29 +486,6 @@ class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin,
 
         return redirect("inventory:inventory_list")
     
-# ----------------------------
-# 在庫を一括削除（確認ページ表示）
-# ----------------------------
-class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
-    template_name = "inventory/bulk_delete_confirm.html"
-
-    def post(self, request):
-        household = request.user.household
-        ids = request.POST.getlist("selected_ids")
-
-        if not ids:
-            return redirect("inventory:inventory_list")
-
-        items = InventoryItem.objects.filter(
-            household=household,
-            id__in=ids
-        )
-
-        return render(request, self.template_name, {
-            "items": items,
-            "ids": ids
-        })
-
 
 # ----------------------------
 # 在庫を一括削除（実行）
@@ -529,22 +503,27 @@ class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin,
             ).delete()
 
         return redirect("inventory:inventory_list")
+
 # ----------------------------
 # 在庫を一括複製（確認ページ表示）
 # ----------------------------
 class InventoryBulkDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     template_name = "inventory/bulk_duplicate_confirm.html"
 
-    def post(self, request):
-        household = request.user.household
-        ids = request.POST.getlist("selected_ids")
+    def post(self, request, *args, **kwargs):
+        selected_ids = request.POST.getlist("selected_ids")
 
-        if not ids:
-            return redirect("inventory:inventory_list")
+        # ✅ 追加：チェック無しガード
+        if not selected_ids:
+            messages.warning(request, "複製する在庫を選択してください。")
+            return redirect(reverse("inventory:inventory_list") + "?select_mode=1")
 
-        items = InventoryItem.objects.filter(household=household, id__in=ids)
+        items = InventoryItem.objects.filter(
+            household=request.user.household,
+            id__in=selected_ids
+        )
 
-        return render(request, self.template_name, {"items": items, "ids": ids})
+        return render(request, "inventory/bulk_duplicate_confirm.html", {"items": items})
         
 # ----------------------------
 # 在庫を一括複製（実行）

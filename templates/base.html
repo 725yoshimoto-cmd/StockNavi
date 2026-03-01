@@ -75,6 +75,14 @@
       <hr>
     {% endif %}
 
+    {% if messages %}
+      <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    
     <!-- ★本文はログイン状態に関係なく必ず描画する -->
     {% block content %}{% endblock %}
 
