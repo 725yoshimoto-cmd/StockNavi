@@ -10,8 +10,10 @@
   <div>
     <p>
       {{ item.updated_at|date:"Y/m/d H:i" }} /
-      {{ item.name }} /
-      数量：{{ item.quantity }}
+      <a href="{% url 'inventory:inventory_detail' item.pk %}">
+        {{ item.name }}
+      </a>
+      / 数量：{{ item.quantity }}
     </p>
   </div>
 {% empty %}
