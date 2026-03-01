@@ -21,6 +21,25 @@
     }
     .nav a { margin-right: 10px; }
     .nav { position: relative; z-index: 10; }
+
+    /* カード全体の文字を赤/青にする（既存の色指定を上書きする） */
+    .item-card.text-alert-red,
+    .item-card.text-alert-red * {
+      color: #dc3545 !important;
+      font-weight: 600;
+    }
+
+    .item-card.text-alert-blue,
+    .item-card.text-alert-blue * {
+      color: #0d6efd !important;
+      font-weight: 600;
+    }
+
+    /* ただし、カテゴリタグの背景色はそのままにしたいので文字色だけ白に戻す（任意） */
+    .item-card.text-alert-red .cat-tag,
+    .item-card.text-alert-blue .cat-tag {
+      color: #fff !important;
+    }
   </style>
 </head>
 
@@ -48,7 +67,7 @@
           class="{% if request.resolver_match.url_name == 'settings' %}is-active{% endif %}">
           設定一覧
         </a>
-        
+
         <a href="{% url 'accounts:mypage' %}">
           マイページ
         </a>

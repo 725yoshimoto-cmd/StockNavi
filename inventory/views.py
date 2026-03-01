@@ -172,78 +172,95 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         - 絞り込みフォームの選択肢（categories, storages）
         - 選択状態（selected_category, selected_storage）
         - 集計（total_items, total_quantity）
-        - アラート判定（days_left, is_alert_red, is_alert_blue）
+        - アラート判定（days_left, is_red, is_blue）
         を context に詰める。
         """
-
         # まず親クラスの context を取得（これが超重要）
-        ctx = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
 
         household = self.request.user.household
-         
+
         # 絞り込みフォーム用の選択肢
-        ctx["categories"] = Category.objects.filter(household=household).order_by("name")
-        ctx["storages"] = StorageLocation.objects.filter(household=household).order_by("name")
+        context["categories"] = Category.objects.filter(household=household).order_by("name")
+        context["storages"] = StorageLocation.objects.filter(household=household).order_by("name")
 
         # 今選ばれている値（テンプレの selected 用）
-        ctx["selected_category"] = self.request.GET.get("category", "")
-        ctx["selected_storage"] = self.request.GET.get("storage", "")
+        context["selected_category"] = self.request.GET.get("category", "")
+        context["selected_storage"] = self.request.GET.get("storage", "")
 
         # 一覧（items）を取り出す
-        # context_object_name="items" の場合は ctx["items"]
-        # 念のため object_list も拾えるようにする
-        items = ctx.get("items") or ctx.get("object_list") or []
-    
+        items = context.get("items") or context.get("object_list") or []
+
         # 集計（件数 / 数量合計）
-        ctx["total_items"] = len(items)
-        ctx["total_quantity"] = sum((i.quantity or 0) for i in items)
-        
-        # アラート判定
-        # （赤：在庫0 または 期限まで0日）
-        # （青：在庫<=1 または 期限まで30日以内）※固定値
-        today = timezone.localdate() # 今日の日付（タイムゾーン安全）
-        quantity_threshold = 1   # 数量が1以下なら「注意」
-        expiry_days_threshold = 30  # 期限が30日以内なら「注意」
+        context["total_items"] = len(items)
+        context["total_quantity"] = sum((i.quantity or 0) for i in items)
+
+        # ---------- ここからアラート判定（設定連動） ----------
+        today = timezone.localdate()
+
+        # ✅ accounts.AlertSetting を世帯で1件取得。なければデフォルトで動かす
+        DEFAULT_ALERT = {
+            "quantity_threshold": 1,  # 青（個数）
+            "expiry_days": 30,        # 青（期限日数）
+        }
+
+        setting = AlertSetting.objects.filter(household=household).first()
+        if setting is None:
+            alert = DEFAULT_ALERT
+        else:
+            alert = {
+                "quantity_threshold": setting.quantity_threshold,
+                "expiry_days": setting.expiry_days,
+            }
 
         # 各在庫アイテムごとに判定を付与
         for item in items:
-            
             # 残り日数を計算（expiry_date がない場合は None）
-            days_left = None
-            if item.expiry_date:
-                # 今日との差分（日数）
+            if item.expiry_date is None:
+                days_left = None
+            else:
                 days_left = (item.expiry_date - today).days
 
-            # テンプレで使えるように一時属性を追加
             item.days_left = days_left
-            
-            # 赤アラート判定（最優先）
-            # 条件：
-            # ① 在庫が0
-            # ② 期限まで0日
-            is_red = (
-                item.quantity == 0
-                or (days_left is not None and days_left <= 0)
-            )
-            
-            # 青アラート判定（赤じゃない時だけ）
-            is_blue = False
-            if not is_red:
-                qty_hit = item.quantity <= quantity_threshold
 
-                day_hit = (
-                    days_left is not None
-                    and days_left <= expiry_days_threshold
-                )
+            qty = item.quantity or 0  # None対策
 
-                # どちらかに該当すれば青
-                is_blue = qty_hit or day_hit
+            # ✅ 赤（固定）：在庫0 または 期限<=0日
+            red_by_qty = (qty <= 0)
+            red_by_days = (days_left is not None) and (days_left <= 0)
+            item.is_red = red_by_qty or red_by_days
+
+            # ✅ 青（設定連動）：赤じゃない場合だけ
+            if not item.is_red:
+                blue_by_qty = (qty <= alert["quantity_threshold"])
+                blue_by_days = (days_left is not None) and (days_left <= alert["expiry_days"])
+                item.is_blue = blue_by_qty or blue_by_days
+            else:
+                item.is_blue = False
                 
-            # テンプレで参照する属性を追加
-            item.is_alert_red = is_red
-            item.is_alert_blue = is_blue
+            # テンプレ互換（既存テンプレは is_alert_* を参照しているため）
+            item.is_alert_red = item.is_red
+            item.is_alert_blue = item.is_blue
 
-        return ctx
+        return context
+    
+    def _get_alert_setting(self):
+        """
+        accounts.AlertSetting を世帯で1件取得。
+        無ければデフォルトを返す（落ちないための保険）。
+        """
+        household = self.request.user.household
+        setting = AlertSetting.objects.filter(household=household).first()
+
+        if setting is None:
+            return self.DEFAULT_ALERT
+
+        return {
+            "quantity_threshold": setting.quantity_threshold,
+            "expiry_days": setting.expiry_days,
+        }
+    
+        
         
 # ----------------------------
 # 在庫を追加する画面（ログイン必須）
@@ -268,7 +285,7 @@ class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView
         """
         # ★ガード：ユーザーの household が未設定なら保存させない
         if not getattr(self.request.user, "household", None):
-            return redirect("no_household")
+            return redirect(reverse("inventory:no_household"))
 
         # ★ここで household を詰める
         form.instance.household = self.request.user.household
