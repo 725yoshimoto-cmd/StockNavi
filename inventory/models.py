@@ -2,6 +2,7 @@ from django.db import models
 from accounts.models import Household
 from django.conf import settings  # ← 追加（上部）
 
+
 class InventoryItem(models.Model):
     """
     InventoryItem（在庫）
@@ -46,8 +47,7 @@ class InventoryItem(models.Model):
     # もし unit を今すぐ増やすと工数増えるので、今回は最小で content_amount のみ追加
     def __str__(self):
         return self.name
-    
-    
+        
 class Category(models.Model):
     """
     Category（カテゴリ）マスタ

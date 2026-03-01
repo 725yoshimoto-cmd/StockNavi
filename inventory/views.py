@@ -50,10 +50,7 @@ from accounts.forms import CustomUserCreationForm
 
 # ★ 追加：世帯ごとの閾値（AlertSetting）を取得する
 # 「世帯で1つだけ」の設定値を在庫一覧の判定基準として使う
-try:
-    from accounts.models import AlertSetting
-except Exception:
-    AlertSetting = None
+from accounts.models import AlertSetting
 
 # ★追加：在庫フォーム（期限入力対応）
 from .forms import InventoryItemForm
