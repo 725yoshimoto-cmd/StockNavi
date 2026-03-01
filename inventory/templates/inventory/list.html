@@ -165,9 +165,13 @@
         <span class="alert-icon" style="color:#0d6efd; font-weight:700;" title="注意（設定した個数・期限内）">🔔</span>
       {% endif %}
 
-      <a href="{% url 'inventory:inventory_detail' item.pk %}" class="item-name">
-        {{ item.name }}
-      </a>
+      {% if request.GET.select_mode == "1" %}
+        <span class="item-name">{{ item.name }}</span>
+      {% else %}
+        <a href="{% url 'inventory:inventory_detail' item.pk %}" class="item-name">
+          {{ item.name }}
+        </a>
+      {% endif %}
     </div>
 
     <div class="meta">
@@ -190,10 +194,12 @@
       {% endif %}
     </div>
 
-    <div class="actions">
-      <a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
-      <a href="{% url 'inventory:inventory_delete' item.pk %}">削除</a>
-    </div>
+    {% if request.GET.select_mode != "1" %}
+      <div class="actions">
+        <a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
+        <a href="{% url 'inventory:inventory_delete' item.pk %}">削除</a>
+      </div>
+    {% endif %}
 
   </div>
 {% empty %}
