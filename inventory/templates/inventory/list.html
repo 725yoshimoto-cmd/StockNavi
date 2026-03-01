@@ -4,6 +4,16 @@
 
 <h1>在庫一覧</h1>
 
+<form method="get" action="{% url 'inventory:inventory_list' %}">
+  <input type="text" name="q" placeholder="商品名で検索" value="{{ request.GET.q|default:'' }}">
+
+  <!-- 既存の絞り込み条件を維持する（←重要） -->
+  <input type="hidden" name="category" value="{{ selected_category }}">
+  <input type="hidden" name="storage" value="{{ selected_storage }}">
+
+  <button type="submit">検索</button>
+</form>
+
 <form method="get">
   <label>分類</label>
   <select name="category">

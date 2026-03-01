@@ -169,6 +169,11 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         if storage_id:
             qs = qs.filter(storage_location_id=storage_id)
 
+        # GETパラメータによる検索（商品名）
+        q = self.request.GET.get("q")
+        if q:
+            qs = qs.filter(name__icontains=q)
+            
         return qs
 
     def get_context_data(self, **kwargs):
