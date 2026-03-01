@@ -4,15 +4,17 @@ from django.http import HttpResponse
 
 # 自分のアプリのモデル
 from .models import InventoryItem, Category, StorageLocation, Memo
-from .mixins import HouseholdRequiredMixin  # 既に使ってるやつ
 
-# ログイン必須にするためのMixin
+# 自作：世帯必須Mixin（世帯が無いユーザーは弾くため）
+from .mixins import HouseholdRequiredMixin
+
+# Django：ログイン必須にするMixin（未ログインならログイン画面へ）
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 # 一覧表示用クラスベースビュー
 from django.views.generic import ListView
 
-# 表示専用ページ用（ポートフォリオ画面）
+# Django：画面表示用のCBV（ポートフォリオ画面など）
 from django.views.generic import TemplateView
 
 # 新規データ作成用クラスベースビュー（ユーザー登録で使用）
@@ -24,7 +26,7 @@ from django.views.generic import UpdateView, DeleteView
 # 在庫詳細用のクラスベースビュー
 from django.views.generic import DetailView
 
-# 登録成功後の遷移先
+# Django：URL生成（登録成功後の遷移先や招待URLを作るため）
 from django.urls import reverse_lazy
 
 # URL名（name="no_household"）からURL文字列を作るために使う
@@ -32,6 +34,8 @@ from django.urls import reverse
 
 #“世帯が未設定のユーザー” のガード（落ちないように）
 from django.shortcuts import get_object_or_404, redirect
+
+# Django：メッセージ表示（成功/失敗を画面に出す）
 from django.contrib import messages
 
 # 在庫集計(合計・件数)
@@ -46,7 +50,7 @@ from django.utils.http import urlencode  # なくてもOKだが後で便利
 # バランス確認
 from .services.balance import calc_category_amounts
 
-# ★ 追加：今日の日付（タイムゾーン安全）を扱うため
+# Django：現在時刻（期限切れ判定やused_at更新に使う）
 from django.utils import timezone
 
 # ★ 追加：カスタムユーザー登録フォームを読み込む
@@ -66,6 +70,22 @@ from datetime import date, timedelta
 
 # 複製
 from django.views import View
+
+# 標準ライブラリ：日時計算（招待リンクの有効期限を作るため）
+from datetime import timedelta
+from django.conf import settings
+
+# Django：DBの同時実行（同じ招待リンクを同時に使われても壊れないようにする）
+from django.db import transaction
+
+# DBにデータが無い場合、自動で404にしてくれる便利関数
+from django.shortcuts import get_object_or_404
+
+# 処理後にページを移動させる
+from django.shortcuts import redirect
+
+# 自作：招待トークンモデル
+from .models import InviteToken
 
 # ----------------------------
 # ポートフォリオトップ画面
@@ -97,7 +117,7 @@ class HouseholdRequiredMixin:
         """
         # ★household が未設定なら案内ページへ
         if not getattr(request.user, "household", None):
-            return redirect(reverse("no_household"))
+            return redirect(reverse("inventory:no_household"))
 
         return super().dispatch(request, *args, **kwargs)
     
@@ -124,6 +144,157 @@ class SignupView(CreateView):
     # 登録成功後の遷移先（login のURL名へ）
     success_url = reverse_lazy("login")
 
+
+# ----------------------------
+# 招待リンク発行画面（ログイン必須）
+# ----------------------------
+class InviteCreateView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
+    """
+    - household必須（HouseholdRequiredMixinで担保）
+    """
+    template_name = "inventory/invite/create.html"
+    EXPIRE_HOURS = 24  # 有効期限（時間）
+
+    def post(self, request, *args, **kwargs):
+        # 念のためガード（500を避ける）
+        if not getattr(request.user, "household", None):
+            messages.error(request, "世帯が未設定のため招待リンクを発行できません。")
+            return self.redirect_top()
+
+        expires_at = timezone.now() + timedelta(hours=self.EXPIRE_HOURS)
+
+        invite = InviteToken.objects.create(
+            household=request.user.household,
+            expires_at=expires_at,
+        )
+
+        invite_url = request.build_absolute_uri(
+            reverse("inventory:invite_accept", kwargs={"token": str(invite.token)})
+        )
+
+        messages.success(request, "招待リンクを発行しました。")
+
+        context = self.get_context_data(**kwargs)
+        context["invite_url"] = invite_url
+        context["expires_at"] = invite.expires_at
+        return self.render_to_response(context)
+
+    def redirect_top(self):
+        # 既存のトップに合わせて変えてOK（inventory_list が無い場合は別名に）
+        from django.shortcuts import redirect
+        return redirect("inventory:inventory_list")
+
+
+class InviteAcceptView(LoginRequiredMixin, TemplateView):
+    """
+    招待URLから参加
+    - GET: 確認画面
+    - POST: 参加確定（user.householdをセットし、tokenを使用済みに）
+    """
+    template_name = "inventory/invite/accept.html"
+
+    def get_invite(self):
+        from django.shortcuts import get_object_or_404
+        return get_object_or_404(InviteToken, token=self.kwargs["token"])
+
+    def get(self, request, *args, **kwargs):
+        invite = self.get_invite()
+
+        # トークンが無効（使用済み or 期限切れ）
+        if not invite.is_valid():
+            messages.error(request, "この招待リンクは無効です。")
+            return redirect("inventory:no_household")
+
+        # すでに世帯を持っている場合は拒否
+        if getattr(request.user, "household", None):
+            messages.error(request, "すでに世帯に参加済みです。")
+            return redirect("inventory:no_household")
+
+        context = self.get_context_data(**kwargs)
+        context["invite"] = invite
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        with transaction.atomic():
+            invite = self.get_invite()
+
+            # ロック（同時押し対策）
+            invite = InviteToken.objects.select_for_update().get(pk=invite.pk)
+
+            # 再チェック
+            if not invite.is_valid():
+                messages.error(request, "この招待リンクは無効です。")
+                return redirect("inventory:no_household")
+
+            if getattr(request.user, "household", None):
+                messages.error(request, "すでに世帯に参加済みです。")
+                return redirect("inventory:no_household")
+
+           
+            # 参加処理
+            request.user.household = invite.household
+            request.user.save(update_fields=["household"])
+
+            # 使用済みにする
+            invite.is_used = True
+            invite.save(update_fields=["is_used"])
+
+        messages.success(request, "世帯に参加しました。")
+        return redirect("inventory:inventory_list")
+    
+
+# ----------------------------
+# 招待URLから参加画面（ログイン必須）
+# ----------------------------
+class InviteAcceptView(LoginRequiredMixin, TemplateView):
+    """
+    - GET: 参加確認画面
+    - POST: 参加確定（ユーザーにhouseholdを紐付け、tokenを使用済みに）
+    """
+    template_name = "inventory/invite/accept.html"
+
+    def get_invite(self):
+        from django.shortcuts import get_object_or_404
+        return get_object_or_404(InviteToken, token=self.kwargs["token"])
+
+    def get(self, request, *args, **kwargs):
+        invite = self.get_invite()
+
+        if getattr(request.user, "household", None):
+            messages.error(request, "すでに世帯に参加済みです。")
+            return redirect("inventory:inventory_list")
+
+        if not invite.is_valid():
+            messages.error(request, "この招待リンクは無効です（期限切れ/使用済み）。")
+            return redirect("inventory:inventory_list")
+
+        context = self.get_context_data(**kwargs)
+        context["invite"] = invite
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        with transaction.atomic():
+            invite = self.get_invite()
+            invite = InviteToken.objects.select_for_update().get(pk=invite.pk)
+
+            if getattr(request.user, "household", None):
+                messages.error(request, "すでに世帯に参加済みです。")
+                return redirect("inventory:inventory_list")
+
+            if not invite.is_valid():
+                messages.error(request, "この招待リンクは無効です（期限切れ/使用済み）。")
+                return redirect("inventory:inventory_list")
+
+            request.user.household = invite.household
+            request.user.save(update_fields=["household"])
+
+            invite.is_used = True
+            invite.save(update_fields=["is_used"])
+
+        messages.success(request, "世帯に参加しました。")
+        return redirect("inventory:inventory_list")
+    
+    
 # ----------------------------
 # 在庫一覧画面（ログイン必須）
 # ----------------------------

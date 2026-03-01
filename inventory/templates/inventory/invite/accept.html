@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="max-width: 520px; margin: 0 auto; padding: 16px;">
+  <h1 style="font-size: 20px; margin-bottom: 12px;">世帯に参加</h1>
+
+  <p style="margin-bottom: 12px;">
+    この招待リンクで世帯に参加します。よろしいですか？
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success" style="width: 100%;">
+      参加する
+    </button>
+  </form>
+
+  <div style="margin-top: 12px;">
+    <a href="{% url 'inventory:inventory_list' %}">キャンセルして戻る</a>
+  </div>
+</div>
+{% endblock %}

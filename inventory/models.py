@@ -1,7 +1,9 @@
 from django.db import models
 from accounts.models import Household
 from django.conf import settings  # ← 追加（上部）
+import uuid
 from django.utils import timezone
+from datetime import timedelta
 
 class InventoryItem(models.Model):
     """
@@ -154,3 +156,29 @@ class Memo(models.Model):
 
     def __str__(self):
         return self.title
+    
+    
+class InviteToken(models.Model):
+    household = models.ForeignKey(
+        Household,
+        on_delete=models.CASCADE,
+        related_name="invite_tokens"
+    )
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    expires_at = models.DateTimeField(blank=True, null=True)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(days=1)
+        super().save(*args, **kwargs)
+
+    def is_valid(self):
+        return (
+            not self.is_used and
+            self.expires_at > timezone.now()
+        )
+
+    def __str__(self):
+        return f"{self.household.name} 招待リンク"

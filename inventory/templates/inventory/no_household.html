@@ -1,4 +1,15 @@
 <h1>世帯が未設定です</h1>
+
+{% if messages %}
+  <ul style="padding: 0; margin: 12px 0; list-style: none;">
+    {% for message in messages %}
+      <li style="margin-bottom: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
 <p>管理者に連絡して、ユーザーに世帯（household）を設定してもらってください。</p>
 <p><a href="/logout/">ログアウト</a></p>
 
