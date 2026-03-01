@@ -37,6 +37,9 @@ from django.contrib import messages
 # 在庫集計(合計・件数)
 from django.db.models import Sum, Count
 
+# 在庫sort 処理
+from django.db import models
+
 # 「カテゴリ一覧を渡す」と「GETで絞る」
 from django.utils.http import urlencode  # なくてもOKだが後で便利
 
@@ -173,6 +176,25 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         q = self.request.GET.get("q")
         if q:
             qs = qs.filter(name__icontains=q)
+        
+        # GETパラメータによる並び替え
+        sort = self.request.GET.get("sort", "")
+
+        if sort == "expiry":
+            # 期限が近い順（未設定は最後）
+            qs = qs.order_by(models.F("expiry_date").asc(nulls_last=True), "name")
+
+        elif sort == "quantity":
+            # 数量が少ない順（同数は名前順）
+            qs = qs.order_by("quantity", "name")
+
+        elif sort == "name":
+            # 名前順（50音順相当）
+            qs = qs.order_by("name")
+
+        else:
+            # デフォルト（いままでの表示順を維持したいなら何もしない）
+            pass
             
         return qs
 

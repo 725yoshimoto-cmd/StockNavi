@@ -4,6 +4,25 @@
 
 <h1>在庫一覧</h1>
 
+{% if request.GET.sort == "expiry" %}
+  <p>並び替え：期限が近い順</p>
+{% elif request.GET.sort == "quantity" %}
+  <p>並び替え：数量が少ない順</p>
+{% elif request.GET.sort == "name" %}
+  <p>並び替え：名前順</p>
+{% endif %}
+
+<form method="get" action="{% url 'inventory:inventory_list' %}">
+  <!-- 既存条件を維持 -->
+  <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">
+  <input type="hidden" name="category" value="{{ selected_category }}">
+  <input type="hidden" name="storage" value="{{ selected_storage }}">
+
+  <button type="submit" name="sort" value="expiry">期限が近い順</button>
+  <button type="submit" name="sort" value="quantity">数量が少ない順</button>
+  <button type="submit" name="sort" value="name">名前順</button>
+</form>
+
 <form method="get" action="{% url 'inventory:inventory_list' %}">
   <input type="text" name="q" placeholder="商品名で検索" value="{{ request.GET.q|default:'' }}">
 
