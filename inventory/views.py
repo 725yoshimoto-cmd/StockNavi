@@ -433,6 +433,23 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
         return InventoryItem.objects.filter(household=self.request.user.household)
 
 # ----------------------------
+# 履歴一覧（HistoryListView）（ログイン必須）
+# ----------------------------
+class InventoryHistoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
+    model = InventoryItem
+    template_name = "inventory/history_list.html"
+    context_object_name = "items"
+
+    def get_queryset(self):
+        return (
+            InventoryItem.objects
+            .filter(household=self.request.user.household)
+            .select_related("storage_location", "category")
+            .order_by("-updated_at")
+        )
+
+
+# ----------------------------
 # バランス確認（Balance）（ログイン必須）
 # ----------------------------
 class BalanceView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):

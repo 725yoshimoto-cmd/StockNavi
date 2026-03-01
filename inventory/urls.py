@@ -29,6 +29,10 @@ urlpatterns = [
     # ★追加：複製
     path("<int:pk>/duplicate/", views.InventoryDuplicateView.as_view(), name="inventory_duplicate"),
 
+    # ----------------------------
+    # 過去一覧（History）
+    # ----------------------------
+    path("history/", views.InventoryHistoryListView.as_view(), name="inventory_history"),
 
     # ----------------------------
     # 分類（Category）

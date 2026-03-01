@@ -1,7 +1,7 @@
 from django.db import models
 from accounts.models import Household
 from django.conf import settings  # ← 追加（上部）
-
+from django.utils import timezone
 
 class InventoryItem(models.Model):
     """
@@ -47,6 +47,9 @@ class InventoryItem(models.Model):
     # もし unit を今すぐ増やすと工数増えるので、今回は最小で content_amount のみ追加
     def __str__(self):
         return self.name
+    
+        created_at = models.DateTimeField("登録日時", auto_now_add=True)
+    updated_at = models.DateTimeField("更新日時", auto_now=True)
         
 class Category(models.Model):
     """
