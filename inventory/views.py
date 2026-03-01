@@ -21,6 +21,9 @@ from django.views.generic import CreateView
 # 更新・削除用のクラスベースビュー
 from django.views.generic import UpdateView, DeleteView
 
+# 在庫詳細用のクラスベースビュー
+from django.views.generic import DetailView
+
 # 登録成功後の遷移先
 from django.urls import reverse_lazy
 
@@ -28,7 +31,7 @@ from django.urls import reverse_lazy
 from django.urls import reverse
 
 #“世帯が未設定のユーザー” のガード（落ちないように）
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 
 # 在庫集計(合計・件数)
@@ -58,6 +61,8 @@ from .forms import InventoryItemForm
 # アラート判定
 from datetime import date, timedelta
 
+# 複製
+from django.views import View
 
 # ----------------------------
 # ポートフォリオトップ画面
@@ -310,6 +315,17 @@ class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView
         )
 
         return form
+
+# ----------------------------
+# 在庫を詳細画面（ログイン必須）
+# ----------------------------
+class InventoryDetailView(LoginRequiredMixin, HouseholdRequiredMixin, DetailView):
+    model = InventoryItem
+    template_name = "inventory/detail.html"
+    context_object_name = "item"
+
+    def get_queryset(self):
+        return InventoryItem.objects.filter(household=self.request.user.household)
     
 # ----------------------------
 # 在庫を編集する画面（ログイン必須）
@@ -322,7 +338,7 @@ class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView
     model = InventoryItem
     form_class = InventoryItemForm  # ★fieldsの代わりにこれ
     template_name = "inventory/item_form.html"
-    success_url = "/inventory/"
+    success_url = reverse_lazy("inventory:inventory_list")
 
     def get_queryset(self):
         """
@@ -347,6 +363,30 @@ class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView
         return form
 
 # ----------------------------
+# 在庫を複製する画面（ログイン必須）
+# ----------------------------
+class InventoryDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    def post(self, request, pk):
+        src = get_object_or_404(
+            InventoryItem,
+            pk=pk,
+            household=request.user.household
+        )
+
+        new_item = InventoryItem.objects.create(
+            household=src.household,
+            category=src.category,
+            storage_location=src.storage_location,
+            name=src.name,
+            quantity=src.quantity,
+            content_amount=src.content_amount,
+            expiry_date=src.expiry_date,
+        )
+
+        return redirect("inventory:inventory_edit", pk=new_item.pk) 
+
+
+# ----------------------------
 # 在庫を削除する画面（ログイン必須）
 # ----------------------------
 class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
@@ -359,7 +399,7 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
     """
     model = InventoryItem
     template_name = "inventory/inventory_confirm_delete.html"  # ★スクショの期待名に合わせる
-    success_url = "/inventory/"
+    success_url = reverse_lazy("inventory:inventory_list")
 
     def get_queryset(self):
         """削除対象を自分の世帯の在庫に限定"""

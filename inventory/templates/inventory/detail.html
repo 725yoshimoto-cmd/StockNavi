@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>商品情報</h1>
+
+<p>商品名：{{ item.name }}</p>
+
+<p>分類：
+  {% if item.category %}{{ item.category.name }}{% else %}未分類{% endif %}
+</p>
+
+<p>保管場所：
+  {% if item.storage_location %}{{ item.storage_location.name }}{% else %}未設定{% endif %}
+</p>
+
+<p>数量：{{ item.quantity }}</p>
+
+<p>賞味期限：
+  {% if item.expiry_date %}{{ item.expiry_date }}{% else %}未設定{% endif %}
+</p>
+
+<p>内容量：{{ item.content_amount }}</p>
+
+<hr>
+
+<a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
+
+<form method="post" action="{% url 'inventory:inventory_delete' item.pk %}" style="display:inline;">
+  {% csrf_token %}
+  <button type="submit">削除</button>
+</form>
+
+<form method="post" action="{% url 'inventory:inventory_duplicate' item.pk %}" style="display:inline;">
+  {% csrf_token %}
+  <button type="submit">複製</button>
+</form>
+
+<a href="{% url 'inventory:inventory_list' %}">一覧に戻る</a>
+
+{% endblock %}

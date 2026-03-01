@@ -15,13 +15,21 @@ urlpatterns = [
     path("no-household/", views.NoHouseholdView.as_view(), name="no_household"),
 
     # ----------------------------
-    # 在庫（inventory）一覧、追加、編集、削除
-    # ----------------------------   
+    # 在庫（inventory）一覧、追加、詳細、編集、削除、複製
+    # ----------------------------
     path("", views.InventoryListView.as_view(), name="inventory_list"),
     path("add/", views.InventoryCreateView.as_view(), name="inventory_add"),
+
+    # ★追加：詳細
+    path("<int:pk>/", views.InventoryDetailView.as_view(), name="inventory_detail"),
+
     path("<int:pk>/edit/", views.InventoryUpdateView.as_view(), name="inventory_edit"),
     path("<int:pk>/delete/", views.InventoryDeleteView.as_view(), name="inventory_delete"),
-    
+
+    # ★追加：複製
+    path("<int:pk>/duplicate/", views.InventoryDuplicateView.as_view(), name="inventory_duplicate"),
+
+
     # ----------------------------
     # 分類（Category）
     # ----------------------------
