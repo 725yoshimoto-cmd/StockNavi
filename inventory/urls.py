@@ -20,14 +20,22 @@ urlpatterns = [
     path("", views.InventoryListView.as_view(), name="inventory_list"),
     path("add/", views.InventoryCreateView.as_view(), name="inventory_add"),
 
-    # ★追加：詳細
+    # 詳細
     path("<int:pk>/", views.InventoryDetailView.as_view(), name="inventory_detail"),
 
     path("<int:pk>/edit/", views.InventoryUpdateView.as_view(), name="inventory_edit"),
     path("<int:pk>/delete/", views.InventoryDeleteView.as_view(), name="inventory_delete"),
 
-    # ★追加：複製
+    # 複製
     path("<int:pk>/duplicate/", views.InventoryDuplicateView.as_view(), name="inventory_duplicate"),
+
+    # 一括削除
+    path("bulk-delete/", views.InventoryBulkDeleteView.as_view(), name="inventory_bulk_delete"),
+    path("bulk-delete/execute/", views.InventoryBulkDeleteExecuteView.as_view(), name="inventory_bulk_delete_execute"),
+    
+    # 一括複製
+    path("bulk-duplicate/", views.InventoryBulkDuplicateView.as_view(), name="inventory_bulk_duplicate"),
+    path("bulk-duplicate/execute/", views.InventoryBulkDuplicateExecuteView.as_view(), name="inventory_bulk_duplicate_execute"),
 
     # ----------------------------
     # 過去一覧（History）

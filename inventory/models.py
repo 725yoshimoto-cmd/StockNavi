@@ -44,12 +44,12 @@ class InventoryItem(models.Model):
         null=True,   # 既存データがあるため必須にしない
         blank=True   # フォーム未入力を許可
     )
+    # 保存されるたびに自動で今の時刻が入る（履歴にも使える）
+    updated_at = models.DateTimeField("更新日時", auto_now=True)
+    
     # もし unit を今すぐ増やすと工数増えるので、今回は最小で content_amount のみ追加
     def __str__(self):
         return self.name
-    
-        created_at = models.DateTimeField("登録日時", auto_now_add=True)
-    updated_at = models.DateTimeField("更新日時", auto_now=True)
         
 class Category(models.Model):
     """

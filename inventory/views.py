@@ -448,7 +448,131 @@ class InventoryHistoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListV
             .order_by("-updated_at")
         )
 
+# ----------------------------
+# 在庫を一括削除（確認ページ表示）
+# ----------------------------
+class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    template_name = "inventory/bulk_delete_confirm.html"
 
+    def post(self, request):
+        household = request.user.household
+        ids = request.POST.getlist("selected_ids")
+
+        if not ids:
+            return redirect("inventory:inventory_list")
+
+        items = InventoryItem.objects.filter(
+            household=household,
+            id__in=ids
+        )
+
+        return render(request, self.template_name, {
+            "items": items,
+            "ids": ids
+        })
+
+
+# ----------------------------
+# 在庫を一括削除（実行）
+# ----------------------------
+class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+
+    def post(self, request):
+        household = request.user.household
+        ids = request.POST.getlist("selected_ids")
+
+        if ids:
+            InventoryItem.objects.filter(
+                household=household,
+                id__in=ids
+            ).delete()
+
+        return redirect("inventory:inventory_list")
+    
+# ----------------------------
+# 在庫を一括削除（確認ページ表示）
+# ----------------------------
+class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    template_name = "inventory/bulk_delete_confirm.html"
+
+    def post(self, request):
+        household = request.user.household
+        ids = request.POST.getlist("selected_ids")
+
+        if not ids:
+            return redirect("inventory:inventory_list")
+
+        items = InventoryItem.objects.filter(
+            household=household,
+            id__in=ids
+        )
+
+        return render(request, self.template_name, {
+            "items": items,
+            "ids": ids
+        })
+
+
+# ----------------------------
+# 在庫を一括削除（実行）
+# ----------------------------
+class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+
+    def post(self, request):
+        household = request.user.household
+        ids = request.POST.getlist("selected_ids")
+
+        if ids:
+            InventoryItem.objects.filter(
+                household=household,
+                id__in=ids
+            ).delete()
+
+        return redirect("inventory:inventory_list")
+# ----------------------------
+# 在庫を一括複製（確認ページ表示）
+# ----------------------------
+class InventoryBulkDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    template_name = "inventory/bulk_duplicate_confirm.html"
+
+    def post(self, request):
+        household = request.user.household
+        ids = request.POST.getlist("selected_ids")
+
+        if not ids:
+            return redirect("inventory:inventory_list")
+
+        items = InventoryItem.objects.filter(household=household, id__in=ids)
+
+        return render(request, self.template_name, {"items": items, "ids": ids})
+        
+# ----------------------------
+# 在庫を一括複製（実行）
+# ----------------------------
+class InventoryBulkDuplicateExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    def post(self, request):
+        household = request.user.household
+        ids = request.POST.getlist("selected_ids")
+
+        if not ids:
+            return redirect("inventory:inventory_list")
+
+        src_items = InventoryItem.objects.filter(household=household, id__in=ids)
+
+        # 1件ずつコピー（安全＆分かりやすい）
+        for src in src_items:
+            InventoryItem.objects.create(
+                household=src.household,
+                category=src.category,
+                storage_location=src.storage_location,
+                name=src.name,
+                quantity=src.quantity,
+                content_amount=src.content_amount,
+                expiry_date=src.expiry_date,
+            )
+
+        return redirect("inventory:inventory_list")
+            
 # ----------------------------
 # バランス確認（Balance）（ログイン必須）
 # ----------------------------

@@ -4,6 +4,18 @@
 
 <h1>在庫一覧</h1>
 
+{% with select_mode=request.GET.select_mode %}
+  {% if select_mode == "1" %}
+    <a class="btn" href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=0">
+      選択モードOFF
+    </a>
+  {% else %}
+    <a class="btn" href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=1">
+      選択モードON
+    </a>
+  {% endif %}
+{% endwith %}
+
 {% if request.GET.sort == "expiry" %}
   <p>並び替え：期限が近い順</p>
 {% elif request.GET.sort == "quantity" %}
@@ -121,6 +133,11 @@
   .actions a{ font-size:13px; }
 </style>
 
+{% if request.GET.select_mode == "1" %}
+<form method="post" action="{% url 'inventory:inventory_bulk_delete' %}">
+  {% csrf_token %}
+{% endif %}
+
 <!--在庫一覧（カード表示）-->
 {% for item in items %}
   <div class="item-card
@@ -129,6 +146,11 @@
       {% endif %}">
 
     <div class="row-top">
+
+      {% if request.GET.select_mode == "1" %}
+        <input type="checkbox" name="selected_ids" value="{{ item.id }}">
+      {% endif %}
+
       {% if item.category %}
         <span class="cat-tag" style="background: {{ item.category.color|default:'#f1e8ff' }};">
           {{ item.category.name }}
@@ -142,6 +164,7 @@
       {% elif item.is_alert_blue %}
         <span class="alert-icon" style="color:#0d6efd; font-weight:700;" title="注意（設定した個数・期限内）">🔔</span>
       {% endif %}
+
       <a href="{% url 'inventory:inventory_detail' item.pk %}" class="item-name">
         {{ item.name }}
       </a>
@@ -176,5 +199,16 @@
 {% empty %}
   <p>在庫がありません</p>
 {% endfor %}
+
+{% if request.GET.select_mode == "1" %}
+  <button type="submit" formaction="{% url 'inventory:inventory_bulk_delete' %}">
+    選択した在庫を削除
+  </button>
+
+  <button type="submit" formaction="{% url 'inventory:inventory_bulk_duplicate' %}">
+    選択した在庫を複製
+  </button>
+  </form>
+{% endif %}
 
 {% endblock %}

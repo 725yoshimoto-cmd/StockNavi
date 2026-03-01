@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>削除確認</h1>
+<p>以下の在庫を削除します。削除すると元に戻せません。</p>
+
+<ul>
+  {% for item in items %}
+    <li>{{ item.name }}（数量：{{ item.quantity }}）</li>
+  {% endfor %}
+</ul>
+
+<form method="post" action="{% url 'inventory:inventory_bulk_delete_execute' %}">
+  {% csrf_token %}
+  {% for id in ids %}
+    <input type="hidden" name="selected_ids" value="{{ id }}">
+  {% endfor %}
+  <button type="submit" class="btn btn-danger">はい、削除する</button>
+</form>
+
+<a class="btn" href="{% url 'inventory:inventory_list' %}">いいえ、戻る</a>
+
+{% endblock %}

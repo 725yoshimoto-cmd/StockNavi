@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>複製確認</h1>
+<p>以下の在庫を複製します（同じ内容の在庫が追加されます）。</p>
+
+<ul>
+  {% for item in items %}
+    <li>{{ item.name }}（数量：{{ item.quantity }}）</li>
+  {% endfor %}
+</ul>
+
+<form method="post" action="{% url 'inventory:inventory_bulk_duplicate_execute' %}">
+  {% csrf_token %}
+  {% for id in ids %}
+    <input type="hidden" name="selected_ids" value="{{ id }}">
+  {% endfor %}
+  <button type="submit" class="btn">はい、複製する</button>
+</form>
+
+<a class="btn" href="{% url 'inventory:inventory_list' %}">いいえ、戻る</a>
+
+{% endblock %}
