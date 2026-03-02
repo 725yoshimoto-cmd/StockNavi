@@ -242,59 +242,96 @@ class InviteAcceptView(LoginRequiredMixin, TemplateView):
         messages.success(request, "世帯に参加しました。")
         return redirect("inventory:inventory_list")
     
-
-# ----------------------------
-# 招待URLから参加画面（ログイン必須）
-# ----------------------------
-class InviteAcceptView(LoginRequiredMixin, TemplateView):
-    """
-    - GET: 参加確認画面
-    - POST: 参加確定（ユーザーにhouseholdを紐付け、tokenを使用済みに）
-    """
-    template_name = "inventory/invite/accept.html"
-
-    def get_invite(self):
-        from django.shortcuts import get_object_or_404
-        return get_object_or_404(InviteToken, token=self.kwargs["token"])
-
-    def get(self, request, *args, **kwargs):
-        invite = self.get_invite()
-
-        if getattr(request.user, "household", None):
-            messages.error(request, "すでに世帯に参加済みです。")
-            return redirect("inventory:inventory_list")
-
-        if not invite.is_valid():
-            messages.error(request, "この招待リンクは無効です（期限切れ/使用済み）。")
-            return redirect("inventory:inventory_list")
-
-        context = self.get_context_data(**kwargs)
-        context["invite"] = invite
-        return self.render_to_response(context)
-
-    def post(self, request, *args, **kwargs):
-        with transaction.atomic():
-            invite = self.get_invite()
-            invite = InviteToken.objects.select_for_update().get(pk=invite.pk)
-
-            if getattr(request.user, "household", None):
-                messages.error(request, "すでに世帯に参加済みです。")
-                return redirect("inventory:inventory_list")
-
-            if not invite.is_valid():
-                messages.error(request, "この招待リンクは無効です（期限切れ/使用済み）。")
-                return redirect("inventory:inventory_list")
-
-            request.user.household = invite.household
-            request.user.save(update_fields=["household"])
-
-            invite.is_used = True
-            invite.save(update_fields=["is_used"])
-
-        messages.success(request, "世帯に参加しました。")
-        return redirect("inventory:inventory_list")
     
-    
+# ----------------------------
+# 世帯内の招待トークン一覧（発行履歴）（ログイン必須）
+# ----------------------------
+# inventory/views.py
+
+class InviteTokenListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
+    """
+    - household必須（HouseholdRequiredMixin）
+    - 自分の世帯のInviteTokenだけ表示
+    - 未使用のものは招待URLを表示してコピーできるようにする
+    """
+    model = InviteToken
+    template_name = "inventory/invite/invite_token_list.html"
+    context_object_name = "tokens"
+
+    def get_queryset(self):
+        """
+        一覧に出すデータを「自分の世帯」に限定する（世帯分離）
+        """
+        household = self.request.user.household
+        return (
+            InviteToken.objects.filter(household=household)
+            .order_by("-created_at")
+        )
+
+    def get_context_data(self, **kwargs):
+        """
+        テンプレで使う追加データを渡す
+        - now: 期限切れ判定に使う
+        """
+        context = super().get_context_data(**kwargs)
+        context["now"] = timezone.now()
+
+        # 各トークンに「invite_url」を後付けする（DB保存はしない）
+        for t in context["tokens"]:
+            t.invite_url = self.build_invite_url(t.token)
+
+        return context
+
+    def build_invite_url(self, token_uuid):
+        """
+        未使用トークンの招待URLを作る
+        - reverseでパスを生成
+        - build_absolute_uriでドメイン込みURLにする
+        """
+        path = reverse("inventory:invite_accept", kwargs={"token": token_uuid})
+        return self.request.build_absolute_uri(path)
+
+
+class InviteTokenDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
+    """
+    任意（最小）：使用済み or 期限切れトークンだけ削除
+
+    - 「未使用」は削除させない（事故防止）
+    - 世帯分離：自分の世帯のものだけ削除可能
+    """
+    model = InviteToken
+    template_name = "inventory/invite_token_confirm_delete.html"
+
+    def get_queryset(self):
+        """
+        削除対象を
+        - 自分の世帯
+        - かつ「使用済み」or「期限切れ」
+        に限定する
+        """
+        household = self.request.user.household
+        now = timezone.now()
+        return InviteToken.objects.filter(household=household).filter(
+            # 使用済み or 期限切れ
+            models.Q(is_used=True) | models.Q(expires_at__lt=now)
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        get_querysetで拾えない（=未使用など）場合は404になるが、
+        ユーザーに優しいメッセージを出して一覧へ返す
+        """
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Exception:
+            messages.error(request, "未使用の招待リンクは削除できません。")
+            return redirect("inventory:invite_token_list")
+
+    def get_success_url(self):
+        messages.success(self.request, "招待トークンを削除しました。")
+        return reverse("inventory:invite_token_list")
+
+
 # ----------------------------
 # 在庫一覧画面（ログイン必須）
 # ----------------------------

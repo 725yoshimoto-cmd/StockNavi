@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="max-width:520px; margin:0 auto; padding:12px;">
+  <h2>招待トークン削除</h2>
+
+  <p style="margin-top:12px;">
+    この招待トークンを削除しますか？（元に戻せません）
+  </p>
+
+  <ul style="font-size:14px; color:#555;">
+    <li>発行日：{{ object.created_at|date:"Y/m/d H:i" }}</li>
+    <li>有効期限：{{ object.expires_at|date:"Y/m/d H:i" }}</li>
+    <li>使用済み：{{ object.is_used }}</li>
+  </ul>
+
+  <form method="post" style="margin-top:16px;">
+    {% csrf_token %}
+    <button type="submit"
+      style="padding:10px 12px; border-radius:10px; border:1px solid #e99; background:#fee; color:#900;">
+      削除する
+    </button>
+    <a href="{% url 'inventory:invite_token_list' %}"
+      style="margin-left:10px; text-decoration:none;">
+      キャンセル
+    </a>
+  </form>
+</div>
+
+{% endblock %}

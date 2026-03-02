@@ -62,10 +62,22 @@ urlpatterns = [
     # 設定一覧
     path("settings/", views.SettingsListView.as_view(), name="settings"),
 
-    # メンバー招待
+    
+    # ----------------------------
+    # 招待機能（InviteToken）
+    # ----------------------------
     path("invite/", views.InviteCreateView.as_view(), name="invite_create"),
-    path("invite/<str:token>/", views.InviteAcceptView.as_view(), name="invite_accept"),
+    path("invite/<uuid:token>/", views.InviteAcceptView.as_view(), name="invite_accept"),
+    
+    # フェーズ3：招待トークン一覧
+    path("invite/list/", views.InviteTokenListView.as_view(), name="invite_token_list"),
 
+    # 任意：使用済み/期限切れのみ削除
+    path(
+        "invite/token/<int:pk>/delete/",
+        views.InviteTokenDeleteView.as_view(),
+        name="invite_token_delete",
+    ),
 ]
 
 

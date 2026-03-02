@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="max-width:520px;margin:0 auto;padding:12px;">
+  <h2 style="margin:8px 0 12px;">招待リンク（発行履歴）</h2>
+
+  {% if tokens %}
+    <div style="display:grid;gap:12px;">
+
+      {% for t in tokens %}
+        <div style="border:1px solid #ddd;border-radius:12px;padding:12px;background:#fff;">
+
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+            <div>
+              <div style="font-size:14px;color:#666;">
+                発行日：{{ t.created_at|date:"Y/m/d H:i" }}
+              </div>
+
+              <div style="margin-top:6px;font-weight:700;">
+                状態：
+                {% if t.is_used %}
+                  使用済み
+                {% elif t.expires_at < now %}
+                  期限切れ
+                {% else %}
+                  未使用
+                {% endif %}
+              </div>
+
+              <div style="font-size:13px;color:#666;margin-top:6px;">
+                有効期限：{{ t.expires_at|date:"Y/m/d H:i" }}
+              </div>
+            </div>
+
+            <div style="text-align:right;">
+              {% if t.is_used or t.expires_at < now %}
+                <a href="{% url 'inventory:invite_token_delete' t.id %}"
+                   style="display:inline-block;padding:6px 10px;border-radius:10px;border:1px solid #e99;color:#900;text-decoration:none;">
+                  削除
+                </a>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if not t.is_used and t.expires_at >= now %}
+            <div style="margin-top:12px;">
+              <div style="font-size:13px;color:#666;margin-bottom:6px;">招待URL（未使用のみ）</div>
+
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input
+                  id="invite-url-{{ t.id }}"
+                  type="text"
+                  value="{{ t.invite_url }}"
+                  readonly
+                  style="flex:1;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:12px;"
+                />
+                <button
+                  type="button"
+                  onclick="copyInviteUrl('invite-url-{{ t.id }}')"
+                  style="padding:10px 12px;border-radius:10px;border:1px solid #ccc;background:#f5f5f5;">
+                  コピー
+                </button>
+              </div>
+
+              <div style="font-size:12px;color:#666;margin-top:6px;">
+                ※URLを長押し→コピーでもOK
+              </div>
+            </div>
+          {% endif %}
+
+        </div>
+      {% endfor %}
+
+    </div>
+  {% else %}
+    <p>まだ招待リンクを発行していません。</p>
+  {% endif %}
+</div>
+
+<script>
+  function copyInviteUrl(inputId) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+
+    el.select();
+    el.setSelectionRange(0, 99999); // スマホ対策
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(el.value)
+        .then(() => alert("コピーしました"))
+        .catch(() => alert("コピーに失敗しました（長押しでコピーしてください）"));
+    } else {
+      try {
+        document.execCommand("copy");
+        alert("コピーしました");
+      } catch (e) {
+        alert("コピーに失敗しました（長押しでコピーしてください）");
+      }
+    }
+  }
+</script>
+
+{% endblock %}
