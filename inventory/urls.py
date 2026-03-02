@@ -16,16 +16,11 @@ urlpatterns = [
     # 在庫（inventory）一覧、追加、詳細、編集、削除、複製
     path("", views.InventoryListView.as_view(), name="inventory_list"),
     path("add/", views.InventoryCreateView.as_view(), name="inventory_add"),
-
-    # 詳細
     path("<int:pk>/", views.InventoryDetailView.as_view(), name="inventory_detail"),
-
     path("<int:pk>/edit/", views.InventoryUpdateView.as_view(), name="inventory_edit"),
     path("<int:pk>/delete/", views.InventoryDeleteView.as_view(), name="inventory_delete"),
-
-    # 複製
     path("<int:pk>/duplicate/", views.InventoryDuplicateView.as_view(), name="inventory_duplicate"),
-
+  
     # 一括削除
     path("bulk-delete/", views.InventoryBulkDeleteView.as_view(), name="inventory_bulk_delete"),
     path("bulk-delete/execute/", views.InventoryBulkDeleteExecuteView.as_view(), name="inventory_bulk_delete_execute"),
@@ -37,6 +32,9 @@ urlpatterns = [
     # 過去一覧（History）
     path("history/", views.InventoryHistoryListView.as_view(), name="inventory_history"),
 
+    # バランス確認（Balance）
+    path("balance/", views.BalanceView.as_view(), name="balance"),
+    
     # 分類（Category）
     path("category/", views.CategoryListView.as_view(), name="category_list"),
     path("category/add/", views.CategoryCreateView.as_view(), name="category_add"),
@@ -49,25 +47,23 @@ urlpatterns = [
     path("storage-location/<int:pk>/edit/", views.StorageLocationUpdateView.as_view(), name="storage_location_edit"),
     path("storage-location/<int:pk>/delete/", views.StorageLocationDeleteView.as_view(), name="storage_location_delete"), 
    
-    # バランス確認（Balance）
-    path("balance/", views.BalanceView.as_view(), name="balance"),
+    # 設定（タブ統合）
+    path("settings/", views.SettingsTabsView.as_view(), name="settings_tabs"),
 
-    # メモ機能
-    path("memo/", views.MemoListView.as_view(), name="memo_list"),
-    path("memo/add/", views.MemoCreateView.as_view(), name="memo_add"),
-    path("memo/<int:pk>/edit/", views.MemoUpdateView.as_view(), name="memo_edit"),
-    path("memo/<int:pk>/delete/", views.MemoDeleteView.as_view(), name="memo_delete"),
-
-    # 設定一覧
-    path("settings/", views.SettingsListView.as_view(), name="settings"),
-    
-    # 設定 > 分類・目標設定（統合）
+    # 設定互換URL
     path(
         "settings/category-goal/",
         views.SettingsCategoryGoalView.as_view(),
         name="settings_category_goal",
     ),
     
+    # メモ機能
+    path("memo/", views.MemoListView.as_view(), name="memo_list"),
+    path("memo/add/", views.MemoCreateView.as_view(), name="memo_add"),
+    path("memo/<int:pk>/edit/", views.MemoUpdateView.as_view(), name="memo_edit"),
+    path("memo/<int:pk>/delete/", views.MemoDeleteView.as_view(), name="memo_delete"),
+
+   
     # ----------------------------
     # 招待機能（InviteToken）
     # ----------------------------
