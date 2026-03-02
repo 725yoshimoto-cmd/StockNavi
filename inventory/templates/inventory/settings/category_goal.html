@@ -46,6 +46,15 @@
 
 <h3>分類</h3>
 
+<form method="get" action="" style="margin: 8px 0;">
+  <input type="text" name="q" value="{{ q }}" placeholder="分類を検索">
+  <input type="hidden" name="sort" value="{{ sort }}">
+  <button type="submit">検索</button>
+  {% if q %}
+    <a href="?sort={{ sort }}">クリア</a>
+  {% endif %}
+</form>
+
 <p>
   並び替え：
   <a href="?sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
