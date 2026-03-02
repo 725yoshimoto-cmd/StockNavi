@@ -1,15 +1,17 @@
 {% extends "base.html" %}
-{% block title %}在庫登録{% endblock %}
+{% block title %}在庫を追加 / 編集{% endblock %}
+
 {% block content %}
+  <h1>在庫を追加 / 編集</h1>
 
-<h1>在庫を追加 / 編集</h1>
+  <p><a href="{% url 'inventory:inventory_list' %}">一覧へ戻る</a></p>
 
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">登録</button>
-</form>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
 
-<p><a href="{% url 'inventory:inventory_list' %}">一覧へ戻る</a></p>
+    {{ form.non_field_errors }}
+    {{ form.as_p }}
 
+    <button type="submit">保存</button>
+  </form>
 {% endblock %}

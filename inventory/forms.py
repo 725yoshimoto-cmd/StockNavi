@@ -17,6 +17,7 @@ class InventoryItemForm(forms.ModelForm):
             "quantity",
             "content_amount",
             "expiry_date",
+            "image",
         ]
         widgets = {
             "expiry_date": forms.DateInput(attrs={"type": "date"}),

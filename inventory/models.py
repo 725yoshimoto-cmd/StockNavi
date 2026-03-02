@@ -52,6 +52,14 @@ class InventoryItem(models.Model):
     # もし unit を今すぐ増やすと工数増えるので、今回は最小で content_amount のみ追加
     def __str__(self):
         return self.name
+    
+    # 商品画像保存フィールド
+    image = models.ImageField(
+        upload_to="inventory_images/",
+        blank=True,
+        null=True,
+        verbose_name="商品画像"
+    )
         
 class Category(models.Model):
     """
