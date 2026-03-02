@@ -46,6 +46,12 @@
 
 <h3>分類</h3>
 
+<p>
+  並び替え：
+  <a href="?sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
+  <a href="?sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
+</p>
+
 <ul>
   {% for c in categories %}
     <li>

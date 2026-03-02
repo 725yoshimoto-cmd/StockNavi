@@ -1032,6 +1032,33 @@ class SettingsCategoryGoalView(LoginRequiredMixin, HouseholdRequiredMixin, View)
         Category.objects.filter(household=household, id__in=ids).delete()
         messages.success(request, "分類を削除しました。")
         
+    def _render(self, request):
+        household = request.user.household
+
+        q = (request.GET.get("q") or "").strip()
+
+        # ✅ sort（並び替え） created / name
+        sort = request.GET.get("sort") or "created"
+
+        categories = Category.objects.filter(household=household)
+
+        # ✅ 検索（今はnameだけでOK）
+        if q:
+            categories = categories.filter(name__icontains=q)
+
+        # ✅ 並び替え
+        if sort == "name":
+            categories = categories.order_by("name", "id")
+        else:
+            categories = categories.order_by("id")  # 登録順（id順）
+
+        return render(request, self.template_name, {
+            "household": household,
+            "categories": categories,
+            "q": q,
+            "sort": sort,
+        })      
+        
             
 # ----------------------------
 # メモ一覧（ログイン必須）
