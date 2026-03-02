@@ -61,16 +61,23 @@
   <a href="?sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
 </p>
 
-<ul>
+<ul> 
   {% for c in categories %}
     <li>
+      <!-- 分類名（編集リンク） -->
       <a href="{% url 'inventory:category_edit' c.id %}">
         {{ c.name }}
+      </a>
+
+      <!-- 削除リンク追加 -->
+      <a href="{% url 'inventory:category_delete' c.id %}"
+         style="margin-left: 8px; color: red;"
+         onclick="return confirm('この分類を削除しますか？');">
+         削除
       </a>
     </li>
   {% empty %}
     <li>分類がありません</li>
   {% endfor %}
 </ul>
-
 {% endblock %}
