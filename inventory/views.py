@@ -830,7 +830,7 @@ class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView)
     # - name: 分類名
     # - color: 分類カラー（今回追加）
     # ----------------------------
-    fields = ["name", "color"]
+    fields = ["name", "goal_amount", "goal_unit", "color"]
     template_name = "category/form.html"
     success_url = reverse_lazy("inventory:category_list")
 
@@ -847,7 +847,7 @@ class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView)
 # ----------------------------
 class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     model = Category
-    fields = ["name", "color"]
+    fields = ["name", "goal_amount", "goal_unit", "color"]
     template_name = "category/form.html"
     success_url = reverse_lazy("inventory:category_list")
 
