@@ -1,22 +1,61 @@
-{# inventory/templates/inventory/settings/category_goal.html #}
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>分類・目標設定</h2>
+<h2>分類・目標設定</h2>
 
-  <p>ここまで到達OK（TemplateDoesNotExist解消）</p>
+<hr>
 
-  <hr>
+<h3>目標備蓄日数</h3>
 
-  <h3>目標備蓄日数</h3>
-  <p>現在：{{ household.target_days }} 日</p>
+<form method="post" action="{% url 'inventory:settings_category_goal' %}">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="save_target_days">
 
-  <h3>分類</h3>
-  <ul>
-    {% for c in categories %}
-      <li>{{ c.name }}</li>
-    {% empty %}
-      <li>分類がありません</li>
-    {% endfor %}
-  </ul>
+  <label>
+    <input type="radio" name="target_choice" value="3"
+      {% if household.target_days == 3 %}checked{% endif %}>
+    3日分
+  </label><br>
+
+  <label>
+    <input type="radio" name="target_choice" value="7"
+      {% if household.target_days == 7 %}checked{% endif %}>
+    7日分
+  </label><br>
+
+  <label>
+    <input type="radio" name="target_choice" value="14"
+      {% if household.target_days == 14 %}checked{% endif %}>
+    14日分
+  </label><br>
+
+  <label>
+    <input type="radio" name="target_choice" value="custom"
+      {% if household.target_days != 3 and household.target_days != 7 and household.target_days != 14 %}checked{% endif %}>
+    カスタム：
+    <input type="number" name="custom_days"
+           value="{{ household.target_days }}"
+           min="1">
+  </label>
+
+  <br><br>
+  <button type="submit">保存</button>
+</form>
+
+<hr>
+
+<h3>分類</h3>
+
+<ul>
+  {% for c in categories %}
+    <li>
+      <a href="{% url 'inventory:category_edit' c.id %}">
+        {{ c.name }}
+      </a>
+    </li>
+  {% empty %}
+    <li>分類がありません</li>
+  {% endfor %}
+</ul>
+
 {% endblock %}

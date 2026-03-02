@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>保管場所を追加</h1>
+  <h2>{% if object %}保管場所を編集{% else %}保管場所を追加{% endif %}</h2>
 
   <form method="post">
     {% csrf_token %}

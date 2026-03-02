@@ -1,8 +1,6 @@
 from django.urls import path
 from . import views
 
-
-
 app_name = "inventory"
 
 urlpatterns = [
@@ -62,7 +60,13 @@ urlpatterns = [
 
     # 設定一覧
     path("settings/", views.SettingsListView.as_view(), name="settings"),
-
+    
+    # 設定 > 分類・目標設定（統合）
+    path(
+        "settings/category-goal/",
+        views.SettingsCategoryGoalView.as_view(),
+        name="settings_category_goal",
+    ),
     
     # ----------------------------
     # 招待機能（InviteToken）

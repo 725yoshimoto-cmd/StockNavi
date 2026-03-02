@@ -87,6 +87,12 @@ from django.shortcuts import redirect
 # 自作：招待トークンモデル
 from .models import InviteToken
 
+# 検索条件を OR で組みたいときに使う
+from django.db.models import Q
+
+# **Categoryモデル（分類）**を views.py から使うための import
+from .models import Category
+
 # ----------------------------
 # ポートフォリオトップ画面
 # ----------------------------
@@ -915,7 +921,7 @@ class StorageLocationUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, Upda
     - get_queryset() で自世帯のみに限定（他世帯URL直打ち対策）
     """
     model = StorageLocation
-    template_name = "inventory/storage_location_confirm_delete.html"
+    template_name = "inventory/storage_location_form.html"
     success_url = reverse_lazy("inventory:storage_location_list")
     fields = ["name"]
     
@@ -938,7 +944,95 @@ class StorageLocationDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, Dele
         # ★超重要：他世帯の削除を絶対させない
         return StorageLocation.objects.filter(household=self.request.user.household)
 
-    
+class SettingsCategoryGoalView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    """
+    設定＞分類・目標設定（統合画面）
+    - 目標備蓄日数（3/7/14/カスタム）を保存
+    - 分類一覧（検索・並び替え）を表示
+    - 選択削除（confirmでOK）を実行
+    """
+    template_name = "inventory/settings/category_goal.html"
+
+    def get(self, request, *args, **kwargs):
+        return self._render(request)
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("action")
+
+        if action == "save_target_days":
+            self._save_target_days(request)
+            messages.success(request, "変更が保存されました。")
+            return redirect("inventory:settings_category_goal")
+
+        if action == "bulk_delete_categories":
+            self._bulk_delete_categories(request)
+            return redirect("inventory:settings_category_goal")
+
+        messages.warning(request, "不正な操作です。")
+        return redirect("inventory:settings_category_goal")
+
+    def _render(self, request):
+        household = request.user.household
+
+        q = (request.GET.get("q") or "").strip()
+        order = request.GET.get("order") or "created"  # created=登録順, kana=50音順
+
+        categories = Category.objects.filter(household=household)
+
+        # 検索（nameフィールド前提）
+        if q:
+            categories = categories.filter(Q(name__icontains=q))
+
+        # 並び替え
+        if order == "kana":
+            categories = categories.order_by("name", "id")
+        else:
+            categories = categories.order_by("id")  # 登録順の最短はid
+
+        return render(request, self.template_name, {
+            "household": household,
+            "categories": categories,
+            "q": q,
+            "order": order,
+        })
+
+    def _save_target_days(self, request):
+        household = request.user.household
+        target_choice = request.POST.get("target_choice")  # "3" / "7" / "14" / "custom"
+        custom_days = request.POST.get("custom_days")
+
+        if target_choice in {"3", "7", "14"}:
+            household.target_days = int(target_choice)
+            household.save(update_fields=["target_days"])
+            return
+
+        if target_choice == "custom":
+            try:
+                days = int(custom_days)
+                if days <= 0:
+                    raise ValueError
+            except (TypeError, ValueError):
+                messages.error(request, "カスタム日数は1以上の数字で入力してください。")
+                return
+
+            household.target_days = days
+            household.save(update_fields=["target_days"])
+            return
+
+        messages.error(request, "目標備蓄日数を選択してください。")
+
+    def _bulk_delete_categories(self, request):
+        household = request.user.household
+        ids = request.POST.getlist("selected_ids")
+
+        if not ids:
+            messages.warning(request, "削除する分類を選択してください。")
+            return
+
+        Category.objects.filter(household=household, id__in=ids).delete()
+        messages.success(request, "分類を削除しました。")
+        
+            
 # ----------------------------
 # メモ一覧（ログイン必須）
 # ----------------------------
