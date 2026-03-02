@@ -1,0 +1,22 @@
+{# inventory/templates/inventory/settings/category_goal.html #}
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>分類・目標設定</h2>
+
+  <p>ここまで到達OK（TemplateDoesNotExist解消）</p>
+
+  <hr>
+
+  <h3>目標備蓄日数</h3>
+  <p>現在：{{ household.target_days }} 日</p>
+
+  <h3>分類</h3>
+  <ul>
+    {% for c in categories %}
+      <li>{{ c.name }}</li>
+    {% empty %}
+      <li>分類がありません</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
