@@ -895,8 +895,46 @@ class StorageLocationListView(LoginRequiredMixin, HouseholdRequiredMixin, ListVi
     context_object_name = "locations"
 
     def get_queryset(self):
-        # ★事故防止：必ず世帯で絞る（他世帯混入・URL直打ち対策の基本）
-        return StorageLocation.objects.filter(household=self.request.user.household).order_by("name")
+        qs = StorageLocation.objects.filter(household=self.request.user.household)
+
+        q = (self.request.GET.get("q") or "").strip()
+        sort = self.request.GET.get("sort") or "created"  # created / name
+
+        if q:
+            qs = qs.filter(name__icontains=q)
+
+        if sort == "name":
+            qs = qs.order_by("name", "id")
+        else:
+            qs = qs.order_by("id")  # 登録順（最短で安全）
+
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["q"] = (self.request.GET.get("q") or "").strip()
+        ctx["sort"] = self.request.GET.get("sort") or "created"
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("action")
+
+        if action != "bulk_delete":
+            messages.warning(request, "不正な操作です。")
+            return redirect("inventory:storage_location_list")
+
+        ids = request.POST.getlist("selected_ids")
+        if not ids:
+            messages.warning(request, "削除する保管場所を選択してください。")
+            return redirect("inventory:storage_location_list")
+
+        StorageLocation.objects.filter(
+            household=request.user.household,
+            id__in=ids,
+        ).delete()
+
+        messages.success(request, "保管場所を削除しました。")
+        return redirect("inventory:storage_location_list")
 
 
 class StorageLocationCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
