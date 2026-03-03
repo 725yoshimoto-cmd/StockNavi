@@ -623,17 +623,36 @@ class InventoryDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
 # 在庫を削除する画面（ログイン必須）
 class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """
-    - テンプレート名を明示して衝突事故を防ぐ
-    - get_queryset() で自分の世帯の在庫だけ削除できるようにする
+    - 論理削除に変更（is_deleted=Trueにする）
+    - 物理削除はしない
     """
     model = InventoryItem
-    template_name = "inventory/inventory_confirm_delete.html"  # ★スクショの期待名に合わせる
+    template_name = "inventory/inventory_confirm_delete.html"
     success_url = reverse_lazy("inventory:inventory_list")
 
     def get_queryset(self):
         """削除対象を自分の世帯の在庫に限定"""
-        return InventoryItem.objects.filter(household=self.request.user.household)
+        return InventoryItem.objects.filter(
+            household=self.request.user.household,
+            is_deleted=False,
+        )
 
+    def post(self, request, *args, **kwargs):
+        """POSTで論理削除を確実に実行"""
+        self.object = self.get_object()
+        self.object.is_deleted = True
+        self.object.save(update_fields=["is_deleted"])
+        return redirect(self.success_url)
+    
+    def delete(self, request, *args, **kwargs):
+        """
+        物理削除ではなく、is_deleted=Trueにする
+        """
+        self.object = self.get_object()
+        self.object.is_deleted = True
+        self.object.save()
+        return redirect(self.success_url)
+    
 # 履歴一覧（HistoryListView）（ログイン必須）
 class InventoryHistoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     model = InventoryItem
