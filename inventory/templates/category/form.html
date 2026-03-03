@@ -18,8 +18,16 @@
     {% endif %}
   </div>
 
-  <!-- ----------------------------
-       分類カラー（HTML5 color picker）
+  <!-- 概要欄 -->
+  <div style="margin-top: 8px;">
+    <label for="{{ form.description.id_for_label }}">概要：</label>
+    {{ form.description }}
+    {% if form.description.errors %}
+      <div style="color:red;">{{ form.description.errors }}</div>
+    {% endif %}
+  </div>
+
+  <!-- 分類カラー（HTML5 color picker）
        - form.color.value が None のときもあるので default を用意
        ---------------------------- -->
   <div style="margin-top:12px;">

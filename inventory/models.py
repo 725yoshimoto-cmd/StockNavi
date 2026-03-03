@@ -72,7 +72,8 @@ class Category(models.Model):
         related_name="categories",
     )
     name = models.CharField("カテゴリ名", max_length=50)
-
+    description = models.CharField("概要", max_length=100, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -123,8 +124,8 @@ class StorageLocation(models.Model):
     )
 
     name = models.CharField(max_length=50)  # 例: "キッチン棚", "玄関収納"
-    description = models.CharField(max_length=255, blank=True)  # 概要（任意）
-
+    description = models.CharField("説明", max_length=100, blank=True, null=True, default="")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
