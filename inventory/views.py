@@ -818,6 +818,16 @@ class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView)
         # 他世帯のカテゴリを編集できない
         return Category.objects.filter(household=self.request.user.household)
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        # ✅ next があれば最優先でそこへ戻す（確実）
+        next_url = self.request.GET.get("next")
+        if next_url:
+            return redirect(next_url)
+
+        return response
+    
 # 分類（Category）削除（ログイン必須）
 class CategoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """

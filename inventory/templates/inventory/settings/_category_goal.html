@@ -65,12 +65,20 @@
 
 <ul style="list-style: none; padding: 0;">
   {% for c in categories %}
-    <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #ddd;">
-      
-      <!-- 左側：分類名 -->
-      <a href="{% url 'inventory:category_edit' c.id %}">
-        {{ c.name }}
-      </a>
+    <li style="display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #ddd;">
+
+      <!-- 左側：分類名＋概要 -->
+      <div>
+        <a href="{% url 'inventory:category_edit' c.id %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
+          {{ c.name }}
+        </a>
+
+        {% if c.description %}
+          <div style="font-size: 12px; color: #666; margin-top: 4px;">
+            {{ c.description }}
+          </div>
+        {% endif %}
+      </div>
 
       <!-- 右側：削除 -->
       <a href="{% url 'inventory:category_delete' c.id %}"
