@@ -175,9 +175,10 @@
         </div>
       {% endif %}
 
-      {% if item.is_alert_red %} text-alert-red
-      {% elif item.is_alert_blue %} text-alert-blue
-      {% endif %}">
+      <a href="{% url 'inventory:inventory_edit' item.pk %}"
+        class="{% if item.is_alert_red %}text-alert-red{% elif item.is_alert_blue %}text-alert-blue{% endif %}">
+        {{ item.name }}
+      </a>
 
     <div class="row-top">
       
