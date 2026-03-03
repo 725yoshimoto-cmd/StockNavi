@@ -339,12 +339,12 @@ class InviteTokenDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteVi
 
 
 # ----------------------------
-# 在庫一覧画面（ログイン必須）
+# 在庫（Inventory）一覧画面（ログイン必須）
 # ----------------------------
+
+# 在庫（Inventory）一覧ページ（スマホ前提）（ログイン必須）
 class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     """
-    在庫一覧ページ（スマホ前提）
-
     このクラスの役割：
     ① ログイン中ユーザーの「世帯」に属する在庫だけ表示する
        → 他世帯のデータ混入を防ぐ（セキュリティ）
@@ -374,7 +374,6 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
             .filter(household=household)
             .select_related("storage_location", "category")  # パフォーマンス最適化
         )
-
 
         # GETパラメータによる絞り込み（分類）
         category_id = self.request.GET.get("category")
@@ -505,12 +504,8 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
             "quantity_threshold": setting.quantity_threshold,
             "expiry_days": setting.expiry_days,
         }
-    
-        
-        
-# ----------------------------
-# 在庫を追加する画面（ログイン必須）
-# ----------------------------
+            
+# 在庫（Inventory）を追加する画面（ログイン必須）
 class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     """
     - form_valid() で InventoryItem.household を自動セットする（世帯ひも付け漏れ防止）
@@ -557,9 +552,7 @@ class InventoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView
 
         return form
 
-# ----------------------------
-# 在庫を詳細画面（ログイン必須）
-# ----------------------------
+# # 在庫（Inventory）の詳細画面（ログイン必須）
 class InventoryDetailView(LoginRequiredMixin, HouseholdRequiredMixin, DetailView):
     model = InventoryItem
     template_name = "inventory/detail.html"
@@ -568,9 +561,7 @@ class InventoryDetailView(LoginRequiredMixin, HouseholdRequiredMixin, DetailView
     def get_queryset(self):
         return InventoryItem.objects.filter(household=self.request.user.household)
     
-# ----------------------------
-# 在庫を編集する画面（ログイン必須）
-# ----------------------------
+# 在庫（Inventory）を編集する画面（ログイン必須）
 class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     """
     - 他世帯のURL直打ち対策：get_queryset()で絞る
@@ -603,9 +594,7 @@ class InventoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView
 
         return form
 
-# ----------------------------
-# 在庫を複製する画面（ログイン必須）
-# ----------------------------
+# 在庫（Inventory）を複製する画面（ログイン必須）
 class InventoryDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     def post(self, request, pk):
         src = get_object_or_404(
@@ -626,15 +615,9 @@ class InventoryDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
 
         return redirect("inventory:inventory_edit", pk=new_item.pk) 
 
-
-# ----------------------------
 # 在庫を削除する画面（ログイン必須）
-# ----------------------------
 class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """
-    在庫削除ページ
-
-    ポイント：
     - テンプレート名を明示して衝突事故を防ぐ
     - get_queryset() で自分の世帯の在庫だけ削除できるようにする
     """
@@ -646,9 +629,7 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
         """削除対象を自分の世帯の在庫に限定"""
         return InventoryItem.objects.filter(household=self.request.user.household)
 
-# ----------------------------
 # 履歴一覧（HistoryListView）（ログイン必須）
-# ----------------------------
 class InventoryHistoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     model = InventoryItem
     template_name = "inventory/history_list.html"
@@ -662,9 +643,7 @@ class InventoryHistoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListV
             .order_by("-updated_at")
         )
 
-# ----------------------------
 # 在庫を一括削除（確認ページ表示）
-# ----------------------------
 class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     template_name = "inventory/bulk_delete_confirm.html"
 
@@ -683,9 +662,7 @@ class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
 
         return render(request, "inventory/bulk_delete_confirm.html", {"items": items})
 
-# ----------------------------
 # 在庫を一括削除（実行）
-# ----------------------------
 class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
 
     def post(self, request):
@@ -700,10 +677,7 @@ class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin,
 
         return redirect("inventory:inventory_list")
     
-
-# ----------------------------
 # 在庫を一括削除（実行）
-# ----------------------------
 class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
 
     def post(self, request):
@@ -718,9 +692,7 @@ class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin,
 
         return redirect("inventory:inventory_list")
 
-# ----------------------------
 # 在庫を一括複製（確認ページ表示）
-# ----------------------------
 class InventoryBulkDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     template_name = "inventory/bulk_duplicate_confirm.html"
 
@@ -739,9 +711,7 @@ class InventoryBulkDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, Vie
 
         return render(request, "inventory/bulk_duplicate_confirm.html", {"items": items})
         
-# ----------------------------
 # 在庫を一括複製（実行）
-# ----------------------------
 class InventoryBulkDuplicateExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     def post(self, request):
         household = request.user.household
@@ -792,16 +762,12 @@ class BalanceView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
             "total": total,
         })
         return ctx
-
-# ----------------------------
-# 設定一覧（ログイン必須）
-# ----------------------------
-class SettingsListView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
-    template_name = "inventory/settings/index.html"
                 
 # ----------------------------
-# 分類（Category）一覧（ログイン必須）
+# 分類（Category）
 # ----------------------------
+
+# 分類（Category）一覧（ログイン必須）
 class CategoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     """
     分類一覧ページ
@@ -820,9 +786,7 @@ class CategoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
             household=self.request.user.household
         ).order_by("name")
 
-# ----------------------------
 # 分類（Category）追加（ログイン必須）
-# ----------------------------
 class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     model = Category
     """
@@ -831,12 +795,7 @@ class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView)
     - 他世帯カテゴリを誤作成する事故を防ぐ
     """
     
-    # ----------------------------
-    # フォームに表示する項目
-    # - name: 分類名
-    # - color: 分類カラー（今回追加）
-    # ----------------------------
-    fields = ["name", "goal_amount", "goal_unit", "color"]
+    fields = ["name", "description", "color", "goal_amount", "goal_unit"]
     template_name = "category/form.html"
     success_url = reverse_lazy("inventory:category_list")
 
@@ -847,13 +806,10 @@ class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView)
         form.instance.household = self.request.user.household
         return super().form_valid(form)
 
-
-# ----------------------------
 # 分類（Category）編集（ログイン必須）
-# ----------------------------
 class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     model = Category
-    fields = ["name", "goal_amount", "goal_unit", "color"]
+    fields = ["name", "description", "color", "goal_amount", "goal_unit"]
     template_name = "category/form.html"
     success_url = reverse_lazy("inventory:category_list")
 
@@ -861,14 +817,9 @@ class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView)
         # 他世帯のカテゴリを編集できない
         return Category.objects.filter(household=self.request.user.household)
 
-
-# ----------------------------
 # 分類（Category）削除（ログイン必須）
-# ----------------------------
 class CategoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """
-    カテゴリ削除ページ
-
     ポイント：
     - テンプレート名の衝突を防ぐため、template_name を明示する
     - Category を削除すると、InventoryItem.category は SET_NULL で未分類になる
@@ -886,6 +837,8 @@ class CategoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView)
 # ----------------------------
 # 保管場所（StorageLocation）
 # ----------------------------
+
+# 保管場所（StorageLocation）一覧
 class StorageLocationListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     """
     自分の世帯（household）の保管場所だけを一覧表示する
@@ -936,10 +889,9 @@ class StorageLocationListView(LoginRequiredMixin, HouseholdRequiredMixin, ListVi
         messages.success(request, "保管場所を削除しました。")
         return redirect("inventory:storage_location_list")
 
-
+# 保管場所（StorageLocation）追加
 class StorageLocationCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     """
-    保管場所を追加する
     - form_valid() で household を自動セット（世帯ひも付け漏れ防止）
     """
     model = StorageLocation
@@ -952,10 +904,9 @@ class StorageLocationCreateView(LoginRequiredMixin, HouseholdRequiredMixin, Crea
         form.instance.household = self.request.user.household
         return super().form_valid(form)
 
-
+# 保管場所（StorageLocation）編集
 class StorageLocationUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     """
-    保管場所を編集する
     - get_queryset() で自世帯のみに限定（他世帯URL直打ち対策）
     """
     model = StorageLocation
@@ -969,9 +920,9 @@ class StorageLocationUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, Upda
             household=self.request.user.household
         )
 
+# 保管場所（StorageLocation）削除
 class StorageLocationDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """
-    保管場所を削除する
     - get_queryset() で自世帯のみに限定（他世帯URL直打ち対策）
     """
     model = StorageLocation
@@ -982,9 +933,17 @@ class StorageLocationDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, Dele
         # ★超重要：他世帯の削除を絶対させない
         return StorageLocation.objects.filter(household=self.request.user.household)
 
+# ----------------------------
+# 設定一覧（ログイン必須）
+# ----------------------------
+class SettingsListView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
+    template_name = "inventory/settings/index.html"
+
+# ============================================================
+# 設定＞分類・目標設定（統合画面）
+# ============================================================
 class SettingsCategoryGoalView(LoginRequiredMixin, HouseholdRequiredMixin, View):
-    """
-    設定＞分類・目標設定（統合画面）
+    """   
     - 目標備蓄日数（3/7/14/カスタム）を保存
     - 分類一覧（検索・並び替え）を表示
     - 選択削除（confirmでOK）を実行
@@ -1095,12 +1054,108 @@ class SettingsCategoryGoalView(LoginRequiredMixin, HouseholdRequiredMixin, View)
             "categories": categories,
             "q": q,
             "sort": sort,
-        })      
-        
+        })              
+
+# ----------------------------
+# タブ用：各機能Viewを「薄く継承」して、テンプレだけ共通化する
+# ----------------------------
+class SettingsCategoryTabView(SettingsCategoryGoalView):
+    """
+    分類/目標（初期表示タブ）
+    既存の SettingsCategoryGoalView の処理はそのまま使い、
+    表示だけ tabs.html に差し替える
+    """
+    template_name = "inventory/settings/tabs.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["active_tab"] = "category"
+        ctx["tab_title"] = "分類 / 目標"
+        return ctx
+
+
+class SettingsStorageTabView(StorageLocationListView):
+    """
+    保管場所タブ：既存の一覧/検索/並び替え/削除などを流用
+    """
+    template_name = "inventory/settings/tabs.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["active_tab"] = "storage"
+        ctx["tab_title"] = "保管場所"
+        return ctx
+
+# ----------------------------
+# 1ページ統合：/inventory/settings/ だけでタブを切り替える
+# ----------------------------
+class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
+    """
+    /inventory/settings/ を1ページタブ画面にする親View
+    """
+    template_name = "inventory/settings/tabs.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        # どのタブを表示するか
+        tab = self.request.GET.get("tab", "category")
+        if tab not in ["category", "storage", "alert"]:
+            tab = "category"
+        ctx["tab"] = tab
+
+        # 世帯情報
+        ctx["household"] = self.request.user.household
+
+        # ===== タブ①：分類 =====
+        from .models import Category, StorageLocation
+
+        q = self.request.GET.get("q", "")
+        sort = self.request.GET.get("sort", "created")
+
+        categories = Category.objects.filter(
+            household=self.request.user.household
+        )
+
+        if q:
+            categories = categories.filter(name__icontains=q)
+
+        if sort == "name":
+            categories = categories.order_by("name")
+        else:
+            categories = categories.order_by("id")
+
+        ctx["categories"] = categories
+        ctx["q"] = q
+        ctx["sort"] = sort
+
+        # ===== タブ②：保管場所 =====
+        loc_q = self.request.GET.get("loc_q", "")
+        loc_sort = self.request.GET.get("loc_sort", "created")
+
+        locations = StorageLocation.objects.filter(
+            household=self.request.user.household
+        )
+
+        if loc_q:
+            locations = locations.filter(name__icontains=loc_q)
+
+        if loc_sort == "name":
+            locations = locations.order_by("name")
+        else:
+            locations = locations.order_by("id")
+
+        ctx["locations"] = locations
+        ctx["loc_q"] = loc_q
+        ctx["loc_sort"] = loc_sort
+
+        return ctx      
             
 # ----------------------------
-# メモ一覧（ログイン必須）
+# メモ（ログイン必須）
 # ----------------------------
+
+# メモ一覧（ログイン必須）
 class MemoListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     model = Memo
     template_name = "memo/list.html"
@@ -1109,10 +1164,7 @@ class MemoListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         # 自分の世帯のメモだけ表示
         return Memo.objects.filter(household=self.request.user.household).order_by("-created_at")
 
-
-# ----------------------------
 # メモ追加（ログイン必須）
-# ----------------------------
 class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     model = Memo
     fields = ["title", "body"]
@@ -1126,9 +1178,7 @@ class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
         form.instance.user = self.request.user
         return super().form_valid(form)
 
-# ----------------------------
 # メモ編集（ログイン必須）
-# ----------------------------
 class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     model = Memo
     fields = ["title", "body"]
@@ -1146,9 +1196,7 @@ class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
         form.instance.user = self.request.user
         return super().form_valid(form)
 
-# ----------------------------
 # メモ削除（ログイン必須）
-# ----------------------------
 class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     model = Memo
     template_name = "memo/confirm_delete.html"

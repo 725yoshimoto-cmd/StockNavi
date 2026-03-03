@@ -63,7 +63,7 @@
           メモ
         </a>
 
-        <a href="{% url 'inventory:settings' %}"
+        <a href="{% url 'inventory:settings_tabs' %}"
           class="{% if request.resolver_match.url_name == 'settings' %}is-active{% endif %}">
           設定一覧
         </a>
@@ -82,7 +82,7 @@
         {% endfor %}
       </ul>
     {% endif %}
-    
+
     <!-- ★本文はログイン状態に関係なく必ず描画する -->
     {% block content %}{% endblock %}
 

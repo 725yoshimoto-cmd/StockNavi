@@ -1,0 +1,77 @@
+<h1 class="h5 mb-3">アラート設定</h1>
+
+<form id="alertSettingForm" method="post" action="{% url 'accounts:alert_setting' %}">
+  {% csrf_token %}
+
+  <div class="mb-3">
+    <label class="form-label">個数アラート（◯個以下で通知）</label>
+    {{ form.quantity_threshold }}
+    <div class="form-text">例：1 → 1個以下で通知</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">期限アラート（残り◯日以内で通知）</label>
+    {{ form.expiry_days }}
+    <div class="form-text">例：30 → 30日以内で通知</div>
+  </div>
+
+  <button class="btn btn-primary w-100" type="submit">保存</button>
+</form>
+
+<!-- トースト（Bootstrap想定） -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="saveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-body" id="toastBody">保存しました</div>
+  </div>
+</div>
+
+<script>
+/* ===== ① showMessage が無い場合の保険（必ず動く） ===== */
+if (typeof window.showMessage !== "function") {
+  window.showMessage = function (msg) {
+    alert(msg);
+  };
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("alertSettingForm");
+  if (!form) return;
+
+  /* ===== ② 同じイベントを二重登録しない保険 ===== */
+  if (form.dataset.bound === "1") return;
+  form.dataset.bound = "1";
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    /* ★ ③ 連打・二重送信防止（送信中はロック） */
+    if (form.dataset.sending === "1") return;
+    form.dataset.sending = "1";
+
+    const url = form.action;
+    const fd = new FormData(form);
+
+    const saveBtn = form.querySelector("button[type='submit'], input[type='submit']");
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        body: fd,
+      });
+
+      const data = await res.json();
+      console.log("alert save status:", res.status, "body:", data);
+
+      window.showMessage(data.message || "保存しました");
+    } catch (err) {
+      console.error(err);
+      window.showMessage("通信エラーが発生しました");
+    } finally {
+      form.dataset.sending = "0";
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  });
+});
+</script>
