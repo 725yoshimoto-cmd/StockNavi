@@ -60,6 +60,9 @@ class InventoryItem(models.Model):
         null=True,
         verbose_name="商品画像"
     )
+    
+    # 在庫を論理削除するためのフラグ
+    is_deleted = models.BooleanField(default=False)
         
 class Category(models.Model):
     """
