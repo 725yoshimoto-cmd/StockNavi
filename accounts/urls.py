@@ -6,4 +6,5 @@ app_name = "accounts"
 
 urlpatterns = [
     path("mypage/", views.MyPageView.as_view(), name="mypage"),
+    path("alert_setting/", views.AlertSettingView.as_view(), name="alert_setting"),
 ]

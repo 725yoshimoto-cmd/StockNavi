@@ -2,19 +2,26 @@
 
   <p><a href="{% url 'inventory:storage_location_add' %}">＋保管場所を追加</a></p>
   
-  <form method="get" action="" style="margin: 8px 0;">
-    <input type="text" name="q" value="{{ q }}" placeholder="保管場所を検索">
-    <input type="hidden" name="sort" value="{{ sort }}">
-    <button type="submit">検索</button>
-    {% if q %}
-      <a href="?sort={{ sort }}">クリア</a>
-    {% endif %}
-  </form>
+<form method="get" action="" style="margin: 8px 0;">
+  <!-- ★ タブ固定（超重要） -->
+  <input type="hidden" name="tab" value="storage">
+
+  <input type="text" name="loc_q" value="{{ loc_q }}" placeholder="保管場所を検索">
+
+  <!-- 並び替え状態を保持 -->
+  <input type="hidden" name="loc_sort" value="{{ loc_sort }}">
+
+  <button type="submit">検索</button>
+
+  {% if loc_q %}
+    <a href="?tab=storage&sort={{ loc_sort }}">クリア</a>
+  {% endif %}
+</form>
 
   <p>
     並び替え：
-    <a href="?sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
-    <a href="?sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
+    <a href="?tab=storage&loc_sort=created{% if loc_q %}&loc_q={{ loc_q }}{% endif %}">登録順</a>
+    <a href="?tab=storage&loc_sort=name{% if loc_q %}&loc_q={{ loc_q }}{% endif %}">50音順</a>
   </p>
 
   {% if locations %}
@@ -27,24 +34,25 @@
 
       <ul style="list-style:none; padding:0;">
         {% for loc in locations %}
-          <li style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #ddd;">
+            <li style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid #ddd;">
 
-            <!-- ✅ 選択チェック -->
-            <input type="checkbox" name="selected_ids" value="{{ loc.id }}">
+            <!-- 左側（チェック + 名前） -->
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" name="selected_ids" value="{{ loc.id }}">
+                <span>{{ loc.name }}</span>
+            </div>
 
-            <!-- ✅ 名前 -->
-            <span style="flex:1;">{{ loc.name }}</span>
+            <!-- 右側（編集・削除） -->
+            <div style="display:flex; gap:8px;">
+                <a href="{% url 'inventory:storage_location_edit' loc.pk %}">編集</a>
+                <a href="{% url 'inventory:storage_location_delete' loc.pk %}"
+                style="color:red;"
+                onclick="return confirm('この保管場所を削除しますか？');">
+                削除
+                </a>
+            </div>
 
-            <!-- ✅ 編集（個別） -->
-            <a href="{% url 'inventory:storage_location_edit' loc.pk %}">編集</a>
-
-            <!-- ✅ 個別削除は残すなら残す（confirm付けてもOK） -->
-            <a href="{% url 'inventory:storage_location_delete' loc.pk %}"
-               style="color:red;"
-               onclick="return confirm('この保管場所を削除しますか？');">
-               削除
-            </a>
-          </li>
+            </li>
         {% endfor %}
       </ul>
     </form>

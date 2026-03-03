@@ -1,40 +1,22 @@
-{# inventory/templates/inventory/settings/tabs.html #}
 {% extends "base.html" %}
-{% load static %}
-
 {% block content %}
-<h2>設定</h2>
 
-{# タブ（同一ページ内で ?tab=... を変える） #}
-<div style="display:flex; gap:8px; margin:12px 0;">
-  <a href="{% url 'inventory:settings_tabs' %}?tab=category"
-     style="padding:8px 12px; border:1px solid #ccc; border-radius:8px; text-decoration:none;
-            {% if active_tab == 'category' %}background:#eee;{% endif %}">
-    分類 / 目標
-  </a>
+<h1>設定</h1>
 
-  <a href="{% url 'inventory:settings_tabs' %}?tab=storage"
-     style="padding:8px 12px; border:1px solid #ccc; border-radius:8px; text-decoration:none;
-            {% if active_tab == 'storage' %}background:#eee;{% endif %}">
-    保管場所
-  </a>
-
-  <a href="{% url 'inventory:settings_tabs' %}?tab=alert"
-     style="padding:8px 12px; border:1px solid #ccc; border-radius:8px; text-decoration:none;
-            {% if active_tab == 'alert' %}background:#eee;{% endif %}">
-    アラート
-  </a>
+<!-- タブ -->
+<div style="display:flex; gap:12px; border-bottom:1px solid #ddd; padding-bottom:8px; margin-bottom:16px;">
+  <a href="?tab=category" {% if tab == "category" %}style="font-weight:bold;"{% endif %}>分類 / 目標</a>
+  <a href="?tab=storage" {% if tab == "storage" %}style="font-weight:bold;"{% endif %}>保管場所</a>
+  <a href="?tab=alert" {% if tab == "alert" %}style="font-weight:bold;"{% endif %}>アラート</a>
 </div>
 
-<hr>
-
-{# ここでタブ中身を差し替え #}
-{% if active_tab == "category" %}
-  {% include "inventory/settings/partials/_category_goal.html" %}
-{% elif active_tab == "storage" %}
-  {% include "inventory/settings/partials/_storage_location.html" %}
-{% elif active_tab == "alert" %}
-  {% include "inventory/settings/partials/_alert.html" %}
+<!-- 中身（tab を見る） -->
+{% if tab == "category" %}
+  {% include "inventory/settings/_category_goal.html" %}
+{% elif tab == "storage" %}
+  {% include "inventory/settings/_storage_location.html" %}
+{% elif tab == "alert" %}
+  {% include "inventory/settings/_alert.html" %}
 {% else %}
   <p>タブが見つかりません。</p>
 {% endif %}

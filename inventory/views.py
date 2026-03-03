@@ -61,6 +61,7 @@ from accounts.forms import CustomUserCreationForm
 # ★ 追加：世帯ごとの閾値（AlertSetting）を取得する
 # 「世帯で1つだけ」の設定値を在庫一覧の判定基準として使う
 from accounts.models import AlertSetting
+from accounts.views import AlertSetting
 
 # ★追加：在庫フォーム（期限入力対応）
 from .forms import InventoryItemForm
@@ -1148,6 +1149,16 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
         ctx["locations"] = locations
         ctx["loc_q"] = loc_q
         ctx["loc_sort"] = loc_sort
+
+        # ===== タブ③：アラート（フォームをcontextに渡す）=====
+        # accounts側のフォームをそのまま使う（Viewをimportしないので安全）
+        from accounts.forms import AlertSettingForm
+        from accounts.models import AlertSetting
+
+        alert_setting, _ = AlertSetting.objects.get_or_create(
+            household=self.request.user.household
+        )
+        ctx["form"] = AlertSettingForm(instance=alert_setting)
 
         return ctx      
             
