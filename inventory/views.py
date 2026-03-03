@@ -370,10 +370,14 @@ class InventoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         household = self.request.user.household
                 
         # 世帯でフィルタ（他世帯混入防止）
+        # ★ 追加：is_deleted=False（履歴を除外）
         qs = (
             InventoryItem.objects
-            .filter(household=household)
-            .select_related("storage_location", "category")  # パフォーマンス最適化
+            .filter(
+                household=household,
+                is_deleted=False  # ←ここ追加！！
+            )
+            .select_related("storage_location", "category")
         )
 
         # GETパラメータによる絞り込み（分類）
