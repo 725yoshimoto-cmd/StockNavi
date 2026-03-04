@@ -4,6 +4,13 @@
 
 <h2>マイページ</h2>
 
+<p>
+  <a href="{% url 'inventory:invite_create' %}">メンバーを招待する（発行）</a>
+</p>
+<p>
+  <a href="{% url 'inventory:invite_token_list' %}">招待リンク（発行履歴）</a>
+</p>
+
 <p><strong>世帯名：</strong> {{ user.household.name }}</p>
 <p><strong>目標日数：</strong> {{ user.household.target_days }} 日</p>
 

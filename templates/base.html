@@ -5,6 +5,9 @@
   <title>{% block title %}StockNavi{% endblock %}</title>
 
   <style>
+    /* ----------------------------
+      共通ボタン
+    ---------------------------- */
     .btn {
       display: inline-block;
       padding: 8px 12px;
@@ -14,15 +17,75 @@
       color: #000;
     }
     .btn-danger { border-color: #b00; }
+
+    /* ----------------------------
+      画面幅
+    ---------------------------- */
     .wrap {
       max-width: 900px;
       margin: 20px auto;
       padding: 0 12px;
     }
-    .nav a { margin-right: 10px; }
-    .nav { position: relative; z-index: 10; }
 
-    /* カード全体の文字を赤/青にする（既存の色指定を上書きする） */
+    /* ----------------------------
+      下ナビ固定（設計図寄せ）
+      - nav を画面下に固定
+      - 本文が隠れないように余白を確保
+    ---------------------------- */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      padding: 10px 12px;
+      z-index: 9999;
+
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bottom-nav a {
+      text-decoration: none;
+      color: #333;
+      font-size: 14px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    .bottom-nav a.is-active {
+      font-weight: 700;
+      border: 1px solid #333;
+    }
+
+    /* 下ナビ分、本文が隠れないように余白 */
+    .wrap {
+      padding-bottom: 90px;
+    }
+
+    /* ----------------------------
+      メッセージ（Django messages）
+    ---------------------------- */
+    .messages {
+      margin: 12px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .messages li {
+      background: #f6f6f6;
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+
+    /* ----------------------------
+      カード全体の文字を赤/青にする（既存の色指定を上書きする）
+    ---------------------------- */
     .item-card.text-alert-red,
     .item-card.text-alert-red * {
       color: #dc3545 !important;
@@ -47,36 +110,37 @@
   <div class="wrap">
 
     {% if user.is_authenticated %}
-      <nav class="app-nav">
+      <!-- 下ナビ（設計図寄せ） -->
+      <nav class="bottom-nav">
         <a href="{% url 'inventory:inventory_list' %}"
-          class="{% if request.resolver_match.url_name == 'inventory_list' %}is-active{% endif %}">
-          在庫
+           class="{% if request.resolver_match.url_name == 'inventory_list' %}is-active{% endif %}">
+          📦 在庫
         </a>
 
         <a href="{% url 'inventory:balance' %}"
-          class="{% if request.resolver_match.url_name == 'balance' %}is-active{% endif %}">
-          バランス
+           class="{% if request.resolver_match.url_name == 'balance' %}is-active{% endif %}">
+          📊 バランス
         </a>
 
         <a href="{% url 'inventory:memo_list' %}"
-          class="{% if request.resolver_match.url_name|default:''|slice:':4' == 'memo' %}is-active{% endif %}">
-          メモ
+           class="{% if request.resolver_match.url_name|default:''|slice:':4' == 'memo' %}is-active{% endif %}">
+          📝 メモ
         </a>
 
         <a href="{% url 'inventory:settings_tabs' %}"
-          class="{% if request.resolver_match.url_name == 'settings' %}is-active{% endif %}">
-          設定一覧
+           class="{% if request.resolver_match.url_name == 'settings_tabs' %}is-active{% endif %}">
+          ⚙️ 設定
         </a>
 
-        <a href="{% url 'accounts:mypage' %}">
-          マイページ
+        <a href="{% url 'accounts:mypage' %}"
+           class="{% if request.resolver_match.url_name == 'mypage' %}is-active{% endif %}">
+          👤 マイページ
         </a>
       </nav>
-      <hr>
     {% endif %}
 
     {% if messages %}
-      <ul>
+      <ul class="messages">
         {% for message in messages %}
           <li>{{ message }}</li>
         {% endfor %}
