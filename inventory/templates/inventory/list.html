@@ -44,6 +44,12 @@
   <p>並び替え：名前順</p>
 {% endif %}
 
+<p style="text-align:right;">
+  <a href="{% url 'inventory:inventory_history' %}">
+    過去の登録履歴
+  </a>
+</p>
+
 <form method="get" action="{% url 'inventory:inventory_list' %}">
   <!-- 既存条件を維持 -->
   <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">

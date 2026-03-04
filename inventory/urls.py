@@ -31,7 +31,22 @@ urlpatterns = [
 
     # 過去一覧（History）
     path("history/", views.InventoryHistoryListView.as_view(), name="inventory_history"),
-
+    path(
+    "history/select/",
+    views.InventoryHistorySelectView.as_view(),
+    name="inventory_history_select"
+    ),
+    path(
+        "history/delete/",
+        views.InventoryHistoryDeleteView.as_view(),
+        name="inventory_history_delete"
+    ),
+    path(
+        "history/duplicate/<int:pk>/",
+        views.InventoryHistoryDuplicateView.as_view(),
+        name="inventory_history_duplicate"
+    ),
+    
     # バランス確認（Balance）
     path("balance/", views.BalanceView.as_view(), name="balance"),
     

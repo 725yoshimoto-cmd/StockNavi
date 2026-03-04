@@ -662,11 +662,59 @@ class InventoryHistoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListV
     def get_queryset(self):
         return (
             InventoryItem.objects
-            .filter(household=self.request.user.household)
+            .filter(
+                household=self.request.user.household,
+                is_deleted=True
+            )
             .select_related("storage_location", "category")
-            .order_by("-updated_at")
+            .order_by("name")
         )
 
+# 履歴選択画面（HistorySelectView）（ログイン必須）
+class InventoryHistorySelectView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
+    model = InventoryItem
+    template_name = "inventory/history_select.html"
+    context_object_name = "items"
+
+    def get_queryset(self):
+        return (
+            InventoryItem.objects
+            .filter(
+                household=self.request.user.household,
+                is_deleted=True
+            )
+            .order_by("name")
+        )
+
+# 履歴完全削除画面（HistoryDeleteView）（ログイン必須）
+class InventoryHistoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    def post(self, request):
+        selected_ids = request.POST.getlist("selected_ids")
+
+        InventoryItem.objects.filter(
+            household=request.user.household,
+            id__in=selected_ids,
+            is_deleted=True
+        ).delete()
+
+        return redirect("inventory:inventory_history")
+
+# 履歴複製画面（HistoryDuplicateView）（ログイン必須）
+class InventoryHistoryDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    def get(self, request, pk):
+        item = get_object_or_404(
+            InventoryItem,
+            pk=pk,
+            household=request.user.household,
+            is_deleted=True
+        )
+
+        item.pk = None
+        item.is_deleted = False
+        item.save()
+
+        return redirect("inventory:inventory_list")
+    
 # 在庫を一括削除（確認ページ表示）
 class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     template_name = "inventory/bulk_delete_confirm.html"

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>過去の登録履歴</h2>
+
+<p style="text-align:right;">
+  <a href="{% url 'inventory:inventory_history_select' %}">
+    選択画面へ
+  </a>
+</p>
+
+<p>
+  <a href="{% url 'inventory:inventory_list' %}">
+    在庫一覧へ戻る
+  </a>
+</p>
+
+<hr>
+
+<form method="post" action="{% url 'inventory:inventory_history_delete' %}">
+  {% csrf_token %}
+
+  {% for item in items %}
+    <div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
+      <input type="checkbox" name="selected_ids" value="{{ item.id }}">
+
+      <strong>{{ item.name }}</strong><br>
+      分類：{{ item.category.name }}<br>
+      個数：{{ item.quantity }}<br>
+
+      <a href="{% url 'inventory:inventory_history_duplicate' item.id %}">
+        📄 複製
+      </a>
+    </div>
+  {% empty %}
+    <p>履歴はありません。</p>
+  {% endfor %}
+
+  <button type="submit">
+    🗑 選択商品を完全削除
+  </button>
+
+</form>
+
+{% endblock %}

@@ -1,23 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1>過去の登録履歴</h1>
+<h2>過去の登録履歴</h2>
 
-<a href="{% url 'inventory:inventory_list' %}">在庫一覧へ</a>
+<p style="text-align:right;">
+  <a href="{% url 'inventory:inventory_history_select' %}">
+    選択画面へ
+  </a>
+</p>
+
+<hr>
+<p>
+  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+  ＞ 過去の登録履歴
+</p>
+
 <hr>
 
 {% for item in items %}
-  <div>
-    <p>
-      {{ item.updated_at|date:"Y/m/d H:i" }} /
-      <a href="{% url 'inventory:inventory_detail' item.pk %}">
-        {{ item.name }}
-      </a>
-      / 数量：{{ item.quantity }}
-    </p>
+  <div style="padding:12px; border:1px solid #ddd; border-radius:8px; margin:12px 0;">
+    <strong>{{ item.name }}</strong><br>
+    数量：{{ item.quantity }}<br>
+    {% if item.expiry_date %}賞味期限：{{ item.expiry_date }}<br>{% endif %}
+    {% if item.storage_location %}保管：{{ item.storage_location.name }}<br>{% endif %}
+    {% if item.category %}分類：{{ item.category.name }}<br>{% endif %}
   </div>
 {% empty %}
-  <p>履歴がありません</p>
+  <p>履歴はありません。</p>
 {% endfor %}
 
 {% endblock %}
