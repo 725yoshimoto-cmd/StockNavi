@@ -39,24 +39,40 @@
       <th>割合</th>
     </tr>
   </thead>
+
   <tbody>
     {% for r in rows %}
       <tr>
         <td>{{ r.name }}</td>
-        <td>{{ r.goal_amount }} {{ r.goal_unit }}</td>
-        <td>{{ r.current_amount|floatformat:1 }} {{ r.goal_unit }}</td>
+
         <td>
-            <div class="progress-text">
-                {{ r.achievement_percent|floatformat:0 }} %
-            </div>
-            <div class="progress-wrap">
-                <div class="progress-bar"
-                    style="width: {% if r.achievement_percent > 100 %}100{% else %}{{ r.achievement_percent|floatformat:0 }}{% endif %}%;
-                            background-color: {% if r.achievement_percent < 100 %}#f44336{% else %}#4caf50{% endif %};">
-                </div>
-            </div>
+          {% if r.goal_amount %}
+            {{ r.goal_amount }} {{ r.goal_unit }}
+          {% else %}
+            -
+          {% endif %}
         </td>
-        <td>{{ r.achievement_percent|floatformat:0 }} %</td>
+
+        <td>
+          {{ r.current_amount|floatformat:1 }}
+          {% if r.goal_unit %}{{ r.goal_unit }}{% endif %}
+        </td>
+
+        <td>
+          <div class="progress-text">
+            {{ r.achievement_percent|floatformat:0 }} %
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-bar"
+              style="
+                width: {% if r.achievement_percent > 100 %}100{% else %}{{ r.achievement_percent|floatformat:0 }}{% endif %}%;
+                background-color: {% if r.achievement_percent < 100 %}#f44336{% else %}#4caf50{% endif %};
+              ">
+            </div>
+          </div>
+        </td>
+
         <td>{{ r.share_percent|floatformat:0 }} %</td>
       </tr>
     {% endfor %}
