@@ -43,6 +43,12 @@
 
 <h3>分類</h3>
 
+<p>
+  <a href="{% url 'inventory:category_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
+    ＋分類を追加
+  </a>
+</p>
+
 <form method="get" action="" style="margin: 8px 0;">
   <!-- ★ タブ固定 -->
   <input type="hidden" name="tab" value="category">
@@ -59,36 +65,48 @@
 
 <p>
   並び替え：
-  <a href="?sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
+  <a href="?tab=category&sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
   <a href="?tab=category&sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
 </p>
 
-<ul style="list-style: none; padding: 0;">
-  {% for c in categories %}
-    <li style="display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #ddd;">
+{% if categories %}
+  <form method="post" action="{% url 'inventory:settings_tabs' %}"
+        onsubmit="return confirm('選択した分類を削除しますか？');">
+    {% csrf_token %}
+    <input type="hidden" name="tab" value="category">
+    <input type="hidden" name="action" value="bulk_delete_category">
 
-      <!-- 左側：分類名＋概要 -->
-      <div>
-        <a href="{% url 'inventory:category_edit' c.id %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
-          {{ c.name }}
-        </a>
+    <button type="submit" style="color:red;">選択削除</button>
 
-        {% if c.description %}
-          <div style="font-size: 12px; color: #666; margin-top: 4px;">
-            {{ c.description }}
+    <ul style="list-style:none; padding:0;">
+      {% for c in categories %}
+        <li style="display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid #ddd;">
+
+          <!-- 選択 -->
+          <input type="checkbox" name="selected_ids" value="{{ c.id }}" style="margin-top:4px;">
+
+          <!-- 色チップ -->
+          <span style="width:14px; height:14px; border-radius:4px; background:{{ c.color|default:'#f1e8ff' }}; margin-top:4px;"></span>
+
+          <!-- 名前＋概要 -->
+          <div style="flex:1;">
+            <a href="{% url 'inventory:category_edit' c.id %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
+              {{ c.name }}
+            </a>
+
+            {% if c.description %}
+              <div style="font-size:12px; color:#666; margin-top:4px;">
+                {{ c.description }}
+              </div>
+            {% endif %}
           </div>
-        {% endif %}
-      </div>
 
-      <!-- 右側：削除 -->
-      <a href="{% url 'inventory:category_delete' c.id %}"
-         style="color: red; font-size: 14px;"
-         onclick="return confirm('この分類を削除しますか？');">
-         削除
-      </a>
-
-    </li>
-  {% empty %}
-    <li>分類がありません</li>
-  {% endfor %}
-</ul>
+        </li>
+      {% empty %}
+        <li>分類がありません</li>
+      {% endfor %}
+    </ul>
+  </form>
+{% else %}
+  <p>分類がありません</p>
+{% endif %}

@@ -46,6 +46,8 @@
 
 <h3>分類</h3>
 
+<p><a href="{% url 'inventory:category_add' %}">＋分類を追加</a></p>
+
 <form method="get" action="" style="margin: 8px 0;">
   <input type="text" name="q" value="{{ q }}" placeholder="分類を検索">
   <input type="hidden" name="sort" value="{{ sort }}">
@@ -61,25 +63,42 @@
   <a href="?sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
 </p>
 
-<ul style="list-style: none; padding: 0;">
-  {% for c in categories %}
-    <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #ddd;">
-      
-      <!-- 左側：分類名 -->
-      <a href="{% url 'inventory:category_edit' c.id %}">
-        {{ c.name }}
-      </a>
+{% if categories %}
+  <form method="post" action=""
+        onsubmit="return confirm('選択した分類を削除しますか？');">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="bulk_delete">
 
-      <!-- 右側：削除 -->
-      <a href="{% url 'inventory:category_delete' c.id %}"
-         style="color: red; font-size: 14px;"
-         onclick="return confirm('この分類を削除しますか？');">
-         削除
-      </a>
+    <p style="margin:8px 0;">
+      <button type="submit" style="color:red;">選択削除</button>
+    </p>
 
-    </li>
-  {% empty %}
-    <li>分類がありません</li>
-  {% endfor %}
-</ul>
-{% endblock %}
+    <ul style="list-style:none; padding:0;">
+      {% for c in categories %}
+        <li style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #ddd;">
+
+          <!-- ✅ チェック -->
+          <input type="checkbox" name="selected_ids" value="{{ c.id }}">
+
+          <!-- ✅ 名前（編集へ） -->
+          <a href="{% url 'inventory:category_edit' c.id %}" style="flex:1;">
+            {{ c.name }}
+          </a>
+
+          <!-- ✅ 編集 -->
+          <a href="{% url 'inventory:category_edit' c.id %}">編集</a>
+
+          <!-- ✅ 個別削除（残す） -->
+          <a href="{% url 'inventory:category_delete' c.id %}"
+             style="color:red;"
+             onclick="return confirm('この分類を削除しますか？');">
+            削除
+          </a>
+
+        </li>
+      {% endfor %}
+    </ul>
+  </form>
+{% else %}
+  <p>分類はありません。</p>
+{% endif %}

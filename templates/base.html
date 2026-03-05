@@ -5,9 +5,58 @@
   <title>{% block title %}StockNavi{% endblock %}</title>
 
   <style>
-    /* ----------------------------
-      共通ボタン
-    ---------------------------- */
+    .wrap {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 12px;
+    }
+
+    /* 下ナビぶんの余白（コンテンツが隠れないように） */
+    body { margin: 0; }
+    .content-pad { padding-bottom: 80px; }
+
+    /* 下ナビ */
+    .bottom-nav{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;   /* 中央寄せ */
+      padding: 10px 0;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      z-index: 999;
+    }
+    .bottom-nav .nav-inner{
+      width: 100%;
+      max-width: 480px;          /* スマホ幅の箱に収める */
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 10px;
+    }
+    }
+    .bottom-nav a {
+      flex: 1;
+      text-align: center;
+      padding: 10px 6px;
+      border: 1px solid #bbb;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #222;
+      font-size: 14px;
+      line-height: 1.1;
+      background: #fff;
+      white-space: nowrap;
+    }
+    .bottom-nav a.is-active {
+      border-color: #333;
+      font-weight: 700;
+    }
+
+    /* ボタン類（既存） */
     .btn {
       display: inline-block;
       padding: 8px 12px;
@@ -18,87 +67,17 @@
     }
     .btn-danger { border-color: #b00; }
 
-    /* ----------------------------
-      画面幅
-    ---------------------------- */
-    .wrap {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 0 12px;
-    }
-
-    /* ----------------------------
-      下ナビ固定（設計図寄せ）
-      - nav を画面下に固定
-      - 本文が隠れないように余白を確保
-    ---------------------------- */
-    .bottom-nav {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: #fff;
-      border-top: 1px solid #ddd;
-      padding: 10px 12px;
-      z-index: 9999;
-
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .bottom-nav a {
-      text-decoration: none;
-      color: #333;
-      font-size: 14px;
-      padding: 6px 8px;
-      border-radius: 10px;
-      white-space: nowrap;
-    }
-
-    .bottom-nav a.is-active {
-      font-weight: 700;
-      border: 1px solid #333;
-    }
-
-    /* 下ナビ分、本文が隠れないように余白 */
-    .wrap {
-      padding-bottom: 90px;
-    }
-
-    /* ----------------------------
-      メッセージ（Django messages）
-    ---------------------------- */
-    .messages {
-      margin: 12px 0;
-      padding: 0;
-      list-style: none;
-    }
-    .messages li {
-      background: #f6f6f6;
-      border: 1px solid #ddd;
-      padding: 8px 10px;
-      border-radius: 8px;
-      margin-bottom: 6px;
-    }
-
-    /* ----------------------------
-      カード全体の文字を赤/青にする（既存の色指定を上書きする）
-    ---------------------------- */
+    /* 期限アラート色（既存） */
     .item-card.text-alert-red,
     .item-card.text-alert-red * {
       color: #dc3545 !important;
       font-weight: 600;
     }
-
     .item-card.text-alert-blue,
     .item-card.text-alert-blue * {
       color: #0d6efd !important;
       font-weight: 600;
     }
-
-    /* ただし、カテゴリタグの背景色はそのままにしたいので文字色だけ白に戻す（任意） */
     .item-card.text-alert-red .cat-tag,
     .item-card.text-alert-blue .cat-tag {
       color: #fff !important;
@@ -107,49 +86,49 @@
 </head>
 
 <body>
-  <div class="wrap">
-
-    {% if user.is_authenticated %}
-      <!-- 下ナビ（設計図寄せ） -->
-      <nav class="bottom-nav">
-        <a href="{% url 'inventory:inventory_list' %}"
-           class="{% if request.resolver_match.url_name == 'inventory_list' %}is-active{% endif %}">
-          📦 在庫
-        </a>
-
-        <a href="{% url 'inventory:balance' %}"
-           class="{% if request.resolver_match.url_name == 'balance' %}is-active{% endif %}">
-          📊 バランス
-        </a>
-
-        <a href="{% url 'inventory:memo_list' %}"
-           class="{% if request.resolver_match.url_name|default:''|slice:':4' == 'memo' %}is-active{% endif %}">
-          📝 メモ
-        </a>
-
-        <a href="{% url 'inventory:settings_tabs' %}"
-           class="{% if request.resolver_match.url_name == 'settings_tabs' %}is-active{% endif %}">
-          ⚙️ 設定
-        </a>
-
-        <a href="{% url 'accounts:mypage' %}"
-           class="{% if request.resolver_match.url_name == 'mypage' %}is-active{% endif %}">
-          👤 マイページ
-        </a>
-      </nav>
-    {% endif %}
+  <div class="wrap content-pad">
 
     {% if messages %}
-      <ul class="messages">
+      <ul>
         {% for message in messages %}
           <li>{{ message }}</li>
         {% endfor %}
       </ul>
     {% endif %}
 
-    <!-- ★本文はログイン状態に関係なく必ず描画する -->
     {% block content %}{% endblock %}
 
   </div>
+
+{% if user.is_authenticated %}
+  <nav class="bottom-nav" style="position:sticky; bottom:0; background:#fff; padding:10px 0; border-top:1px solid #ddd;">
+    <div class="nav-inner">
+      
+      <a href="{% url 'inventory:inventory_list' %}"
+         class="{% if request.resolver_match.url_name == 'inventory_list' %}is-active{% endif %}">
+        🏠<br>在庫
+      </a>
+
+      <a href="{% url 'inventory:balance' %}"
+         class="{% if request.resolver_match.url_name == 'balance' %}is-active{% endif %}">
+        📊<br>バランス
+      </a>
+
+      <a href="{% url 'inventory:memo_list' %}"
+         class="{% if request.resolver_match.url_name|default:''|slice:':4' == 'memo' %}is-active{% endif %}">
+        📝<br>メモ
+      </a>
+
+      <a href="{% url 'inventory:settings_tabs' %}"
+         class="{% if request.resolver_match.url_name == 'settings_tabs' or request.resolver_match.url_name == 'settings' %}is-active{% endif %}">
+        ⚙️<br>設定
+      </a>
+
+      <a href="{% url 'accounts:mypage' %}"
+         class="{% if request.resolver_match.url_name == 'mypage' %}is-active{% endif %}">
+        👤<br>マイページ
+      </a>
+    </nav>
+  {% endif %}
 </body>
 </html>

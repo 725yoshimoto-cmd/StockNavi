@@ -6,7 +6,7 @@
 
 <form method="post">
   {% csrf_token %}
-
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
   <!-- ----------------------------
        分類名
        ---------------------------- -->
@@ -56,8 +56,10 @@
   </div>
 </form>
 
-<p style="margin-top:16px;">
-  <a href="{% url 'inventory:category_list' %}">一覧へ戻る</a>
-</p>
+    {% if request.GET.next %}
+      <a href="{{ request.GET.next }}">一覧へ戻る</a>
+    {% else %}
+      <a href="{% url 'inventory:category_list' %}">一覧へ戻る</a>
+    {% endif %}
 
 {% endblock %}

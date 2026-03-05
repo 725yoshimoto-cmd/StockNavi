@@ -1,57 +1,61 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>保管場所一覧</h1>
+<h3>保管場所</h3>
 
-  <p><a href="{% url 'inventory:storage_location_add' %}">＋保管場所を追加</a></p>
-  
-  <form method="get" action="" style="margin: 8px 0;">
-    <input type="text" name="q" value="{{ q }}" placeholder="保管場所を検索">
-    <input type="hidden" name="sort" value="{{ sort }}">
-    <button type="submit">検索</button>
-    {% if q %}
-      <a href="?sort={{ sort }}">クリア</a>
-    {% endif %}
-  </form>
+<p><a href="{% url 'inventory:storage_location_add' %}">＋保管場所を追加</a></p>
 
-  <p>
-    並び替え：
-    <a href="?sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
-    <a href="?sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
-  </p>
-
-  {% if locations %}
-    <form method="post" action=""
-          onsubmit="return confirm('選択した保管場所を削除しますか？');">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="bulk_delete">
-
-      <button type="submit" style="color:red;">選択削除</button>
-
-      <ul style="list-style:none; padding:0;">
-        {% for loc in locations %}
-          <li style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #ddd;">
-
-            <!-- ✅ 選択チェック -->
-            <input type="checkbox" name="selected_ids" value="{{ loc.id }}">
-
-            <!-- ✅ 名前 -->
-            <span style="flex:1;">{{ loc.name }}</span>
-
-            <!-- ✅ 編集（個別） -->
-            <a href="{% url 'inventory:storage_location_edit' loc.pk %}">編集</a>
-
-            <!-- ✅ 個別削除は残すなら残す（confirm付けてもOK） -->
-            <a href="{% url 'inventory:storage_location_delete' loc.pk %}"
-               style="color:red;"
-               onclick="return confirm('この保管場所を削除しますか？');">
-               削除
-            </a>
-          </li>
-        {% endfor %}
-      </ul>
-    </form>
-  {% else %}
-    <p>まだ保管場所が登録されていません。</p>
+<form method="get" action="" style="margin: 8px 0;">
+  <input type="text" name="q" value="{{ q }}" placeholder="保管場所を検索">
+  <input type="hidden" name="sort" value="{{ sort }}">
+  <button type="submit">検索</button>
+  {% if q %}
+    <a href="?sort={{ sort }}">クリア</a>
   {% endif %}
+</form>
+
+<p>
+  並び替え：
+  <a href="?sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
+  <a href="?sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
+</p>
+
+{% if locations %}
+  <form method="post" action=""
+        onsubmit="return confirm('選択した保管場所を削除しますか？');">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="bulk_delete">
+
+    <p style="margin:8px 0;">
+      <button type="submit" style="color:red;">選択削除</button>
+    </p>
+
+    <ul style="list-style:none; padding:0;">
+      {% for loc in locations %}
+        <li style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #ddd;">
+
+          <!-- ✅ チェック -->
+          <input type="checkbox" name="selected_ids" value="{{ loc.id }}">
+
+          <!-- ✅ 名前（編集へ） -->
+          <a href="{% url 'inventory:storage_location_edit' loc.pk %}" style="flex:1;">
+            {{ loc.name }}
+          </a>
+
+          <!-- ✅ 右端アクション（分類と統一：削除だけにするなら削除だけでもOK） -->
+          <a href="{% url 'inventory:storage_location_edit' loc.pk %}">編集</a>
+
+          <a href="{% url 'inventory:storage_location_delete' loc.pk %}"
+             style="color:red;"
+             onclick="return confirm('この保管場所を削除しますか？');">
+            削除
+          </a>
+
+        </li>
+      {% endfor %}
+    </ul>
+  </form>
+{% else %}
+  <p>保管場所はありません。</p>
+{% endif %}
 {% endblock %}

@@ -94,6 +94,23 @@ from django.db.models import Q
 # **Categoryモデル（分類）**を views.py から使うための import
 from .models import Category
 
+from django.utils.http import url_has_allowed_host_and_scheme
+
+
+class NextUrlMixin:
+    def _get_next_url(self):
+        # GETでもPOSTでも拾えるようにする
+        next_url = self.request.POST.get("next") or self.request.GET.get("next")
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={self.request.get_host()}):
+            return next_url
+        return None
+
+    def get_success_url(self):
+        nxt = self._get_next_url()
+        if nxt:
+            return nxt
+        return super().get_success_url()
+
 # ----------------------------
 # ポートフォリオトップ画面
 # ----------------------------
@@ -972,7 +989,7 @@ class StorageLocationListView(LoginRequiredMixin, HouseholdRequiredMixin, ListVi
         return redirect("inventory:storage_location_list")
 
 # 保管場所（StorageLocation）追加
-class StorageLocationCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
+class StorageLocationCreateView(NextUrlMixin, LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     """
     - form_valid() で household を自動セット（世帯ひも付け漏れ防止）
     """
@@ -987,7 +1004,7 @@ class StorageLocationCreateView(LoginRequiredMixin, HouseholdRequiredMixin, Crea
         return super().form_valid(form)
 
 # 保管場所（StorageLocation）編集
-class StorageLocationUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
+class StorageLocationUpdateView(NextUrlMixin, LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     """
     - get_queryset() で自世帯のみに限定（他世帯URL直打ち対策）
     """
@@ -1001,7 +1018,7 @@ class StorageLocationUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, Upda
         return StorageLocation.objects.filter(
             household=self.request.user.household
         )
-
+    
 # 保管場所（StorageLocation）削除
 class StorageLocationDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """
@@ -1241,7 +1258,53 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
         )
         ctx["form"] = AlertSettingForm(instance=alert_setting)
 
-        return ctx      
+        return ctx 
+    
+        def post(self, request, *args, **kwargs):
+            from django.shortcuts import redirect
+            from django.contrib import messages
+            from django.urls import reverse
+            from .models import Category, StorageLocation
+
+            tab = request.POST.get("tab") or request.GET.get("tab") or "category"
+
+            # settings の同じタブに戻す
+            redirect_url = reverse("inventory:settings_tabs") + f"?tab={tab}"
+
+            action = request.POST.get("action")
+
+            # --- 分類：選択削除 ---
+            if action == "bulk_delete_category":
+                selected_ids = request.POST.getlist("selected_ids")
+                if not selected_ids:
+                    messages.warning(request, "削除する分類を選択してください。")
+                    return redirect(redirect_url)
+
+                Category.objects.filter(
+                    household=request.user.household,
+                    id__in=selected_ids
+                ).delete()
+
+                messages.success(request, "分類を削除しました。")
+                return redirect(redirect_url)
+
+            # --- 保管場所：選択削除 ---
+            if action == "bulk_delete_storage":
+                selected_ids = request.POST.getlist("selected_ids")
+                if not selected_ids:
+                    messages.warning(request, "削除する保管場所を選択してください。")
+                    return redirect(redirect_url)
+
+                StorageLocation.objects.filter(
+                    household=request.user.household,
+                    id__in=selected_ids
+                ).delete()
+
+                messages.success(request, "保管場所を削除しました。")
+                return redirect(redirect_url)
+
+            # 想定外は元のタブへ
+            return redirect(redirect_url)     
             
 # ----------------------------
 # メモ（ログイン必須）

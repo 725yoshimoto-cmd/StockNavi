@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 
+<!-- ✅ パンくず（簡易・1行） -->
+<p class="breadcrumb" style="margin:8px 0 14px 0; font-size:14px;">
+  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> &gt; バランス
+</p>
+
 <style>
   .progress-wrap { width: 180px; background: #eee; border-radius: 999px; overflow: hidden; }
   .progress-bar { height: 10px; background: #4caf50; }

@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 
+<!-- ✅ パンくず（簡易） -->
+<p class="breadcrumb">
+  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞ 設定
+</p>
+
 <h1>設定</h1>
 
 <!-- タブ -->

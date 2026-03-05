@@ -1,8 +1,11 @@
 {% extends "base.html" %}
-
 {% block title %}メモ{% endblock %}
-
 {% block content %}
+
+<p class="breadcrumb" style="margin:8px 0 14px 0; font-size:14px;">
+  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> &gt; メモ
+</p>
+
 <h1>メモ一覧</h1>
 
 <p>
