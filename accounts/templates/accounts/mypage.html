@@ -21,10 +21,36 @@
 
 <hr>
 
-<p>
-{# TODO: 後でURLを確定して復活させる #}
-  {# <a href="{% url 'alert_setting' %}">アラート設定</a> #}
-</p>
+<!-- =========================
+ユーザー情報編集フォーム
+========================= -->
+
+<h3>ユーザー情報</h3>
+
+<form method="post" style="display:grid; gap:10px; max-width:420px;">
+  {% csrf_token %}
+
+  <div>
+    <label for="{{ form.username.id_for_label }}"><strong>ニックネーム</strong></label><br>
+    {{ form.username }}
+  </div>
+
+  <div>
+    <label for="{{ form.email.id_for_label }}"><strong>メールアドレス</strong></label><br>
+    {{ form.email }}
+  </div>
+
+  <button type="submit" class="btn">保存</button>
+
+  {% if messages %}
+    {% for message in messages %}
+      <p style="font-size:13px;">{{ message }}</p>
+    {% endfor %}
+  {% endif %}
+
+</form>
+
+<hr>
 
 <form method="post" action="{% url 'logout' %}">
   {% csrf_token %}

@@ -1,13 +1,15 @@
 # accounts/views.py
 
 # Django基本
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
+from django.views.generic import TemplateView
 
 # 自アプリ
-from .forms import AlertSettingForm
+from .forms import AlertSettingForm, UserUpdateForm
 from .models import AlertSetting
 
 # 既存：世帯必須のMixin（プロジェクトにあるやつ）
@@ -63,15 +65,27 @@ class AlertSettingView(LoginRequiredMixin, HouseholdRequiredMixin, View):
 # ----------------------------
 # ★ マイページ
 # ----------------------------
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-
 class MyPageView(LoginRequiredMixin, TemplateView):
     """
     マイページ
     - 世帯情報表示
-    - アラート設定への導線
+    - ニックネーム/メール更新（最短：username をニックネーム扱い）
     - ログアウト導線
     """
     template_name = "accounts/mypage.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["form"] = UserUpdateForm(instance=self.request.user)
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        form = UserUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "保存しました。")
+            return redirect("accounts:mypage")
+        # バリデーションエラー時は同じ画面にform付きで戻す
+        ctx = self.get_context_data(**kwargs)
+        ctx["form"] = form
+        return self.render_to_response(ctx)

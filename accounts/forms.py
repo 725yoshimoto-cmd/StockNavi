@@ -2,9 +2,11 @@
 # accountsアプリ専用のフォーム定義ファイル（User作成フォームなど）
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, get_user_model
 from .models import CustomUser
 from .models import AlertSetting
+
+User = get_user_model()
 
 class CustomUserCreationForm(UserCreationForm):
     """
@@ -49,3 +51,20 @@ class AlertSettingForm(forms.ModelForm):
         if v > 3650:
             raise forms.ValidationError("期限アラートは大きすぎます（3650日以下にしてください）")
         return v
+    
+class UserUpdateForm(forms.ModelForm):
+    """
+    マイページで編集する項目だけに絞る
+    ※最短ルート：ニックネーム = username として扱う
+    """
+    class Meta:
+        model = User
+        fields = ["username", "email"]
+        labels = {
+            "username": "ニックネーム",
+            "email": "メールアドレス",
+        }
+        widgets = {
+            "username": forms.TextInput(attrs={"placeholder": "ニックネーム", "autocomplete": "nickname"}),
+            "email": forms.EmailInput(attrs={"placeholder": "mail@example.com", "autocomplete": "email"}),
+        }
