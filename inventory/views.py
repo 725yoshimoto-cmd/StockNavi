@@ -287,10 +287,7 @@ class InviteTokenListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         一覧に出すデータを「自分の世帯」に限定する（世帯分離）
         """
         household = self.request.user.household
-        return (
-            InviteToken.objects.filter(household=household)
-            .order_by("-created_at")
-        )
+        return Memo.objects.filter(household=self.request.user.household)
 
     def get_context_data(self, **kwargs):
         """
@@ -1316,9 +1313,27 @@ class MemoListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     template_name = "memo/list.html"
 
     def get_queryset(self):
-        # 自分の世帯のメモだけ表示
-        return Memo.objects.filter(household=self.request.user.household).order_by("-created_at")
+        household = self.request.user.household
+        qs = Memo.objects.filter(household=household)
 
+        # ✅ 検索（title）
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(title__icontains=q)
+
+        # ✅ 並び替え（テンプレの value と一致させる）
+        sort = self.request.GET.get("sort") or "created_desc"
+
+        if sort == "created_asc":
+            qs = qs.order_by("created_at")
+        elif sort == "created_desc":
+            qs = qs.order_by("-created_at")
+        else:
+            # updated_* はモデルに updated_at が無いので、created_at にフォールバック
+            qs = qs.order_by("-created_at")
+
+        return qs
+        
 # メモ追加（ログイン必須）
 class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     model = Memo
@@ -1341,9 +1356,19 @@ class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     success_url = reverse_lazy("inventory:memo_list")
 
     def get_queryset(self):
-        # 他世帯のメモは編集できない（pk直打ち対策）
         return Memo.objects.filter(household=self.request.user.household)
 
+        # ✅ 検索（タイトル＋本文っぽいフィールド）
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(
+                Q(title__icontains=q)
+                | Q(content__icontains=q)
+                | Q(body__icontains=q)
+                | Q(text__icontains=q)
+                | Q(note__icontains=q)
+            )
+    
     def form_valid(self, form):
         print("★ MemoCreateView.form_valid called")  # ←確認用（あとで消す）
         print("★ user household =", getattr(self.request.user, "household", None))
@@ -1358,9 +1383,23 @@ class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     success_url = reverse_lazy("inventory:memo_list")
 
     def get_queryset(self):
-        # 他世帯のメモは削除できない（pk直打ち対策）
         return Memo.objects.filter(household=self.request.user.household)
+    
+class MemoBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        ids = request.POST.getlist("selected_ids")
+        if not ids:
+            messages.warning(request, "削除するメモを選択してください。")
+            return redirect("inventory:memo_list")
 
+        Memo.objects.filter(
+            household=request.user.household,
+            id__in=ids
+        ).delete()
+
+        messages.success(request, "選択したメモを削除しました。")
+        return redirect("inventory:memo_list")
+    
 # ----------------------------
 # マイページ
 # ----------------------------

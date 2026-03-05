@@ -14,44 +14,97 @@
 
 <hr>
 
+<!-- =========================
+     ① 検索・並び替え（GET）
+     ========================= -->
+<form method="get" style="display:inline-block; margin-right:8px;">
+  <input
+    type="text"
+    name="q"
+    value="{{ request.GET.q|default:'' }}"
+    placeholder="キーワード検索"
+    style="padding:6px 10px; width:220px;"
+  />
+
+  <select name="sort" style="padding:6px 10px;" onchange="this.form.submit()">
+    <option value="created_desc" {% if request.GET.sort == "created_desc" or not request.GET.sort %}selected{% endif %}>
+      作成日：新しい順
+    </option>
+    <option value="created_asc" {% if request.GET.sort == "created_asc" %}selected{% endif %}>
+      作成日：古い順
+    </option>
+  </select>
+
+  <button type="submit" class="btn">検索</button>
+
+  {% if request.GET.q or request.GET.sort %}
+    <a class="btn" href="{% url 'inventory:memo_list' %}">リセット</a>
+  {% endif %}
+</form>
+
+<!-- =========================
+     ② 選択削除（POST）※GETフォームの外！
+     ========================= -->
+<form id="bulkDeleteForm"
+      method="post"
+      action="{% url 'inventory:memo_bulk_delete' %}"
+      style="display:inline-block;">
+  {% csrf_token %}
+  <button type="submit"
+          class="btn btn-danger"
+          title="選択メモを削除"
+          onclick="return confirm('選択したメモを削除しますか？');">
+    🗑
+  </button>
+</form>
+
+<script>
+  // チェックされた memo の id を hidden に詰めて POST 送信
+  document.getElementById("bulkDeleteForm").addEventListener("submit", function(e){
+    const checked = document.querySelectorAll('input[name="selected_ids"]:checked');
+    if (checked.length === 0) {
+      e.preventDefault();
+      alert("削除するメモを選択してください。");
+      return;
+    }
+    // 既存 hidden を削除（連打対策）
+    this.querySelectorAll('input[type="hidden"][name="selected_ids"]').forEach(x => x.remove());
+    // checked を hidden で詰める
+    checked.forEach(cb => {
+      const h = document.createElement("input");
+      h.type = "hidden";
+      h.name = "selected_ids";
+      h.value = cb.value;
+      this.appendChild(h);
+    });
+  });
+</script>
+
+<hr>
+
+<!-- =========================
+     ③ メモ一覧（縦並び）
+     ========================= -->
 {% for memo in object_list %}
-  <div style="margin-bottom: 16px;">
-    <strong>{{ memo.title }}</strong>
+  <div style="margin-bottom:16px; border-bottom:1px solid #eee; padding-bottom:12px; display:block; width:100%;">
+    <label style="display:block;">
+      <input type="checkbox" name="selected_ids" value="{{ memo.pk }}">
+      <strong style="margin-left:6px;">
+        <a href="{% url 'inventory:memo_edit' memo.pk %}">{{ memo.title }}</a>
+      </strong>
+    </label>
 
-    {# ある場合だけ表示（フィールドが無いときに落ちないよう保険） #}
-    <div style="font-size: 12px; margin-top: 4px;">
-      {% if memo.updated_at %}更新: {{ memo.updated_at|date:"Y-m-d H:i" }}{% endif %}
-      {% if memo.created_at %} / 作成: {{ memo.created_at|date:"Y-m-d H:i" }}{% endif %}
-    {# --- ここから「作成者」と「本文」安全表示 --- #}
+    <div style="font-size:12px; margin-top:4px;">
+      {% if memo.created_at %}作成: {{ memo.created_at|date:"Y-m-d H:i" }}{% endif %}
+      {% if memo.user %} / 作成者: {{ memo.user }}{% endif %}
+    </div>
 
-    {# 作成者：存在する候補だけ順番に表示（無ければ何も出さない） #}
-    {% if memo.user %}
-      / 作成者: {{ memo.user }}
-    {% elif memo.author %}
-      / 作成者: {{ memo.author }}
-    {% elif memo.owner %}
-      / 作成者: {{ memo.owner }}
-    {% endif %}
-
-    {# 本文：存在する候補だけ表示 #}
-    {% if memo.content %}
-      <p>{{ memo.content|linebreaksbr }}</p>
-    {% elif memo.body %}
+    {% if memo.body %}
       <p>{{ memo.body|linebreaksbr }}</p>
-    {% elif memo.text %}
-      <p>{{ memo.text|linebreaksbr }}</p>
-    {% elif memo.note %}
-      <p>{{ memo.note|linebreaksbr }}</p>
     {% endif %}
-
-    {# --- ここまで --- #}
-
-    <p>
-      <a class="btn" href="{% url 'inventory:memo_edit' memo.pk %}">編集</a>
-      <a class="btn btn-danger" href="{% url 'inventory:memo_delete' memo.pk %}">削除</a>
-    </p>
   </div>
 {% empty %}
   <p>メモがまだありません。</p>
 {% endfor %}
+
 {% endblock %}

@@ -64,18 +64,24 @@
 </form>
 
 <form method="get" action="{% url 'inventory:inventory_list' %}">
-  <input type="text" name="q" placeholder="商品名で検索" value="{{ request.GET.q|default:'' }}">
 
-  <!-- 既存の絞り込み条件を維持する（←重要） -->
-  <input type="hidden" name="category" value="{{ selected_category }}">
-  <input type="hidden" name="storage" value="{{ selected_storage }}">
+  <!-- ✅ 並び替え/選択モードを維持 -->
+  <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
+  <input type="hidden" name="select_mode" value="{{ request.GET.select_mode|default:'0' }}">
 
-  <button type="submit">検索</button>
-</form>
+  <!-- ✅ 検索 -->
+  <input
+    type="text"
+    name="q"
+    placeholder="商品名で検索"
+    value="{{ request.GET.q|default:'' }}"
+    style="padding:6px 10px; width:220px;"
+  />
+  <button type="submit" class="btn">検索</button>
 
-<form method="get">
-  <label>分類</label>
-  <select name="category">
+  <!-- ✅ 分類（選んだ瞬間に反映） -->
+  <label style="margin-left:10px;">分類</label>
+  <select name="category" onchange="this.form.submit()">
     <option value="">すべて</option>
     {% for c in categories %}
       <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:"s" %}selected{% endif %}>
@@ -84,8 +90,9 @@
     {% endfor %}
   </select>
 
-  <label>保管場所</label>
-  <select name="storage">
+  <!-- ✅ 保管場所（選んだ瞬間に反映） -->
+  <label style="margin-left:10px;">保管場所</label>
+  <select name="storage" onchange="this.form.submit()">
     <option value="">すべて</option>
     {% for s in storages %}
       <option value="{{ s.id }}" {% if selected_storage == s.id|stringformat:"s" %}selected{% endif %}>
@@ -94,8 +101,9 @@
     {% endfor %}
   </select>
 
-  <button class="btn" type="submit">絞り込み</button>
-  <a class="btn" href="{% url 'inventory:inventory_list' %}">解除</a>
+  <!-- ✅ 解除 -->
+  <a class="btn" style="margin-left:10px;" href="{% url 'inventory:inventory_list' %}">解除</a>
+
 </form>
 
 <form id="bulkForm" method="post">
