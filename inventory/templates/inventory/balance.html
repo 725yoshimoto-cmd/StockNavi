@@ -7,93 +7,156 @@
 </p>
 
 <style>
+  /* 進捗バー */
   .progress-wrap { width: 180px; background: #eee; border-radius: 999px; overflow: hidden; }
-  .progress-bar { height: 10px; background: #4caf50; }
+  .progress-bar { height: 10px; }
   .progress-text { font-size: 12px; }
+
+  /* 画面上部の行：左(ドロップダウン) / 右(目標) */
+  .top-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin: 10px 0 6px;
+  }
+  .top-left{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .top-right{
+    text-align:right;
+    font-weight:bold;
+    line-height:1.2;
+  }
+  .top-right .num{
+    font-size:22px;
+  }
+
+  /* 円グラフはスマホ幅に合わせる */
+  #balancePie { max-width: 100%; height: auto; }
+
+  /* テーブルをスクロール化 */
+  .table-wrap{
+    max-height: 360px;
+    overflow:auto;
+    border:1px solid #ddd;
+    border-radius:8px;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  th, td{
+    padding:10px;
+    border-bottom:1px solid #eee;
+    vertical-align:top;
+    font-size:14px;
+  }
+  thead th{
+    position:sticky;
+    top:0;
+    background:#fff;
+    border-bottom:1px solid #ddd;
+    z-index:1;
+    text-align:left;
+  }
 </style>
 
 <h1>備蓄バランス確認</h1>
 
-<h2>目標：{{ target_days }}日分の備蓄バランス</h2>
+<!-- ✅ 上段：保管場所プルダウン（自動切替）＋ 目標日数 -->
+<form method="get" class="top-row">
+  <div class="top-left">
+    <label for="storageSelect">保管場所</label>
+    <select id="storageSelect" name="storage" onchange="this.form.submit()" style="padding:6px 10px;">
+      <option value="">すべて</option>
+      {% for s in storages %}
+        <option value="{{ s.id }}" {% if storage_id|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>
+          {{ s.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
 
-<form method="get">
-  <label>保管場所：</label>
-  <select name="storage">
-    <option value="">すべて</option>
-    {% for s in storages %}
-      <option value="{{ s.id }}" {% if storage_id|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>
-        {{ s.name }}
-      </option>
-    {% endfor %}
-  </select>
-  <button type="submit">絞り込む</button>
+  <div class="top-right">
+    備蓄目標<br>
+    <span class="num">{{ target_days }}</span> 日分
+  </div>
 </form>
 
 <hr>
 
 <h2>分類別の割合</h2>
-<canvas id="balancePie" width="400" height="400"></canvas>
+<!-- ✅ 円グラフ（復旧） -->
+<canvas id="balancePie"></canvas>
 
-<table border="1" cellpadding="6">
-  <thead>
-    <tr>
-      <th>分類</th>
-      <th>目標</th>
-      <th>現在</th>
-      <th>達成度</th>
-      <th>割合</th>
-    </tr>
-  </thead>
+<hr style="margin: 18px 0;">
 
-  <tbody>
-    {% for r in rows %}
+<h2>分類ごとの達成度</h2>
+
+<div class="table-wrap">
+  <table>
+    <thead>
       <tr>
-        <td>{{ r.name }}</td>
-
-        <td>
-          {% if r.goal_amount %}
-            {{ r.goal_amount }} {{ r.goal_unit }}
-          {% else %}
-            -
-          {% endif %}
-        </td>
-
-        <td>
-          {{ r.current_amount|floatformat:1 }}
-          {% if r.goal_unit %}{{ r.goal_unit }}{% endif %}
-        </td>
-
-        <td>
-          <div class="progress-text">
-            {{ r.achievement_percent|floatformat:0 }} %
-          </div>
-
-          <div class="progress-wrap">
-            <div class="progress-bar"
-              style="
-                width: {% if r.achievement_percent > 100 %}100{% else %}{{ r.achievement_percent|floatformat:0 }}{% endif %}%;
-                background-color: {% if r.achievement_percent < 100 %}#f44336{% else %}#4caf50{% endif %};
-              ">
-            </div>
-          </div>
-        </td>
-
-        <td>{{ r.share_percent|floatformat:0 }} %</td>
+        <th>分類</th>
+        <th>目標</th>
+        <th>現在</th>
+        <th>達成度</th>
+        <th>割合</th>
       </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </thead>
 
-<p>合計：{{ total|floatformat:1 }}</p>
+    <tbody>
+      {% for r in rows %}
+        <tr>
+          <td>{{ r.name }}</td>
 
+          <td>
+            {% if r.goal_amount %}
+              {{ r.goal_amount }} {{ r.goal_unit }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
 
+          <td>
+            {{ r.current_amount|floatformat:1 }}
+            {% if r.goal_unit %} {{ r.goal_unit }}{% endif %}
+          </td>
 
+          <td>
+            <div class="progress-text">
+              {{ r.achievement_percent|floatformat:0 }} %
+            </div>
+
+            <div class="progress-wrap">
+              <div class="progress-bar"
+                style="
+                  width: {% if r.achievement_percent > 100 %}100{% else %}{{ r.achievement_percent|floatformat:0 }}{% endif %}%;
+                  background-color: {% if r.achievement_percent < 100 %}#f44336{% else %}#4caf50{% endif %};
+                ">
+              </div>
+            </div>
+          </td>
+
+          <td>{{ r.share_percent|floatformat:0 }} %</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p style="margin-top:10px;">合計：{{ total|floatformat:1 }}</p>
+
+<!-- ✅ Chart.js（既存通り） -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  // ----------------------------
-  // Djangoテンプレから配列を作成
-  // ----------------------------
+  // labels / data / colors
   const labels = [
     {% for r in rows %}
       "{{ r.name }}",
@@ -106,24 +169,16 @@
     {% endfor %}
   ];
 
-  // ----------------------------
-  // 色：DBの color をそのまま使う
-  // r.color が空のときは fallback
-  // ----------------------------
   const bgColors = [
     {% for r in rows %}
       "{{ r.color|default:'#f1e8ff' }}",
     {% endfor %}
   ];
 
-  // canvas取得（id="balancePie" を想定）
-  const ctx = document.getElementById("balancePie");
+  const canvas = document.getElementById("balancePie");
 
-  // ----------------------------
-  // Chart 初期化（= new Chart が初期化コード）
-  // ----------------------------
-  if (ctx) {
-    new Chart(ctx, {
+  if (canvas) {
+    new Chart(canvas, {
       type: "pie",
       data: {
         labels: labels,
@@ -135,6 +190,7 @@
         }]
       },
       options: {
+        responsive: true,
         plugins: {
           legend: { position: "bottom" }
         }
@@ -142,6 +198,5 @@
     });
   }
 </script>
-
 
 {% endblock %}
