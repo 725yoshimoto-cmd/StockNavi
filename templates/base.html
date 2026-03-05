@@ -37,7 +37,6 @@
       gap: 8px;
       padding: 0 10px;
     }
-    }
     .bottom-nav a {
       flex: 1;
       text-align: center;
@@ -95,15 +94,14 @@
         {% endfor %}
       </ul>
     {% endif %}
-
     {% block content %}{% endblock %}
 
   </div>
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated and request.resolver_match.url_name != 'login' %}
   <nav class="bottom-nav" style="position:sticky; bottom:0; background:#fff; padding:10px 0; border-top:1px solid #ddd;">
     <div class="nav-inner">
-      
+
       <a href="{% url 'inventory:inventory_list' %}"
          class="{% if request.resolver_match.url_name == 'inventory_list' %}is-active{% endif %}">
         🏠<br>在庫
@@ -128,7 +126,7 @@
          class="{% if request.resolver_match.url_name == 'mypage' %}is-active{% endif %}">
         👤<br>マイページ
       </a>
-    </nav>
-  {% endif %}
-</body>
-</html>
+
+    </div>
+  </nav>
+{% endif %}
