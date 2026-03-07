@@ -2,6 +2,7 @@
 
 # Django基本
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -15,7 +16,23 @@ from .models import AlertSetting
 # 既存：世帯必須のMixin（プロジェクトにあるやつ）
 from inventory.mixins import HouseholdRequiredMixin
 
+from inventory.views import HouseholdRequiredMixin
 
+User = get_user_model()
+
+class MemberListView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
+    template_name = "accounts/member_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        household = self.request.user.household
+        members = User.objects.filter(household=household).order_by("id")
+
+        context["household"] = household
+        context["members"] = members
+        return context
+    
 class AlertSettingView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     """
     アラート設定画面

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}メンバー一覧 | StockNavi{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <h2>メンバー一覧</h2>
+
+  <p><strong>世帯名：</strong>{{ household.name }}</p>
+
+  {% if members %}
+    <ul style="list-style: none; padding-left: 0;">
+      {% for member in members %}
+        <li style="border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+          <p style="margin: 0 0 6px 0;">
+            <strong>アカウント名：</strong>
+            {% if member.username %}
+              {{ member.username }}
+            {% else %}
+              （未設定）
+            {% endif %}
+          </p>
+          <p style="margin: 0;">
+            <strong>メールアドレス：</strong>
+            {{ member.email }}
+          </p>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>メンバーはいません。</p>
+  {% endif %}
+
+  <p style="margin-top: 16px;">
+    <a href="{% url 'accounts:mypage' %}">← マイページへ戻る</a>
+  </p>
+</div>
+{% endblock %}
