@@ -24,11 +24,11 @@ urlpatterns = [
     # 一括削除
     path("bulk-delete/", views.InventoryBulkDeleteView.as_view(), name="inventory_bulk_delete"),
     path("bulk-delete/execute/", views.InventoryBulkDeleteExecuteView.as_view(), name="inventory_bulk_delete_execute"),
-    
+
     # 一括複製
     path("bulk-duplicate/", views.InventoryBulkDuplicateView.as_view(), name="inventory_bulk_duplicate"),
-    path("bulk-duplicate/execute/", views.InventoryBulkDuplicateExecuteView.as_view(), name="inventory_bulk_duplicate_execute"),
-
+    path("bulk-duplicate/execute/", views.InventoryBulkDuplicateExecuteView.as_view(), name="inventory_bulk_duplicate_execute"),    
+    
     # 過去一覧（History）
     path("history/", views.InventoryHistoryListView.as_view(), name="inventory_history"),
     path(
@@ -78,7 +78,7 @@ urlpatterns = [
     path("memo/<int:pk>/edit/", views.MemoUpdateView.as_view(), name="memo_edit"),
     path("memo/<int:pk>/delete/", views.MemoDeleteView.as_view(), name="memo_delete"),
     path("memo/bulk-delete/", views.MemoBulkDeleteView.as_view(), name="memo_bulk_delete"),
-   
+    
     # ----------------------------
     # 招待機能（InviteToken）
     # ----------------------------

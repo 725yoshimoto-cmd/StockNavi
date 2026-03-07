@@ -20,7 +20,7 @@
     </button>
 
     <button type="submit" form="bulkForm"
-        formaction="{% url 'inventory:inventory_bulk_delete' %}">
+            formaction="{% url 'inventory:inventory_bulk_delete' %}">
       削除
     </button>
 
@@ -234,7 +234,7 @@
       <div class="row-top">
 
         {% if request.GET.select_mode == "1" %}
-          <input type="checkbox" name="selected_ids" value="{{ item.id }}">
+          <input type="checkbox" name="selected_ids" value="{{ item.id }}" form="bulkForm">
         {% endif %}
 
         {% if item.category %}
