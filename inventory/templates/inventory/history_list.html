@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- ✅ パンくず（簡易・1行） -->
 <p class="breadcrumb" style="margin:8px 0 14px 0; font-size:14px;">
   <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> &gt; 履歴
 </p>
@@ -29,6 +28,12 @@
     {% if item.expiry_date %}賞味期限：{{ item.expiry_date }}<br>{% endif %}
     {% if item.storage_location %}保管：{{ item.storage_location.name }}<br>{% endif %}
     {% if item.category %}分類：{{ item.category.name }}<br>{% endif %}
+
+    <p>
+      <a href="{% url 'inventory:inventory_history_duplicate' item.id %}">
+        在庫一覧に複製する
+      </a>
+    </p>
   </div>
 {% empty %}
   <p>履歴はありません。</p>

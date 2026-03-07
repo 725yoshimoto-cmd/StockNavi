@@ -2,16 +2,12 @@
 {% block content %}
 
 <p class="breadcrumb" style="margin:8px 0 14px 0; font-size:14px;">
-  在庫一覧 &gt; 履歴 &gt; 履歴選択
+  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> &gt;
+  <a href="{% url 'inventory:inventory_history' %}">履歴</a> &gt;
+  履歴選択
 </p>
 
 <h2>過去の登録履歴</h2>
-
-<p style="text-align:right;">
-  <a href="{% url 'inventory:inventory_history_select' %}">
-    選択画面へ
-  </a>
-</p>
 
 <p>
   <a href="{% url 'inventory:inventory_list' %}">
@@ -29,21 +25,16 @@
       <input type="checkbox" name="selected_ids" value="{{ item.id }}">
 
       <strong>{{ item.name }}</strong><br>
-      分類：{{ item.category.name }}<br>
+      {% if item.category %}分類：{{ item.category.name }}<br>{% endif %}
       個数：{{ item.quantity }}<br>
-
-      <a href="{% url 'inventory:inventory_history_duplicate' item.id %}">
-        📄 複製
-      </a>
+      {% if item.expiry_date %}賞味期限：{{ item.expiry_date }}<br>{% endif %}
+      {% if item.storage_location %}保管：{{ item.storage_location.name }}<br>{% endif %}
     </div>
   {% empty %}
     <p>履歴はありません。</p>
   {% endfor %}
 
-  <button type="submit">
-    🗑 選択商品を完全削除
-  </button>
-
+  <button type="submit">選択商品を完全削除</button>
 </form>
 
 {% endblock %}

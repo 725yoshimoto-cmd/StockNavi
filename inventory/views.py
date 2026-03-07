@@ -669,24 +669,21 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
 
 # 在庫を一括削除（確認ページ表示）
 class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
-    template_name = "inventory/bulk_delete_confirm.html"
-
     def post(self, request, *args, **kwargs):
         selected_ids = request.POST.getlist("selected_ids")
 
         if not selected_ids:
             messages.warning(request, "削除する在庫を選択してください。")
-            return redirect(reverse("inventory:inventory_list") + "?select_mode=1")
+            return redirect("inventory:inventory_list")
 
-        items = InventoryItem.objects.filter(
+        updated_count = InventoryItem.objects.filter(
             household=request.user.household,
-            id__in=selected_ids
-        )
+            id__in=selected_ids,
+            is_deleted=False
+        ).update(is_deleted=True)
 
-        return render(request, self.template_name, {
-            "items": items,
-            "selected_ids": selected_ids,
-        })
+        messages.success(request, f"{updated_count}件を履歴に移動しました。")
+        return redirect("inventory:inventory_list")
 
 # 在庫を一括削除（実行）
 class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
@@ -699,12 +696,17 @@ class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin,
 
         qs = InventoryItem.objects.filter(
             household=request.user.household,
-            id__in=selected_ids
+            id__in=selected_ids,
+            is_deleted=False
         )
-        delete_count = qs.count()
-        qs.delete()
 
-        messages.success(request, f"{delete_count}件の在庫を削除しました。")
+        delete_count = qs.count()
+
+        # ★物理削除ではなく履歴へ
+        qs.update(is_deleted=True)
+
+        messages.success(request, f"{delete_count}件の在庫を履歴に移動しました。")
+
         return redirect("inventory:inventory_list")
 
 # 在庫を一括複製（確認ページ表示）
