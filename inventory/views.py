@@ -1252,51 +1252,51 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
 
         return ctx 
     
-        def post(self, request, *args, **kwargs):
-            from django.shortcuts import redirect
-            from django.contrib import messages
-            from django.urls import reverse
-            from .models import Category, StorageLocation
+    def post(self, request, *args, **kwargs):
+        from django.shortcuts import redirect
+        from django.contrib import messages
+        from django.urls import reverse
+        from .models import Category, StorageLocation
 
-            tab = request.POST.get("tab") or request.GET.get("tab") or "category"
+        tab = request.POST.get("tab") or request.GET.get("tab") or "category"
 
-            # settings の同じタブに戻す
-            redirect_url = reverse("inventory:settings_tabs") + f"?tab={tab}"
+        # settings の同じタブに戻す
+        redirect_url = reverse("inventory:settings_tabs") + f"?tab={tab}"
 
-            action = request.POST.get("action")
+        action = request.POST.get("action")
 
-            # --- 分類：選択削除 ---
-            if action == "bulk_delete_category":
-                selected_ids = request.POST.getlist("selected_ids")
-                if not selected_ids:
-                    messages.warning(request, "削除する分類を選択してください。")
-                    return redirect(redirect_url)
-
-                Category.objects.filter(
-                    household=request.user.household,
-                    id__in=selected_ids
-                ).delete()
-
-                messages.success(request, "分類を削除しました。")
+        # --- 分類：選択削除 ---
+        if action == "bulk_delete_category":
+            selected_ids = request.POST.getlist("selected_ids")
+            if not selected_ids:
+                messages.warning(request, "削除する分類を選択してください。")
                 return redirect(redirect_url)
 
-            # --- 保管場所：選択削除 ---
-            if action == "bulk_delete_storage":
-                selected_ids = request.POST.getlist("selected_ids")
-                if not selected_ids:
-                    messages.warning(request, "削除する保管場所を選択してください。")
-                    return redirect(redirect_url)
+            Category.objects.filter(
+                household=request.user.household,
+                id__in=selected_ids
+            ).delete()
 
-                StorageLocation.objects.filter(
-                    household=request.user.household,
-                    id__in=selected_ids
-                ).delete()
+            messages.success(request, "分類を削除しました。")
+            return redirect(redirect_url)
 
-                messages.success(request, "保管場所を削除しました。")
+        # --- 保管場所：選択削除 ---
+        if action == "bulk_delete_storage":
+            selected_ids = request.POST.getlist("selected_ids")
+            if not selected_ids:
+                messages.warning(request, "削除する保管場所を選択してください。")
                 return redirect(redirect_url)
 
-            # 想定外は元のタブへ
-            return redirect(redirect_url)     
+            StorageLocation.objects.filter(
+                household=request.user.household,
+                id__in=selected_ids
+            ).delete()
+
+            messages.success(request, "保管場所を削除しました。")
+            return redirect(redirect_url)
+
+        # 想定外は元のタブへ
+        return redirect(redirect_url)     
             
 # ----------------------------
 # メモ（ログイン必須）
