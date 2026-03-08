@@ -7,7 +7,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("", RedirectView.as_view(url="/accounts/login/", permanent=False)),
+    path("", inv_views.PortfolioView.as_view(), name="portfolio"),
     path("admin/", admin.site.urls),
     path("inventory/", include("inventory.urls")),
 
