@@ -131,4 +131,6 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+# メール送信（開発用）
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "StockNavi <no-reply@example.com>"

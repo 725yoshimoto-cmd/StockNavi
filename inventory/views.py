@@ -87,6 +87,7 @@ from django.shortcuts import redirect
 
 # 自作：招待トークンモデル
 from .models import InviteToken
+from django.core.mail import send_mail
 
 # 検索条件を OR で組みたいときに使う
 from django.db.models import Q
@@ -95,6 +96,7 @@ from django.db.models import Q
 from .models import Category
 
 from django.utils.http import url_has_allowed_host_and_scheme
+
 
 
 class NextUrlMixin:
@@ -185,6 +187,13 @@ class InviteCreateView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
             messages.error(request, "世帯が未設定のため招待リンクを発行できません。")
             return self.redirect_top()
 
+        email = request.POST.get("email")
+
+        # メール未入力ガード
+        if not email:
+            messages.error(request, "送付先メールアドレスを入力してください。")
+            return self.render_to_response(self.get_context_data(**kwargs))
+
         expires_at = timezone.now() + timedelta(hours=self.EXPIRE_HOURS)
 
         invite = InviteToken.objects.create(
@@ -196,7 +205,27 @@ class InviteCreateView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
             reverse("inventory:invite_accept", kwargs={"token": str(invite.token)})
         )
 
-        messages.success(request, "招待リンクを発行しました。")
+        subject = "StockNavi メンバー招待のお知らせ"
+        message = f"""StockNavi に招待されました。
+
+以下のURLから24時間以内に参加してください。
+
+{invite_url}
+
+※このメールに心当たりがない場合は破棄してください。
+"""
+
+        try:
+            send_mail(
+                subject,
+                message,
+                None,
+                [email],
+                fail_silently=False,
+            )
+            messages.success(request, "招待リンクを発行し、招待メールを送信しました。")
+        except Exception:
+            messages.warning(request, "招待リンクは発行しましたが、メール送信に失敗しました。")
 
         context = self.get_context_data(**kwargs)
         context["invite_url"] = invite_url
@@ -204,11 +233,13 @@ class InviteCreateView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
         return self.render_to_response(context)
 
     def redirect_top(self):
-        # 既存のトップに合わせて変えてOK（inventory_list が無い場合は別名に）
         from django.shortcuts import redirect
         return redirect("inventory:inventory_list")
 
 
+# ----------------------------
+# 招待URLから参加（ログイン必須）
+# ----------------------------
 class InviteAcceptView(LoginRequiredMixin, TemplateView):
     """
     招待URLから参加
@@ -254,7 +285,6 @@ class InviteAcceptView(LoginRequiredMixin, TemplateView):
                 messages.error(request, "すでに世帯に参加済みです。")
                 return redirect("inventory:no_household")
 
-           
             # 参加処理
             request.user.household = invite.household
             request.user.save(update_fields=["household"])
@@ -265,8 +295,7 @@ class InviteAcceptView(LoginRequiredMixin, TemplateView):
 
         messages.success(request, "世帯に参加しました。")
         return redirect("inventory:inventory_list")
-    
-    
+        
 # ----------------------------
 # 世帯内の招待トークン一覧（発行履歴）（ログイン必須）
 # ----------------------------
@@ -287,7 +316,7 @@ class InviteTokenListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         一覧に出すデータを「自分の世帯」に限定する（世帯分離）
         """
         household = self.request.user.household
-        return Memo.objects.filter(household=self.request.user.household)
+        return InviteToken.objects.filter(household=self.request.user.household)
 
     def get_context_data(self, **kwargs):
         """
