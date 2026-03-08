@@ -280,13 +280,6 @@
         {% endif %}
       </div>
 
-      {% if request.GET.select_mode != "1" %}
-        <div class="actions">
-          <a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
-          <a href="{% url 'inventory:inventory_delete' item.pk %}">削除</a>
-        </div>
-      {% endif %}
-
     </div>
     {# ★ここまで wrapper #}
 

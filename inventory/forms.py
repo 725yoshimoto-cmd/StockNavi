@@ -19,6 +19,15 @@ class InventoryItemForm(forms.ModelForm):
             "expiry_date",
             "image",
         ]
+        labels = {
+            "category": "分類",
+            "storage_location": "保管場所",
+            "name": "在庫名",
+            "quantity": "数量",
+            "content_amount": "内容量",
+            "expiry_date": "賞味期限",
+            "image": "商品画像",
+        }
         widgets = {
             "expiry_date": forms.DateInput(attrs={"type": "date"}),
         }

@@ -19,6 +19,10 @@
 <p><strong>世帯名：</strong> {{ user.household.name }}</p>
 <p><strong>目標日数：</strong> {{ user.household.target_days }} 日</p>
 
+<p>
+  <a href="{% url 'inventory:settings_tabs' %}?tab=alert">アラート設定</a>
+</p>
+
 <hr>
 
 <!-- =========================
