@@ -39,10 +39,14 @@
     ></span>
 
     <!-- 分類名 -->
-    {{ c.name }}
+    <a href="{% url 'inventory:category_edit' c.pk %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
+      {{ c.name }}
+    </a>
 
     <!-- 編集 / 削除 -->
-    <a href="{% url 'inventory:category_edit' c.pk %}">編集</a>
+    <a href="{% url 'inventory:category_edit' c.pk %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
+      編集
+    </a>
     <a href="{% url 'inventory:category_delete' c.pk %}">削除</a>
   </p>
 {% empty %}

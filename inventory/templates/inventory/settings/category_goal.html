@@ -85,16 +85,7 @@
             {{ c.name }}
           </a>
 
-          <!-- ✅ 編集 -->
-          <a href="{% url 'inventory:category_edit' c.id %}">編集</a>
-
-          <!-- ✅ 個別削除（残す） -->
-          <a href="{% url 'inventory:category_delete' c.id %}"
-            class="btn btn-danger"
-            onclick="return confirm('この分類を削除しますか？');">
-            削除
-          </a>
-
+          
         </li>
       {% endfor %}
     </ul>
