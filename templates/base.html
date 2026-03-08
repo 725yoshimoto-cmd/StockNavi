@@ -103,7 +103,7 @@
       border-color: #dc2626;
       color: #dc2626;
     }
-    
+
     /* 期限アラート色（既存） */
     .item-card.text-alert-red,
     .item-card.text-alert-red * {
@@ -136,7 +136,7 @@
 
   </div>
 
-{% if user.is_authenticated and request.resolver_match.url_name != 'login' %}
+{% if user.is_authenticated and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'logout' and request.resolver_match.url_name != 'password_reset' and request.resolver_match.url_name != 'password_reset_done' and request.resolver_match.url_name != 'password_reset_confirm' and request.resolver_match.url_name != 'password_reset_complete' and request.resolver_match.url_name != 'password_change' and request.resolver_match.url_name != 'password_change_done' %}
   <nav class="bottom-nav" style="position:sticky; bottom:0; background:#fff; padding:10px 0; border-top:1px solid #ddd;">
     <div class="nav-inner">
 

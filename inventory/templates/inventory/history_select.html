@@ -10,14 +10,30 @@
 <h2>過去の登録履歴</h2>
 
 <p>
-  <a href="{% url 'inventory:inventory_list' %}">
+  <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline">
     在庫一覧へ戻る
   </a>
 </p>
 
 <hr>
 
-<form method="post" action="{% url 'inventory:inventory_history_delete' %}">
+<div style="display:flex; gap:8px; margin:12px 0;">
+  <button type="submit"
+          class="btn btn-success"
+          form="historyBulkForm"
+          formaction="{% url 'inventory:inventory_history_bulk_duplicate' %}">
+    在庫一覧に複製
+  </button>
+
+  <button type="submit"
+          class="btn btn-danger"
+          form="historyBulkForm"
+          formaction="{% url 'inventory:inventory_history_delete' %}">
+    削除
+  </button>
+</div>
+
+<form id="historyBulkForm" method="post">
   {% csrf_token %}
 
   {% for item in items %}
@@ -33,8 +49,6 @@
   {% empty %}
     <p>履歴はありません。</p>
   {% endfor %}
-
-  <button type="submit" class="btn btn-danger">選択商品を完全削除</button>
 </form>
 
 {% endblock %}
