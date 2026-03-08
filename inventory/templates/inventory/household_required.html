@@ -5,5 +5,8 @@
   管理者（admin）に世帯を設定してもらってください。
 </p>
 
-<p><a href="/logout/">ログアウト</a></p>
+<form method="post" action="{% url 'logout' %}">
+  {% csrf_token %}
+  <button type="submit">ログアウト</button>
+</form>
 <p><a href="/">ポートフォリオTOPへ戻る</a></p>

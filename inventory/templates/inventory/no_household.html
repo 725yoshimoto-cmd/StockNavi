@@ -11,5 +11,9 @@
 {% endif %}
 
 <p>管理者に連絡して、ユーザーに世帯（household）を設定してもらってください。</p>
-<p><a href="/logout/">ログアウト</a></p>
+
+<form method="post" action="{% url 'logout' %}">
+  {% csrf_token %}
+  <button type="submit">ログアウト</button>
+</form>
 
