@@ -907,7 +907,9 @@ class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView)
     
     fields = ["name", "description", "color", "goal_amount", "goal_unit"]
     template_name = "category/form.html"
-    success_url = reverse_lazy("inventory:category_list")
+    
+    def get_success_url(self):
+        return reverse("inventory:settings_tabs") + "?tab=category"
 
     def form_valid(self, form):
         """
@@ -921,7 +923,9 @@ class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView)
     model = Category
     fields = ["name", "description", "color", "goal_amount", "goal_unit"]
     template_name = "category/form.html"
-    success_url = reverse_lazy("inventory:category_list")
+
+    def get_success_url(self):
+        return reverse("inventory:settings_tabs") + "?tab=category"
 
     def get_queryset(self):
         # 他世帯のカテゴリを編集できない
@@ -946,8 +950,10 @@ class CategoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView)
     """
     model = Category
     template_name = "category/category_confirm_delete.html"
-    success_url = reverse_lazy("inventory:category_list")  # ★ここが重要
-
+    
+    def get_success_url(self):
+        return reverse("inventory:settings_tabs") + "?tab=category"
+    
     def get_queryset(self):
         """
         ★削除対象を「自分の世帯のカテゴリ」に限定する

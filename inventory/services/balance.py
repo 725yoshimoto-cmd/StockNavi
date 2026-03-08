@@ -1,4 +1,3 @@
-# inventory/services/balance.py
 from django.db.models import Sum, F, FloatField
 from django.db.models.functions import Coalesce
 
@@ -11,9 +10,15 @@ def calc_category_amounts(household, storage_location_id=None):
     画面設計図の「内容量 × 個数」で計算する前提。
     - household で必ず絞る（他世帯混入防止）
     - storage_location_id があれば保管場所でも絞る
+    - 論理削除済みは除外する
+    - 数量0は除外する
     - 0件でも落ちない（Coalesceで0にする）
     """
-    qs = InventoryItem.objects.filter(household=household)
+    qs = InventoryItem.objects.filter(
+        household=household,
+        is_deleted=False,
+        quantity__gt=0,
+    )
 
     # 保管場所フィルタ（任意）
     if storage_location_id:
@@ -41,7 +46,7 @@ def calc_category_amounts(household, storage_location_id=None):
         total += cur
 
         goal = float(c.goal_amount or 0.0)
-        achievement = 0.0 if goal <= 0 else (cur / goal) * 100  # 目標0でも落ちない
+        achievement = 0.0 if goal <= 0 else (cur / goal) * 100
 
         rows.append(
             {
@@ -55,13 +60,10 @@ def calc_category_amounts(household, storage_location_id=None):
             }
         )
 
-    # 円グラフ用：分類割合（total=0でも落ちない）
+    # 円グラフ用：分類割合
     for r in rows:
         r["share_percent"] = 0.0 if total <= 0 else (r["current_amount"] / total) * 100
 
-    # 不足しているもの（達成度が低い順）を上に
-    rows.sort(key=lambda x: x["achievement_percent"])
-    
     # 達成度が低い順に並び替え（不足を上に）
     rows.sort(key=lambda x: x["achievement_percent"])
 
