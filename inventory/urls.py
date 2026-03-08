@@ -42,10 +42,16 @@ urlpatterns = [
         name="inventory_history_delete"
     ),
     path(
+        "history/duplicate/",
+        views.InventoryHistoryBulkDuplicateView.as_view(),
+        name="inventory_history_bulk_duplicate"
+    ),
+    path(
         "history/duplicate/<int:pk>/",
         views.InventoryHistoryDuplicateView.as_view(),
         name="inventory_history_duplicate"
     ),
+   
     
     # バランス確認（Balance）
     path("balance/", views.BalanceView.as_view(), name="balance"),

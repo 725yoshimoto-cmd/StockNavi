@@ -7,8 +7,8 @@
 
 <h2>過去の登録履歴</h2>
 
-<p style="text-align:right;">
-  <a href="{% url 'inventory:inventory_history_select' %}">
+<p style="text-align:right; margin: 8px 0;">
+  <a href="{% url 'inventory:inventory_history_select' %}" class="btn btn-outline">
     選択画面へ
   </a>
 </p>
@@ -29,11 +29,6 @@
     {% if item.storage_location %}保管：{{ item.storage_location.name }}<br>{% endif %}
     {% if item.category %}分類：{{ item.category.name }}<br>{% endif %}
 
-    <p>
-      <a href="{% url 'inventory:inventory_history_duplicate' item.id %}">
-        在庫一覧に複製する
-      </a>
-    </p>
   </div>
 {% empty %}
   <p>履歴はありません。</p>

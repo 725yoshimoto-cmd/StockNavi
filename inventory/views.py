@@ -846,6 +846,40 @@ class InventoryHistoryDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, 
 
         return redirect("inventory:inventory_list")
 
+# 履歴を一括複製（HistoryBulkDuplicateView）（ログイン必須）
+class InventoryHistoryBulkDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        selected_ids = request.POST.getlist("selected_ids")
+
+        if not selected_ids:
+            messages.warning(request, "複製する履歴を選択してください。")
+            return redirect("inventory:inventory_history_select")
+
+        qs = InventoryItem.objects.filter(
+            household=request.user.household,
+            id__in=selected_ids,
+            is_deleted=True,
+        )
+
+        created_count = 0
+
+        for item in qs:
+            InventoryItem.objects.create(
+                household=item.household,
+                category=item.category,
+                storage_location=item.storage_location,
+                name=item.name,
+                quantity=item.quantity,
+                content_amount=item.content_amount,
+                expiry_date=item.expiry_date,
+                image=item.image,
+                is_deleted=False,
+            )
+            created_count += 1
+
+        messages.success(request, f"{created_count}件の履歴を在庫一覧に複製しました。")
+        return redirect("inventory:inventory_list")
+    
 # ----------------------------
 # バランス確認（Balance）（ログイン必須）
 # ----------------------------

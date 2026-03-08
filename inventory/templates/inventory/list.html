@@ -17,12 +17,14 @@
     </a>
     <button type="submit"
             class="btn btn-success"
+            form="bulkForm"
             formaction="{% url 'inventory:inventory_bulk_duplicate' %}">
       複製
     </button>
 
     <button type="submit"
             class="btn btn-danger"
+            form="bulkForm"
             formaction="{% url 'inventory:inventory_bulk_delete' %}">
       削除
     </button>
@@ -52,7 +54,9 @@
 
 <!-- ✅ 過去の登録履歴（在庫一覧からのみ遷移） -->
 <p style="text-align:right; margin: 8px 0;">
-  <a href="{% url 'inventory:inventory_history' %}">過去の登録履歴</a>
+  <a href="{% url 'inventory:inventory_history' %}" class="btn btn-outline">
+    履歴一覧へ
+  </a>
 </p>
 
 <form method="get" action="{% url 'inventory:inventory_list' %}">
