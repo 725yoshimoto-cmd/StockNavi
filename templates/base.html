@@ -63,7 +63,7 @@
       font-weight: 700;
     }
 
-    /* ボタン類（既存） */
+    /* ボタン類 */
     .btn {
       display: inline-block;
       padding: 8px 12px;
@@ -71,9 +71,39 @@
       border-radius: 8px;
       text-decoration: none;
       color: #000;
+      background: #fff;
+      cursor: pointer;
     }
-    .btn-danger { border-color: #b00; }
 
+    .btn-primary {
+      background: #f59e0b;   /* オレンジ */
+      border-color: #f59e0b;
+      color: #fff;
+    }
+
+    .btn-success {
+      background: #16a34a;   /* 緑 */
+      border-color: #16a34a;
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: #dc2626;   /* 赤 */
+      border-color: #dc2626;
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: #fff;
+      border-color: #bbb;
+      color: #222;
+    }
+    .btn-danger-outline {
+      background: #fff;
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+    
     /* 期限アラート色（既存） */
     .item-card.text-alert-red,
     .item-card.text-alert-red * {

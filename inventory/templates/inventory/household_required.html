@@ -7,6 +7,6 @@
 
 <form method="post" action="{% url 'logout' %}">
   {% csrf_token %}
-  <button type="submit">ログアウト</button>
+  <button type="submit" class="btn btn-danger-outline">ログアウト</button>
 </form>
 <p><a href="/">ポートフォリオTOPへ戻る</a></p>

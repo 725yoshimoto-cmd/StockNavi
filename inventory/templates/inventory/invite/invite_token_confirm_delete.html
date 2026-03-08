@@ -16,10 +16,7 @@
 
   <form method="post" style="margin-top:16px;">
     {% csrf_token %}
-    <button type="submit"
-      style="padding:10px 12px; border-radius:10px; border:1px solid #e99; background:#fee; color:#900;">
-      削除する
-    </button>
+    <button class="btn btn-danger">削除する</button>
     <a href="{% url 'inventory:invite_token_list' %}"
       style="margin-left:10px; text-decoration:none;">
       キャンセル

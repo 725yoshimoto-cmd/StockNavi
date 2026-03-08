@@ -11,15 +11,18 @@
 
 {% if request.GET.select_mode == "1" %}
   <div class="select-bar">
-    <a class="btn"
+    <a class="btn btn-outline"
       href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=0">
       選択解除
     </a>
-    <button type="submit" form="bulkForm" formaction="{% url 'inventory:inventory_bulk_duplicate' %}" class="btn">
+    <button type="submit"
+            class="btn btn-success"
+            formaction="{% url 'inventory:inventory_bulk_duplicate' %}">
       複製
     </button>
 
-    <button type="submit" form="bulkForm"
+    <button type="submit"
+            class="btn btn-danger"
             formaction="{% url 'inventory:inventory_bulk_delete' %}">
       削除
     </button>
@@ -102,7 +105,9 @@
   </select>
 
   <!-- ✅ 解除 -->
-  <a class="btn" style="margin-left:10px;" href="{% url 'inventory:inventory_list' %}">解除</a>
+  <a class="btn btn-outline" style="margin-left:10px;" href="{% url 'inventory:inventory_list' %}">
+  解除
+  </a>
 
 </form>
 

@@ -27,12 +27,12 @@
 
 <form method="post" action="{% url 'inventory:inventory_delete' item.pk %}" style="display:inline;">
   {% csrf_token %}
-  <button type="submit">削除</button>
+  <button type="submit" class="btn btn-danger">削除</button>
 </form>
 
 <form method="post" action="{% url 'inventory:inventory_duplicate' item.pk %}" style="display:inline;">
   {% csrf_token %}
-  <button type="submit">複製</button>
+  <<button type="submit" class="btn btn-success">複製</button>
 </form>
 
 <a href="{% url 'inventory:inventory_list' %}">一覧に戻る</a>

@@ -16,7 +16,7 @@
     <input type="hidden" name="selected_ids" value="{{ id }}">
   {% endfor %}
 
-  <button type="submit" class="btn">複製する</button>
+  <button type="submit" class="btn btn-success">複製する</button>
   <a class="btn" href="{% url 'inventory:inventory_list' %}?select_mode=1">キャンセル</a>
 </form>
 

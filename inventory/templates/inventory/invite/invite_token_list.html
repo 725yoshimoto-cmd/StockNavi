@@ -35,7 +35,7 @@
             <div style="text-align:right;">
               {% if t.is_used or t.expires_at < now %}
                 <a href="{% url 'inventory:invite_token_delete' t.id %}"
-                   style="display:inline-block;padding:6px 10px;border-radius:10px;border:1px solid #e99;color:#900;text-decoration:none;">
+                  class="btn btn-danger">
                   削除
                 </a>
               {% endif %}
