@@ -4,7 +4,7 @@
 
 <h3>目標備蓄日数</h3>
 
-<form method="post" action="{% url 'inventory:settings_category_goal' %}">
+<form method="post" action="{% url 'inventory:settings_tabs' %}">
   {% csrf_token %}
   <input type="hidden" name="action" value="save_target_days">
 
