@@ -2,16 +2,19 @@
 
 # Django基本
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import login, get_user_model
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, CreateView
+from django.db import transaction
 
 # 自アプリ
-from .forms import AlertSettingForm, UserUpdateForm
-from .models import AlertSetting
+from .forms import AlertSettingForm, UserUpdateForm, SignUpForm
+from .models import AlertSetting, Household
 
 # 既存：世帯必須のMixin（プロジェクトにあるやつ）
 from inventory.mixins import HouseholdRequiredMixin
@@ -106,3 +109,49 @@ class MyPageView(LoginRequiredMixin, TemplateView):
         ctx = self.get_context_data(**kwargs)
         ctx["form"] = form
         return self.render_to_response(ctx)
+
+# ----------------------------
+# ★ サインアップ（アカウント登録）
+# ----------------------------
+class SignUpView(CreateView):
+    """
+    新規登録画面
+
+    通常登録では
+    - Household を新規作成
+    - user にその household をセット
+    - そのままログイン
+    を行う
+    """
+    template_name = "accounts/signup.html"
+    form_class = SignUpForm
+    success_url = reverse_lazy("inventory:inventory_list")
+
+    @transaction.atomic
+    def form_valid(self, form):
+        """
+        登録成功時の処理
+
+        transaction.atomic を使う理由：
+        user だけ保存されて household が無い、
+        という中途半端な状態を防ぐため
+        """
+        # まだ保存しない user を作る
+        user = form.save(commit=False)
+
+        # 新しい世帯を自動作成
+        household = Household.objects.create(
+            name=f"{user.username}さんの世帯"
+        )
+
+        # user に household をセット
+        user.household = household
+
+        # user を保存
+        user.save()
+
+        # そのままログイン
+        login(self.request, user)
+
+        messages.success(self.request, "アカウント登録が完了しました。")
+        return redirect(self.success_url)

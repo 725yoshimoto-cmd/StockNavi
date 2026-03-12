@@ -1,170 +1,381 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8">
+
+  <!-- スマホ表示を正しくするための設定 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- ページタイトル（各ページで上書き可能） -->
   <title>{% block title %}StockNavi{% endblock %}</title>
 
   <style>
+
+    /* ----------------------------
+       基本設定
+       ---------------------------- */
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-size: 16px;
-      line-height: 1.5;
+      margin: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        "Hiragino Sans",
+        "Yu Gothic",
+        sans-serif;
+
+      background: #f7f8fb;
+      color: #333;
     }
 
-    input, select, button, textarea {
-      font-size: 16px;
-    }
-    .wrap {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 0 12px;
+    a {
+      text-decoration: none;
+      color: inherit;
     }
 
-    /* 下ナビぶんの余白（コンテンツが隠れないように） */
-    body { margin: 0; }
-    .content-pad { padding-bottom: 80px; }
+    /* ----------------------------
+       アプリ全体の枠
+       スマホ幅で中央に表示
+       ---------------------------- */
 
-    /* 下ナビ */
-    .bottom-nav{
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
-      display: flex;
-      justify-content: center;   /* 中央寄せ */
-      padding: 10px 0;
-      background: #fff;
-      border-top: 1px solid #ddd;
-      z-index: 999;
+    .app-shell {
+
+      /* 最大幅をスマホサイズにする */
+      max-width: 430px;
+
+      /* 中央寄せ */
+      margin: 0 auto;
+
+      /* 画面いっぱいの高さ */
+      min-height: 100vh;
+
+      background: white;
+
+      /* 薄い枠線 */
+      box-shadow: 0 0 0 1px #e5e7eb;
+
+      position: relative;
     }
-    .bottom-nav .nav-inner{
-      width: 100%;
-      max-width: 480px;          /* スマホ幅の箱に収める */
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 0 10px;
+
+    /* ----------------------------
+       ヘッダー
+       ---------------------------- */
+
+    .app-header {
+
+      /* 上部に固定 */
+      position: sticky;
+      top: 0;
+
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+
+      padding: 14px 16px;
+
+      z-index: 100;
     }
-    .bottom-nav a {
-      flex: 1;
+
+    .app-header-title {
+
       text-align: center;
-      padding: 10px 6px;
-      border: 1px solid #bbb;
-      border-radius: 10px;
-      text-decoration: none;
-      color: #222;
-      font-size: 14px;
-      line-height: 1.1;
-      background: #fff;
-      white-space: nowrap;
-    }
-    .bottom-nav a.is-active {
-      border-color: #333;
-      font-weight: 700;
+      font-size: 18px;
+      font-weight: bold;
+
     }
 
-    /* ボタン類 */
+    /* ----------------------------
+       メインコンテンツ
+       ---------------------------- */
+
+    .app-main {
+
+      padding: 16px;
+
+      /* 下ナビに隠れない余白 */
+      padding-bottom: 90px;
+    }
+
+    /* ----------------------------
+       ページタイトル
+       ---------------------------- */
+
+    .page-title {
+
+      margin-top: 0;
+      margin-bottom: 12px;
+
+      font-size: 22px;
+      text-align: center;
+
+    }
+
+    /* ----------------------------
+       メッセージ表示
+       （成功・エラーなど）
+       ---------------------------- */
+
+    .messages {
+
+      margin-bottom: 16px;
+
+    }
+
+    .message {
+
+      padding: 10px 12px;
+      border-radius: 10px;
+
+      margin-bottom: 8px;
+
+      font-size: 14px;
+
+    }
+
+    .message.success {
+
+      background: #ecfdf3;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+
+    }
+
+    .message.error {
+
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+
+    }
+
+    .message.warning {
+
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+
+    }
+
+    /* ----------------------------
+       カードデザイン
+       ---------------------------- */
+
+    .card {
+
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+
+      padding: 14px;
+      margin-bottom: 14px;
+
+      background: white;
+
+    }
+
+    /* ----------------------------
+       共通ボタン
+       ---------------------------- */
+
     .btn {
+
       display: inline-block;
-      padding: 8px 12px;
-      border: 1px solid #333;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #000;
-      background: #fff;
+
+      padding: 10px 14px;
+
+      border-radius: 10px;
+
+      font-weight: bold;
+
+      border: none;
+
       cursor: pointer;
+
     }
 
     .btn-primary {
-      background: #f59e0b;   /* オレンジ */
-      border-color: #f59e0b;
-      color: #fff;
-    }
 
-    .btn-success {
-      background: #16a34a;   /* 緑 */
-      border-color: #16a34a;
-      color: #fff;
+      background: #16a34a;
+      color: white;
+
     }
 
     .btn-danger {
-      background: #dc2626;   /* 赤 */
-      border-color: #dc2626;
-      color: #fff;
+
+      background: #dc2626;
+      color: white;
+
     }
 
-    .btn-outline {
-      background: #fff;
-      border-color: #bbb;
-      color: #222;
-    }
-    .btn-danger-outline {
-      background: #fff;
-      border-color: #dc2626;
-      color: #dc2626;
+    /* ----------------------------
+       入力フォーム
+       ---------------------------- */
+
+    input,
+    select,
+    textarea {
+
+      width: 100%;
+
+      padding: 10px;
+
+      border-radius: 10px;
+
+      border: 1px solid #d1d5db;
+
+      margin-top: 6px;
+
     }
 
-    /* 期限アラート色（既存） */
-    .item-card.text-alert-red,
-    .item-card.text-alert-red * {
-      color: #dc3545 !important;
-      font-weight: 600;
+    label {
+
+      display: block;
+      margin-bottom: 12px;
+
+      font-size: 14px;
+      font-weight: bold;
+
     }
-    .item-card.text-alert-blue,
-    .item-card.text-alert-blue * {
-      color: #0d6efd !important;
-      font-weight: 600;
+
+    /* ----------------------------
+       下部ナビ
+       ---------------------------- */
+
+    .bottom-nav {
+
+      position: fixed;
+
+      bottom: 0;
+
+      left: 50%;
+      transform: translateX(-50%);
+
+      width: 100%;
+      max-width: 430px;
+
+      height: 64px;
+
+      background: white;
+
+      border-top: 1px solid #e5e7eb;
+
+      display: flex;
+
+      z-index: 200;
+
     }
-    .item-card.text-alert-red .cat-tag,
-    .item-card.text-alert-blue .cat-tag {
-      color: #fff !important;
+
+    .bottom-nav a {
+
+      flex: 1;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      font-size: 12px;
+
+      text-align: center;
+
     }
+
+    /* ---------------------------------
+      認証画面（ログイン・登録など）専用
+      body に auth-page クラスが付いたとき用
+    --------------------------------- */
+    .auth-page {
+      background: #f3f4f6;
+    }
+
+    /* 認証画面では共通ヘッダーを消す */
+    .auth-page .app-header {
+      display: none;
+    }
+
+    /* 認証画面では下ナビを消す */
+    .auth-page .bottom-nav {
+      display: none;
+    }
+
+    /* 認証画面では下の余白を減らす
+      （下ナビが無いので 90px も不要） */
+    .auth-page .app-main {
+      padding-bottom: 24px;
+    }
+    
   </style>
+
+  {% block extra_css %}{% endblock %}
+
 </head>
 
-<body>
-  <div class="wrap content-pad">
+<body class="{% block body_class %}{% endblock %}">
 
-    {% if messages %}
-      <ul>
+  <!-- アプリ全体 -->
+  <div class="app-shell">
+
+    <!-- ヘッダー -->
+    {% block app_header %}
+    <header class="app-header">
+      <div class="app-header-title">
+        {% block header_title %}
+        StockNavi
+        {% endblock %}
+      </div>
+    </header>
+    {% endblock %}
+
+    <!-- メインコンテンツ -->
+    <main class="app-main">
+
+      <!-- ページタイトル -->
+      {% if page_title %}
+      <h1 class="page-title">{{ page_title }}</h1>
+      {% endif %}
+
+      <!-- Djangoメッセージ -->
+      {% if messages %}
+
+      <div class="messages">
+
         {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-    {% block content %}{% endblock %}
 
+        <div class="message {{ message.tags }}">
+          {{ message }}
+        </div>
+
+        {% endfor %}
+
+      </div>
+
+      {% endif %}
+
+      <!-- 各ページの内容 -->
+      {% block content %}
+      {% endblock %}
+
+    </main>
+
+    <!-- 下部ナビ -->
+    {% block bottom_nav %}
+    <nav class="bottom-nav">
+      <a href="{% url 'inventory:inventory_list' %}">在庫</a>
+      <a href="{% url 'inventory:balance' %}">バランス</a>
+      <a href="{% url 'inventory:memo_list' %}">メモ</a>
+      <a href="{% url 'accounts:mypage' %}">マイページ</a>
+      <a href="{% url 'inventory:settings_tabs' %}">設定</a>
+    </nav>
+    {% endblock %}
   </div>
 
-{% if user.is_authenticated and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'logout' and request.resolver_match.url_name != 'password_reset' and request.resolver_match.url_name != 'password_reset_done' and request.resolver_match.url_name != 'password_reset_confirm' and request.resolver_match.url_name != 'password_reset_complete' and request.resolver_match.url_name != 'password_change' and request.resolver_match.url_name != 'password_change_done' %}
-  <nav class="bottom-nav" style="position:sticky; bottom:0; background:#fff; padding:10px 0; border-top:1px solid #ddd;">
-    <div class="nav-inner">
+  {% block extra_js %}{% endblock %}
 
-      <a href="{% url 'inventory:inventory_list' %}"
-         class="{% if request.resolver_match.url_name == 'inventory_list' %}is-active{% endif %}">
-        🏠<br>在庫
-      </a>
+</body>
 
-      <a href="{% url 'inventory:balance' %}"
-         class="{% if request.resolver_match.url_name == 'balance' %}is-active{% endif %}">
-        📊<br>バランス
-      </a>
-
-      <a href="{% url 'inventory:memo_list' %}"
-         class="{% if request.resolver_match.url_name|default:''|slice:':4' == 'memo' %}is-active{% endif %}">
-        📝<br>メモ
-      </a>
-
-      <a href="{% url 'inventory:settings_tabs' %}"
-         class="{% if request.resolver_match.url_name == 'settings_tabs' or request.resolver_match.url_name == 'settings' %}is-active{% endif %}">
-        ⚙️<br>設定
-      </a>
-
-      <a href="{% url 'accounts:mypage' %}"
-         class="{% if request.resolver_match.url_name == 'mypage' %}is-active{% endif %}">
-        👤<br>マイページ
-      </a>
-
-    </div>
-  </nav>
-{% endif %}
+</html>

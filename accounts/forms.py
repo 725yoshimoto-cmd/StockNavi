@@ -2,69 +2,83 @@
 # accountsアプリ専用のフォーム定義ファイル（User作成フォームなど）
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, get_user_model
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import get_user_model
+
 from .models import CustomUser
 from .models import AlertSetting
 
+# 今使っているユーザーモデルを取得
 User = get_user_model()
+
 
 class CustomUserCreationForm(UserCreationForm):
     """
-    CustomUser（AUTH_USER_MODEL）用のユーザー登録フォーム
-    Django標準のUserCreationFormを、CustomUserに対応させたもの
+    既存コードとの互換用のユーザー作成フォーム
+
+    もともと inventory/views.py などで
+    CustomUserCreationForm を import しているため残しておく
     """
     class Meta:
         model = CustomUser
-        # 最小構成：username + password
         fields = ("username",)
 
-class AlertSettingForm(forms.ModelForm):
-    """
-    アラート設定の入力フォーム
-    - ModelFormにすると、モデルとフォームのズレが起きにくい（無駄工数削減）
-    """
 
-    class Meta:
-        model = AlertSetting
-        fields = ("quantity_threshold", "expiry_days")
-        # Bootstrap想定：クラスを付けて入力欄を整える（任意）
-        widgets = {
-            "quantity_threshold": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
-            "expiry_days": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
-        }
-
-    def clean_quantity_threshold(self):
-        """
-        個数アラート閾値のバリデーション
-        - 例：9999みたいな現実的じゃない値は弾く
-        """
-        v = self.cleaned_data["quantity_threshold"]
-        if v > 9999:
-            raise forms.ValidationError("個数アラートは大きすぎます（9999以下にしてください）")
-        return v
-
-    def clean_expiry_days(self):
-        """
-        期限アラート日数のバリデーション
-        """
-        v = self.cleaned_data["expiry_days"]
-        if v > 3650:
-            raise forms.ValidationError("期限アラートは大きすぎます（3650日以下にしてください）")
-        return v
-    
 class UserUpdateForm(forms.ModelForm):
     """
-    マイページで編集する項目だけに絞る
-    ※最短ルート：ニックネーム = username として扱う
+    ユーザー情報更新用フォーム
+
+    accounts/views.py で import されているため必要
     """
     class Meta:
         model = User
-        fields = ["username", "email"]
-        labels = {
-            "username": "ニックネーム",
-            "email": "メールアドレス",
-        }
-        widgets = {
-            "username": forms.TextInput(attrs={"placeholder": "ニックネーム", "autocomplete": "nickname"}),
-            "email": forms.EmailInput(attrs={"placeholder": "mail@example.com", "autocomplete": "email"}),
-        }
+        fields = ("username", "email")
+
+
+class AlertSettingForm(forms.ModelForm):
+    """
+    アラート設定用フォーム
+
+    accounts/views.py で import されているため必要
+    """
+    class Meta:
+        model = AlertSetting
+
+        # いったん安全のため全項目にする
+        # もし後で FieldError が出たら、その時点で元定義に合わせて絞る
+        fields = "__all__"
+
+
+class SignUpForm(UserCreationForm):
+    """
+    サインアップ用フォーム
+
+    目的
+    ----
+    Django標準の UserCreationForm には email が無いので、
+    メールアドレス欄を追加する
+    """
+
+    email = forms.EmailField(
+        required=True,
+        label="メールアドレス"
+    )
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
+
+    def save(self, commit=True):
+        """
+        user に email をセットして保存する
+
+        ※ household はここでは入れない
+        ※ household は view 側で作成してからセットする
+        """
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+
+        if commit:
+            user.save()
+
+        return user

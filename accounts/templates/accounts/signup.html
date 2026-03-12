@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}アカウント登録 | StockNavi{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block app_header %}{% endblock %}
+{% block page_title_area %}{% endblock %}
+{% block bottom_nav %}{% endblock %}
+
+{% block content %}
+<style>
+  /* ---------------------------------
+    画面全体
+    上余白を減らして、ロゴをもっと上に寄せる
+  --------------------------------- */
+  .login-page {
+    min-height: calc(100vh - 24px);
+    padding: 0 0 40px;
+  }
+
+  /* =========================
+     全体
+     ・背景グレーをやめて白ベースにする
+  ========================= */
+  .signup-page {
+    min-height: 100vh;
+    padding: 0 0 40px;   /* 上余白をさらに減らす */
+    background: #ffffff;
+  }  
+
+  .signup-container {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    padding: 0 18px;
+    box-sizing: border-box;
+    background: #ffffff;
+  }
+
+
+
+  /* =========================
+     上部導線
+  ========================= */
+  .signup-logo-wrap {
+    text-align: center;
+    margin: 0 0 8px;   /* ロゴ上の余白をなくす */
+  }
+  
+  .signup-topline {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #333;
+    text-align: left;
+  }
+
+  /* ---------------------------------
+     ロゴ
+     一番上に表示する
+  --------------------------------- */
+  .login-logo-wrap {
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .login-logo {
+    width: 230px;
+    max-width: 78%;
+    height: auto;
+    display: inline-block;
+  }
+  
+  /* =========================
+     フォーム
+  ========================= */
+  .signup-form-group {
+    margin-bottom: 24px;
+  }
+
+  .signup-label {
+    display: block;
+    margin-top: 30px;
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #444;
+    line-height: 1.4;
+  }
+
+  .signup-label-note {
+    font-size: 12px;
+    font-weight: 700;
+    color: #666;
+  }
+
+  .signup-input {
+    width: 100%;
+    height: 46px;
+    padding: 10px 14px;
+    border: 1px solid #8f8f8f;
+    border-radius: 0;
+    background: #ffffff;
+    font-size: 16px;
+    color: #111;
+    box-sizing: border-box;
+  }
+
+  /* =========================
+     パスワード表示切替
+  ========================= */
+  .password-wrap {
+    position: relative;
+  }
+
+  .password-wrap .signup-input {
+    padding-right: 52px;
+  }
+
+  .password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+  }
+
+  .signup-help {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  .signup-error {
+    margin-bottom: 18px;
+    padding: 12px;
+    border: 1px solid #fca5a5;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .signup-field-error {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #b91c1c;
+    line-height: 1.5;
+  }
+
+  .signup-btn-wrap {
+    text-align: center;
+    margin-top: 8px;
+    margin-bottom: 34px;
+  }
+
+  .signup-btn {
+    min-width: 160px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 999px;
+    background: #d8a543;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .signup-back {
+    text-align: center;
+  }
+
+  .signup-back a {
+    color: #2563eb;
+    text-decoration: underline;
+    font-size: 14px;
+    font-weight: 400;
+  }
+</style>
+
+<div class="signup-page">
+  <div class="signup-container">
+
+    <div class="signup-logo-wrap">
+    <!-- ここは login.html と同じ img タグにする -->
+    <img
+      src="{% static 'images/stocknavi_logo.png' %}"
+      alt="StockNaviロゴ"
+      class="login-logo"
+    >
+    </div>
+
+    <div class="signup-topline">
+    <a href="{% url 'login' %}">ログイン</a> ＞ アカウント登録
+    </div>
+
+    {% if form.errors %}
+      <div class="signup-error">
+        登録に失敗しました。入力内容を確認してください。
+      </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="signup-form-group">
+        <label for="{{ form.username.id_for_label }}" class="signup-label">
+          アカウント名
+        </label>
+        <input
+          type="text"
+          name="{{ form.username.html_name }}"
+          id="{{ form.username.id_for_label }}"
+          value="{{ form.username.value|default_if_none:'' }}"
+          class="signup-input"
+        >
+        {% if form.username.errors %}
+          <div class="signup-field-error">
+            {{ form.username.errors }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="signup-form-group">
+        <label for="{{ form.email.id_for_label }}" class="signup-label">
+            メールアドレス
+        </label>
+        <input
+            type="email"
+            name="{{ form.email.html_name }}"
+            id="{{ form.email.id_for_label }}"
+            value="{{ form.email.value|default_if_none:'' }}"
+            class="signup-input"
+        >
+        {% if form.email.errors %}
+            <div class="signup-field-error">
+            {{ form.email.errors }}
+            </div>
+        {% endif %}
+        </div>
+      <div class="signup-form-group">
+        <label for="{{ form.password1.id_for_label }}" class="signup-label">
+          パスワード
+          <span class="signup-label-note">（8文字以上・英数字を含む）</span>
+        </label>
+
+        <div class="password-wrap">
+          <input
+            type="password"
+            name="{{ form.password1.html_name }}"
+            id="{{ form.password1.id_for_label }}"
+            class="signup-input js-password"
+          >
+          <button type="button" class="password-toggle js-toggle-password" aria-label="パスワードを表示">
+            👁
+          </button>
+        </div>
+
+        <div class="signup-help">
+          8文字以上で、英字と数字を含むパスワードを入力してください。
+        </div>
+
+        {% if form.password1.errors %}
+          <div class="signup-field-error">
+            {{ form.password1.errors }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="signup-form-group">
+        <label for="{{ form.password2.id_for_label }}" class="signup-label">
+          パスワード（確認用）
+        </label>
+
+        <div class="password-wrap">
+          <input
+            type="password"
+            name="{{ form.password2.html_name }}"
+            id="{{ form.password2.id_for_label }}"
+            class="signup-input js-password"
+          >
+          <button type="button" class="password-toggle js-toggle-password" aria-label="確認用パスワードを表示">
+            👁
+          </button>
+        </div>
+
+        <div class="signup-help">
+          確認のため、同じパスワードをもう一度入力してください。
+        </div>
+
+        {% if form.password2.errors %}
+          <div class="signup-field-error">
+            {{ form.password2.errors }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="signup-btn-wrap">
+        <button type="submit" class="signup-btn">登録</button>
+      </div>
+    </form>
+
+    <div class="signup-back">
+      <a href="{% url 'login' %}">ログイン画面へ戻る</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleButtons = document.querySelectorAll(".js-toggle-password");
+
+    toggleButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        const wrapper = button.closest(".password-wrap");
+        const input = wrapper.querySelector(".js-password");
+
+        if (input.type === "password") {
+          input.type = "text";
+          button.textContent = "🙈";
+        } else {
+          input.type = "password";
+          button.textContent = "👁";
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
