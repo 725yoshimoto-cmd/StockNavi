@@ -10,6 +10,7 @@ urlpatterns = [
     path("alert_setting/", views.AlertSettingView.as_view(), name="alert_setting"),
     path("members/", views.MemberListView.as_view(), name="member_list"),
     path("signup/", views.SignUpView.as_view(), name="signup"),
+    path("signup/<uuid:token>/", SignUpView.as_view(), name="signup_with_token"),
     
     # ----------------------------
     # パスワード再設定

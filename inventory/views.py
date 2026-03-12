@@ -239,64 +239,53 @@ class InviteCreateView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
 
 
 # ----------------------------
-# 招待URLから参加（ログイン必須）
+# 招待リンクを開いたときの受け口
 # ----------------------------
-class InviteAcceptView(LoginRequiredMixin, TemplateView):
+class InviteAcceptView(View):
     """
-    招待URLから参加
-    - GET: 確認画面
-    - POST: 参加確定（user.householdをセットし、tokenを使用済みに）
+    招待リンクを開いたときの処理
+
+    方針
+    ----
+    1. トークンが無効ならエラー
+    2. すでにログイン済みで、しかも household がある人は参加させない
+       → 既存ユーザーの household 引っ越し機能は今回やらない
+    3. 未ログイン or household未設定ユーザーなら signup へ流す
     """
-    template_name = "inventory/invite/accept.html"
 
-    def get_invite(self):
-        from django.shortcuts import get_object_or_404
-        return get_object_or_404(InviteToken, token=self.kwargs["token"])
+    def get(self, request, token):
+        # まずトークンを取得
+        try:
+            token_obj = InviteToken.objects.get(token=token)
+        except InviteToken.DoesNotExist:
+            messages.error(request, "招待リンクが正しくありません。")
+            return redirect("login")
 
-    def get(self, request, *args, **kwargs):
-        invite = self.get_invite()
+        # 有効期限切れ・使用済みチェック
+        if not token_obj.is_valid():
+            messages.error(request, "招待リンクの有効期限が切れているか、すでに使用済みです。")
+            return redirect("login")
 
-        # トークンが無効（使用済み or 期限切れ）
-        if not invite.is_valid():
-            messages.error(request, "この招待リンクは無効です。")
-            return redirect("inventory:no_household")
+        # すでにログイン済みの場合
+        if request.user.is_authenticated:
+            # すでに household があるユーザーは、別世帯に参加させない
+            if getattr(request.user, "household_id", None):
+                messages.error(request, "すでに世帯に参加済みです。新しいアカウントで登録してください。")
+                return redirect("accounts:mypage")
 
-        # すでに世帯を持っている場合は拒否
-        if getattr(request.user, "household", None):
-            messages.error(request, "すでに世帯に参加済みです。")
-            return redirect("inventory:no_household")
+            # もし「ログイン済みだけど household 未設定」のレアケースなら参加させる
+            request.user.household = token_obj.household
+            request.user.save()
 
-        context = self.get_context_data(**kwargs)
-        context["invite"] = invite
-        return self.render_to_response(context)
+            token_obj.is_used = True
+            token_obj.save()
 
-    def post(self, request, *args, **kwargs):
-        with transaction.atomic():
-            invite = self.get_invite()
+            messages.success(request, "世帯への参加が完了しました。")
+            return redirect("inventory:inventory_list")
 
-            # ロック（同時押し対策）
-            invite = InviteToken.objects.select_for_update().get(pk=invite.pk)
-
-            # 再チェック
-            if not invite.is_valid():
-                messages.error(request, "この招待リンクは無効です。")
-                return redirect("inventory:no_household")
-
-            if getattr(request.user, "household", None):
-                messages.error(request, "すでに世帯に参加済みです。")
-                return redirect("inventory:no_household")
-
-            # 参加処理
-            request.user.household = invite.household
-            request.user.save(update_fields=["household"])
-
-            # 使用済みにする
-            invite.is_used = True
-            invite.save(update_fields=["is_used"])
-
-        messages.success(request, "世帯に参加しました。")
-        return redirect("inventory:inventory_list")
-        
+        # 未ログインなら、招待つきsignupへ送る
+        return redirect("accounts:signup_with_token", token=token)
+            
 # ----------------------------
 # 世帯内の招待トークン一覧（発行履歴）（ログイン必須）
 # ----------------------------

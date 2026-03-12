@@ -3,36 +3,119 @@
 {% block title %}メンバー一覧 | StockNavi{% endblock %}
 
 {% block content %}
-<div class="wrap">
-  <h2>メンバー一覧</h2>
+<style>
+  .member-page {
+    max-width: 360px;
+    margin: 0 auto;
+    padding: 8px 16px 24px;
+  }
 
-  <p><strong>世帯名：</strong>{{ household.name }}</p>
+  .member-breadcrumb {
+    margin: 0 0 18px;
+    font-size: 12px;
+    color: #444;
+  }
+
+  .member-breadcrumb a {
+    color: #444;
+    text-decoration: none;
+  }
+
+  .member-header {
+    display: flex;
+    justify-content: flex-end; /* 中身を右端に寄せる */
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .member-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .member-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+    background: #d8a543;
+
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    text-decoration: none;
+    line-height: 1;
+  }
+
+  .member-list {
+    margin: 0;
+    padding-left: 28px;
+  }
+
+  .member-list li {
+    margin-bottom: 18px;
+    font-size: 16px;
+    color: #333;
+  }
+
+  .member-list a {
+    color: #1d4ed8;
+    text-decoration: underline;
+    font-weight: 700;
+  }
+
+  .member-back {
+    margin-top: 20px;
+  }
+
+  .member-back a {
+    color: #333;
+    text-decoration: none;
+  }
+</style>
+
+<div class="member-page">
+  <div class="member-breadcrumb">
+    <a href="{% url 'accounts:mypage' %}">マイページ</a> ＞ メンバー一覧
+  </div>
+
+  <div class="member-header">
+    {# 招待リンク発行履歴ページへ移動 既存実装に合わせてURL名を使う #}
+    <a href="{% url 'inventory:invite_token_list' %}" class="member-add-btn" aria-label="メンバーを招待する">＋</a>
+  </div>
 
   {% if members %}
-    <ul style="list-style: none; padding-left: 0;">
+    <ol class="member-list">
       {% for member in members %}
-        <li style="border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
-          <p style="margin: 0 0 6px 0;">
-            <strong>アカウント名：</strong>
+        <li>
+          {% if member.id == request.user.id %}
+            {# ログイン中ユーザーだけマイページへ飛べるようにする #}
+            <a href="{% url 'accounts:mypage' %}">
+              {% if member.username %}
+                {{ member.username }}
+              {% else %}
+                （未設定）
+              {% endif %}
+            </a>
+          {% else %}
             {% if member.username %}
               {{ member.username }}
             {% else %}
               （未設定）
             {% endif %}
-          </p>
-          <p style="margin: 0;">
-            <strong>メールアドレス：</strong>
-            {{ member.email }}
-          </p>
+          {% endif %}
         </li>
       {% endfor %}
-    </ul>
+    </ol>
   {% else %}
     <p>メンバーはいません。</p>
   {% endif %}
 
-  <p style="margin-top: 16px;">
-    <a href="{% url 'accounts:mypage' %}">← マイページへ戻る</a>
-  </p>
 </div>
 {% endblock %}

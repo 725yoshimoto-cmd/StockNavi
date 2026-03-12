@@ -8,6 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView, CreateView
 from django.db import transaction
@@ -18,7 +19,7 @@ from .models import AlertSetting, Household
 
 # 既存：世帯必須のMixin（プロジェクトにあるやつ）
 from inventory.mixins import HouseholdRequiredMixin
-
+from inventory.models import InviteToken   # ← InviteToken の場所に合わせて修正
 from inventory.views import HouseholdRequiredMixin
 
 User = get_user_model()
@@ -117,11 +118,13 @@ class SignUpView(CreateView):
     """
     新規登録画面
 
-    通常登録では
-    - Household を新規作成
-    - user にその household をセット
-    - そのままログイン
-    を行う
+    通常登録
+    - Householdを新規作成
+    - userをその世帯に所属させる
+
+    招待URL登録
+    - InviteTokenが有効なら
+    - その世帯に参加する
     """
     template_name = "accounts/signup.html"
     form_class = SignUpForm
@@ -129,29 +132,53 @@ class SignUpView(CreateView):
 
     @transaction.atomic
     def form_valid(self, form):
-        """
-        登録成功時の処理
 
-        transaction.atomic を使う理由：
-        user だけ保存されて household が無い、
-        という中途半端な状態を防ぐため
-        """
-        # まだ保存しない user を作る
+        # まだ保存しないuser
         user = form.save(commit=False)
 
-        # 新しい世帯を自動作成
-        household = Household.objects.create(
-            name=f"{user.username}さんの世帯"
-        )
+        # URLの招待tokenを取得
+        invite_token = self.kwargs.get("token")
 
-        # user に household をセット
+        household = None
+
+        # ----------------------------
+        # 招待リンク経由
+        # ----------------------------
+        if invite_token:
+
+            try:
+                token_obj = InviteToken.objects.get(token=invite_token)
+            except InviteToken.DoesNotExist:
+                messages.error(self.request, "招待リンクが正しくありません。")
+                return self.form_invalid(form)
+
+            # 有効チェック
+            if not token_obj.is_valid():
+                messages.error(self.request, "招待リンクの期限が切れています。")
+                return self.form_invalid(form)
+
+            household = token_obj.household
+
+            # 使用済みにする
+            token_obj.is_used = True
+            token_obj.save()
+
+        # ----------------------------
+        # 通常登録
+        # ----------------------------
+        else:
+
+            household = Household.objects.create(
+                name=f"{user.username}さんの世帯"
+            )
+
+        # userに世帯をセット
         user.household = household
-
-        # user を保存
         user.save()
 
-        # そのままログイン
+        # ログイン
         login(self.request, user)
 
         messages.success(self.request, "アカウント登録が完了しました。")
+
         return redirect(self.success_url)
