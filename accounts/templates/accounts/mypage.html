@@ -1,68 +1,200 @@
 {% extends "base.html" %}
 
+{% block title %}マイページ | StockNavi{% endblock %}
+
 {% block content %}
+<style>
+  .mypage-page {
+    max-width: 360px;
+    margin: 0 auto;
+    padding: 8px 16px 24px;
+  }
 
-<!-- ✅ パンくず（簡易・1行） -->
-<p class="breadcrumb" style="margin:8px 0 14px 0; font-size:14px;">
-  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> &gt; マイページ
-</p>
+  .mypage-breadcrumb {
+    margin: 0 0 18px;
+    font-size: 12px;
+    color: #444;
+  }
 
-<h2>マイページ</h2>
+  .mypage-breadcrumb a {
+    color: #444;
+    text-decoration: none;
+  }
 
-<p>
-  <a href="{% url 'inventory:invite_create' %}">メンバーを招待する（発行）</a>
-</p>
-<p>
-  <a href="{% url 'inventory:invite_token_list' %}">招待リンク（発行履歴）</a>
-</p>
+  .mypage-title {
+    margin: 0 0 22px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+  }
 
-<p><strong>世帯名：</strong> {{ user.household.name }}</p>
-<p><strong>目標日数：</strong> {{ user.household.target_days }} 日</p>
+  .mypage-link-block {
+    margin-bottom: 14px;
+  }
 
-<p>
-  <a href="{% url 'inventory:settings_tabs' %}?tab=alert">アラート設定</a>
-</p>
+  .mypage-link-block a {
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+  }
 
-<hr>
+  .mypage-info {
+    margin: 18px 0 22px;
+  }
 
-<!-- =========================
-ユーザー情報編集フォーム
-========================= -->
+  .mypage-info p {
+    margin: 0 0 14px;
+    font-size: 15px;
+    color: #333;
+    line-height: 1.7;
+  }
 
-<h3>ユーザー情報</h3>
+  .mypage-divider {
+    border: none;
+    border-top: 1px solid #cfcfcf;
+    margin: 18px 0 22px;
+  }
 
-<form method="post" style="display:grid; gap:10px; max-width:420px;">
-  {% csrf_token %}
+  .mypage-section-title {
+    margin: 0 0 18px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+  }
 
-  <div>
-    <label for="{{ form.username.id_for_label }}"><strong>ニックネーム</strong></label><br>
-    {{ form.username }}
+  .mypage-form {
+    display: grid;
+    gap: 16px;
+  }
+
+  .mypage-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .mypage-form-group input {
+    width: 100%;
+    height: 46px;
+    padding: 10px 14px;
+    border: 1px solid #c8ced8;
+    border-radius: 14px;
+    background: #fff;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  .mypage-save-btn {
+    width: 100%;
+    height: 50px;
+    border: none;
+    border-radius: 14px;
+    background: #19a848;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .mypage-message {
+    font-size: 13px;
+    color: #333;
+    margin: 0;
+  }
+
+  .mypage-logout-wrap {
+    margin-top: 8px;
+  }
+
+  .mypage-logout-btn {
+    min-width: 110px;
+    height: 48px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 14px;
+    background: #e9e9e9;
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .mypage-member-link {
+    margin-top: 18px;
+  }
+
+  .mypage-member-link a {
+    color: #333;
+    text-decoration: none;
+    font-size: 15px;
+  }
+</style>
+
+<div class="mypage-page">
+
+  <div class="mypage-breadcrumb">
+    <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞ マイページ
   </div>
 
-  <div>
-    <label for="{{ form.email.id_for_label }}"><strong>メールアドレス</strong></label><br>
-    {{ form.email }}
+  <h2 class="mypage-title">マイページ</h2>
+
+  <div class="mypage-link-block">
+    <a href="{% url 'inventory:invite_create' %}">メンバーを招待する（発行）</a>
   </div>
 
-  <button type="submit" class="btn btn-primary">保存</button>
+  <div class="mypage-link-block">
+    <a href="{% url 'inventory:invite_token_list' %}">招待リンク（発行履歴）</a>
+  </div>
 
-  {% if messages %}
-    {% for message in messages %}
-      <p style="font-size:13px;">{{ message }}</p>
-    {% endfor %}
-  {% endif %}
+  <div class="mypage-info">
+    <p><strong>世帯名：</strong> {{ user.household.name }}</p>
+    <p><strong>目標日数：</strong> {{ user.household.target_days }} 日</p>
+  </div>
 
-</form>
+  <div class="mypage-link-block">
+    <a href="{% url 'inventory:settings_tabs' %}?tab=alert">アラート設定</a>
+  </div>
 
-<hr>
+  <hr class="mypage-divider">
 
-<form method="post" action="{% url 'logout' %}">
-  {% csrf_token %}
-  <button type="submit" class="btn btn-danger-outline">ログアウト</button>
-</form>
+  <h3 class="mypage-section-title">ユーザー情報</h3>
 
-<p>
-  <a href="{% url 'accounts:member_list' %}">メンバー一覧</a>
-</p>
+  <form method="post" class="mypage-form">
+    {% csrf_token %}
 
+    <div class="mypage-form-group">
+      <label for="{{ form.username.id_for_label }}">ニックネーム</label>
+      {{ form.username }}
+    </div>
+
+    <div class="mypage-form-group">
+      <label for="{{ form.email.id_for_label }}">メールアドレス</label>
+      {{ form.email }}
+    </div>
+
+    <button type="submit" class="mypage-save-btn">保存</button>
+
+    {% if messages %}
+      {% for message in messages %}
+        <p class="mypage-message">{{ message }}</p>
+      {% endfor %}
+    {% endif %}
+  </form>
+
+  <hr class="mypage-divider">
+
+  <div class="mypage-logout-wrap">
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="mypage-logout-btn">ログアウト</button>
+    </form>
+  </div>
+
+  <div class="mypage-member-link">
+    <a href="{% url 'accounts:member_list' %}">メンバー一覧</a>
+  </div>
+
+</div>
 {% endblock %}
