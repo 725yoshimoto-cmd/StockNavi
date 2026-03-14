@@ -1,82 +1,377 @@
 {% extends "base.html" %}
+{% block title %}アラート設定{% endblock %}
+
 {% block content %}
+<div class="page-wrap">
 
-<h1 class="h5 mb-3">アラート設定</h1>
+  <!-- パンくず -->
+  <p class="breadcrumb">
+    <a href="{% url 'accounts:mypage' %}">マイページ</a>
+    <span class="sep">＞</span>
+    <span>アラート設定</span>
+  </p>
 
-<form id="alertSettingForm" method="post" action="{% url 'accounts:alert_setting' %}">
-  {% csrf_token %}
+  <!-- 画面タイトル -->
+  <h1 class="page-title">アラート設定</h1>
 
-  <div class="mb-3">
-    <label class="form-label">個数アラート（◯個以下で通知）</label>
-    {{ form.quantity_threshold }}
-    <div class="form-text">例：1 → 1個以下で通知</div>
-  </div>
+  <!-- 保存メッセージ表示エリア
+       ※ 最初は空にしておく
+       ※ 保存成功したときだけJSで文字を入れる
+       ※ 「常時 保存しました」が出続けないようにするため -->
+  <div id="alertMessage" class="alert-message" style="display: none;"></div>
 
-  <div class="mb-3">
-    <label class="form-label">期限アラート（残り◯日以内で通知）</label>
-    {{ form.expiry_days }}
-    <div class="form-text">例：30 → 30日以内で通知</div>
-  </div>
+  <!-- アラート設定カード -->
+  <section class="card">
+    <p class="note">※ 世帯共通の設定です</p>
+    <p class="sub-note">在庫一覧などで使うアラート基準を設定します。</p>
 
-  <button class="btn btn-primary w-100" type="submit">保存</button>
-</form>
+    <!--
+      この form は AJAX 送信用
+      action は accounts:alert_setting にする
+      method は POST
+    -->
+    <form id="alertSettingForm" method="post" action="{% url 'accounts:alert_setting' %}">
+      {% csrf_token %}
 
-<!-- トースト（Bootstrap想定） -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-  <div id="saveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="toast-body" id="toastBody">保存しました</div>
-  </div>
+      <!-- フォーム全体エラー -->
+      {% if form.non_field_errors %}
+        <div class="form-errors">
+          {% for error in form.non_field_errors %}
+            <p class="error-text">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!--
+        ここが重要
+        フィールド名をベタ書きせず、
+        Django Formの field をそのまま使う
+        → views.py / forms.py と name がズレない
+      -->
+      {% for field in form %}
+        <div class="form-row">
+          <label class="form-label" for="{{ field.id_for_label }}">
+            {{ field.label }}
+          </label>
+
+          <div class="field-area">
+            {{ field }}
+          </div>
+
+          {% if field.help_text %}
+            <p class="help-text">{{ field.help_text }}</p>
+          {% endif %}
+
+          <div class="field-errors" id="error_{{ field.name }}">
+            {% if field.errors %}
+              {% for error in field.errors %}
+                <p class="error-text">{{ error }}</p>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+
+      <div class="submit-area">
+        <button type="submit" class="save-btn">保存</button>
+      </div>
+    </form>
+  </section>
 </div>
 
-<script>
-/* ===== ① showMessage が無い場合の保険（必ず動く） ===== */
-if (typeof window.showMessage !== "function") {
-  window.showMessage = function (msg) {
-    alert(msg);
-  };
-}
+<style>
+  /* ----------------------------
+     画面全体
+  ---------------------------- */
+  .page-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 16px 12px 96px;
+    box-sizing: border-box;
+  }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("alertSettingForm");
-  if (!form) return;
+  /* ----------------------------
+     パンくず
+  ---------------------------- */
+  .breadcrumb {
+    margin: 4px 0 12px;
+    font-size: 14px;
+    color: #666;
+  }
 
-  /* ===== ② 同じイベントを二重登録しない保険 ===== */
-  if (form.dataset.bound === "1") return;
-  form.dataset.bound = "1";
+  .breadcrumb a {
+    color: #666;
+    text-decoration: none;
+  }
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  .breadcrumb .sep {
+    margin: 0 6px;
+  }
 
-    /* ★ ③ 連打・二重送信防止（送信中はロック） */
-    if (form.dataset.sending === "1") return;
-    form.dataset.sending = "1";
+  /* ----------------------------
+     タイトル
+  ---------------------------- */
+  .page-title {
+    margin: 0 0 16px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #222;
+  }
 
-    const url = form.action;
-    const fd = new FormData(form);
+  /* ----------------------------
+     保存メッセージ
+  ---------------------------- */
+  .alert-message {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #b9e3c6;
+    background: #edf9f1;
+    color: #1f6b36;
+  }
 
-    const saveBtn = form.querySelector("button[type='submit'], input[type='submit']");
-    if (saveBtn) saveBtn.disabled = true;
+  .alert-message.is-error {
+    border: 1px solid #f0b8b8;
+    background: #fff1f1;
+    color: #b42318;
+  }
 
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "X-Requested-With": "XMLHttpRequest" },
-        body: fd,
-      });
+  /* ----------------------------
+     カード
+  ---------------------------- */
+  .card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px 16px 20px;
+    box-sizing: border-box;
+  }
 
-      const data = await res.json();
-      console.log("alert save status:", res.status, "body:", data);
+  .note {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
 
-      window.showMessage(data.message || "保存しました");
-    } catch (err) {
-      console.error(err);
-      window.showMessage("通信エラーが発生しました");
-    } finally {
-      form.dataset.sending = "0";
-      if (saveBtn) saveBtn.disabled = false;
+  .sub-note {
+    margin: 0 0 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #666;
+  }
+
+  /* ----------------------------
+     フォーム
+  ---------------------------- */
+  .form-row {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+  }
+
+  .field-area input,
+  .field-area select,
+  .field-area textarea {
+    width: 100%;
+    max-width: 280px;
+    height: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 1px solid #cfd4dc;
+    border-radius: 10px;
+    background: #fff;
+    box-sizing: border-box;
+  }
+
+  .field-area textarea {
+    min-height: 100px;
+    height: auto;
+    resize: vertical;
+  }
+
+  .help-text {
+    margin: 8px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #666;
+  }
+
+  .field-errors {
+    margin-top: 6px;
+  }
+
+  .form-errors {
+    margin-bottom: 12px;
+  }
+
+  .error-text {
+    margin: 0 0 4px;
+    font-size: 13px;
+    color: #b42318;
+  }
+
+  /* ----------------------------
+     ボタン
+  ---------------------------- */
+  .submit-area {
+    margin-top: 28px;
+    text-align: center;
+  }
+
+  .save-btn {
+    min-width: 160px;
+    height: 44px;
+    padding: 0 24px;
+    border: none;
+    border-radius: 999px;
+    background: #2f80ed;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .save-btn:hover {
+    opacity: 0.92;
+  }
+
+  .save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* ----------------------------
+     スマホ
+  ---------------------------- */
+  @media (max-width: 767px) {
+    .page-wrap {
+      padding-left: 12px;
+      padding-right: 12px;
     }
-  });
-});
-</script>
 
+    .page-title {
+      font-size: 22px;
+    }
+
+    .field-area input,
+    .field-area select,
+    .field-area textarea {
+      max-width: 100%;
+    }
+  }
+</style>
+
+<script>
+  // ==========================================
+  // アラート設定 保存処理
+  // - 画面遷移なしで保存
+  // - 成功時だけメッセージ表示
+  // - エラー時はエラー表示
+  // ==========================================
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("alertSettingForm");
+    const messageBox = document.getElementById("alertMessage");
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // フィールド名一覧を事前取得
+    // Djangoテンプレートで form を回して name をJSに埋め込む
+    const fieldNames = [
+      {% for field in form %}
+        "{{ field.name }}"{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    // 成功・失敗メッセージ表示用関数
+    function showMessage(text, isError = false) {
+      messageBox.textContent = text;
+      messageBox.style.display = "block";
+
+      if (isError) {
+        messageBox.classList.add("is-error");
+      } else {
+        messageBox.classList.remove("is-error");
+      }
+    }
+
+    // フィールドごとのエラー表示をクリア
+    function clearErrors() {
+      fieldNames.forEach(function (name) {
+        const errorBox = document.getElementById("error_" + name);
+        if (errorBox) {
+          errorBox.innerHTML = "";
+        }
+      });
+    }
+
+    // フィールドごとのエラー表示
+    function showFieldErrors(errors) {
+      Object.keys(errors).forEach(function (name) {
+        const errorBox = document.getElementById("error_" + name);
+        if (!errorBox) return;
+
+        let html = "";
+        errors[name].forEach(function (msg) {
+          html += '<p class="error-text">' + msg + '</p>';
+        });
+        errorBox.innerHTML = html;
+      });
+    }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      clearErrors();
+      messageBox.style.display = "none";
+      messageBox.textContent = "";
+      messageBox.classList.remove("is-error");
+
+      submitBtn.disabled = true;
+
+      try {
+        const formData = new FormData(form);
+
+        const response = await fetch(form.action, {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          // バリデーションエラー
+          if (data.errors) {
+            showFieldErrors(data.errors);
+            showMessage("入力内容を確認してください。", true);
+          } else {
+            showMessage("保存に失敗しました。", true);
+          }
+          return;
+        }
+
+        // 成功
+        showMessage(data.message || "アラート設定を保存しました");
+
+        // 上までスクロールしてメッセージを見やすくする
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+      } catch (error) {
+        showMessage("通信エラーが発生しました。時間を置いて再度お試しください。", true);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  });
+</script>
 {% endblock %}
