@@ -1,299 +1,475 @@
 {% extends "base.html" %}
-{% block title %}在庫{% endblock %}
+{% block title %}在庫一覧 | StockNavi{% endblock %}
+
 {% block content %}
+<style>
+  /* =========================
+     在庫一覧ページ全体
+  ========================= */
+  .inventory-page {
+    max-width: 360px;
+    margin: 0 auto;
+    padding: 8px 16px 24px;
+  }
 
-<!-- ✅ パンくず（簡易・1行） -->
-<p class="breadcrumb" style="margin:8px 0 14px 0; font-size:14px;">
-  在庫一覧
-</p>
+  .inventory-breadcrumb {
+    margin: 0 0 18px;
+    font-size: 12px;
+    color: #444;
+  }
 
-<h1>在庫一覧</h1>
+  .inventory-title {
+    margin: 0 0 18px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    text-align: left;
+  }
 
-{% if request.GET.select_mode == "1" %}
-  <div class="select-bar">
-    <a class="btn btn-outline"
-      href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=0">
-      選択解除
-    </a>
-    <button type="submit"
-            class="btn btn-success"
-            form="bulkForm"
-            formaction="{% url 'inventory:inventory_bulk_duplicate' %}">
-      複製
-    </button>
+  .inventory-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
 
-    <button type="submit"
-            class="btn btn-danger"
-            form="bulkForm"
-            formaction="{% url 'inventory:inventory_bulk_delete' %}">
-      削除
-    </button>
+  .inventory-mode {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+  }
 
-  </div>
-{% endif %}
-
-{% with select_mode=request.GET.select_mode %}
-  {% if select_mode == "1" %}
-    <a class="btn" href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=0">
-      選択モードOFF
-    </a>
-  {% else %}
-    <a class="btn" href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=1">
-      選択モードON
-    </a>
-  {% endif %}
-{% endwith %}
-
-{% if request.GET.sort == "expiry" %}
-  <p>並び替え：期限が近い順</p>
-{% elif request.GET.sort == "quantity" %}
-  <p>並び替え：数量が少ない順</p>
-{% elif request.GET.sort == "name" %}
-  <p>並び替え：名前順</p>
-{% endif %}
-
-<!-- ✅ 過去の登録履歴（在庫一覧からのみ遷移） -->
-<p style="text-align:right; margin: 8px 0;">
-  <a href="{% url 'inventory:inventory_history' %}" class="btn btn-outline">
-    履歴一覧へ
-  </a>
-</p>
-
-<form method="get" action="{% url 'inventory:inventory_list' %}">
-  <!-- 既存条件を維持 -->
-  <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">
-  <input type="hidden" name="category" value="{{ selected_category }}">
-  <input type="hidden" name="storage" value="{{ selected_storage }}">
-
-  <button type="submit" name="sort" value="expiry">期限が近い順</button>
-  <button type="submit" name="sort" value="quantity">数量が少ない順</button>
-  <button type="submit" name="sort" value="name">名前順</button>
-</form>
-
-<form method="get" action="{% url 'inventory:inventory_list' %}">
-
-  <!-- ✅ 並び替え/選択モードを維持 -->
-  <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
-  <input type="hidden" name="select_mode" value="{{ request.GET.select_mode|default:'0' }}">
-
-  <!-- ✅ 検索 -->
-  <input
-    type="text"
-    name="q"
-    placeholder="商品名で検索"
-    value="{{ request.GET.q|default:'' }}"
-    style="padding:6px 10px; width:220px;"
-  />
-  <button type="submit" class="btn">検索</button>
-
-  <!-- ✅ 分類（選んだ瞬間に反映） -->
-  <label style="margin-left:10px;">分類</label>
-  <select name="category" onchange="this.form.submit()">
-    <option value="">すべて</option>
-    {% for c in categories %}
-      <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:"s" %}selected{% endif %}>
-        {{ c.name }}
-      </option>
-    {% endfor %}
-  </select>
-
-  <!-- ✅ 保管場所（選んだ瞬間に反映） -->
-  <label style="margin-left:10px;">保管場所</label>
-  <select name="storage" onchange="this.form.submit()">
-    <option value="">すべて</option>
-    {% for s in storages %}
-      <option value="{{ s.id }}" {% if selected_storage == s.id|stringformat:"s" %}selected{% endif %}>
-        {{ s.name }}
-      </option>
-    {% endfor %}
-  </select>
-
-  <!-- ✅ 解除 -->
-  <a class="btn btn-outline" style="margin-left:10px;" href="{% url 'inventory:inventory_list' %}">
-  解除
-  </a>
-
-</form>
-
-<form id="bulkForm" method="post">
-  {% csrf_token %}
-</form>
-
-<hr>
-
-<p>合計：{{ total_items }}件 / 数量合計：{{ total_quantity }}</p>
-<p><a href="{% url 'inventory:inventory_add' %}">＋在庫を追加</a></p>
-
-<!--見た目（CSS）は「1回だけ」ここに置く-->
-<style> 
-  .breadcrumb {
-    margin: 8px 0 14px;
+  .inventory-history-link {
     font-size: 14px;
-  }
-  .breadcrumb a {
-    text-decoration: underline;
-  }
-  .item-card{
-    border:1px solid #ddd;
-    border-radius:12px;
-    padding:10px 12px;
-    margin:10px 0;
-    background:#fff;
-  }
-  .row-top{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-    margin-bottom:6px;
-  }
-  .cat-tag{
-    display:inline-block;
-    padding:2px 8px;
-    border-radius:999px;
-    font-size:12px;
-    border:1px solid #ddd;
-    vertical-align:middle;
-  }
-  .alert-icon{
-    display:inline-block;
-    font-size:14px;
-    vertical-align:middle;
-  }
-  .alert-red{ color:#d00; font-weight:700; }
-  .alert-blue{ color:#06c; font-weight:700; }
-
-  .item-name{
-    font-weight:700;
-    font-size:16px;
-    line-height:1.2;
+    color: #333;
+    text-decoration: none;
+    white-space: nowrap;
   }
 
-  .meta{
-    font-size:12px;
-    color:#333;
-    margin-top:6px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px 10px;
+  .sort-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
   }
 
-  .meta span{
-    background:#f7f7f7;
-    border:1px solid #eee;
-    border-radius:999px;
-    padding:2px 8px;
+  .sort-row button {
+    padding: 8px 10px;
+    border: 1px solid #999;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 14px;
+    cursor: pointer;
   }
 
-  .actions{
-    margin-top:8px;
-    display:flex;
-    gap:10px;
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
   }
 
-  .actions a{ font-size:13px; }
+  .search-input {
+    flex: 1;
+    height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #c8ced8;
+    border-radius: 14px;
+    background: #fff;
+    font-size: 16px;
+  }
 
+  .search-btn {
+    min-width: 82px;
+    height: 44px;
+    border: none;
+    border-radius: 14px;
+    background: #e7e7e7;
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
 
-  /* ================================
-     ★ここから追加（アラート色を全体に効かせる）
-     ================================ */
+  .filter-label {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+  }
 
+  .filter-select {
+    width: 100%;
+    height: 44px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border: 1px solid #c8ced8;
+    border-radius: 14px;
+    background: #fff;
+    font-size: 16px;
+  }
+
+  .clear-link-wrap {
+    margin: 0 0 18px;
+  }
+
+  .clear-link {
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .bulk-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .bulk-btn,
+  .mode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .mode-btn {
+    background: #f1f1f1;
+    color: #333;
+    margin-bottom: 14px;
+  }
+
+  .bulk-btn-gray {
+    background: #f1f1f1;
+    color: #333;
+  }
+
+  .bulk-btn-green {
+    background: #16a34a;
+    color: #fff;
+  }
+
+  .bulk-btn-red {
+    background: #dc2626;
+    color: #fff;
+  }
+
+  .inventory-divider {
+    border: none;
+    border-top: 1px solid #cfcfcf;
+    margin: 18px 0;
+  }
+
+  .inventory-summary {
+    margin: 0 0 14px;
+    font-size: 15px;
+    color: #333;
+  }
+
+  .inventory-add-link {
+    display: inline-block;
+    margin-bottom: 18px;
+    font-size: 16px;
+    color: #333;
+    text-decoration: none;
+  }
+
+  .item-card {
+    display: flex;
+    gap: 12px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+
+  .item-thumb {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .item-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .item-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .item-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    text-decoration: none;
+    line-height: 1.3;
+  }
+
+  .cat-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid #ddd;
+    color: #111 !important;
+  }
+
+  .alert-icon {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+  }
+
+  .meta span {
+    font-size: 12px;
+    color: #333;
+    background: #f7f7f7;
+    border: 1px solid #eee;
+    border-radius: 999px;
+    padding: 2px 8px;
+  }
+
+  /* アラート色 */
   .item-body.alert-red,
   .item-body.alert-red a,
   .item-body.alert-red span,
   .item-body.alert-red div {
-    color:#d00 !important;
+    color: #d00 !important;
   }
 
   .item-body.alert-blue,
   .item-body.alert-blue a,
   .item-body.alert-blue span,
   .item-body.alert-blue div {
-    color:#06c !important;
+    color: #06c !important;
   }
 
-  /* カテゴリタグだけは背景色があるので文字色固定 */
   .item-body.alert-red .cat-tag,
   .item-body.alert-blue .cat-tag {
-    color:#111 !important;
+    color: #111 !important;
   }
 
+  .empty-text {
+    font-size: 14px;
+    color: #666;
+    margin-top: 12px;
+  }
 </style>
 
-<!--在庫一覧（カード表示）-->
-{% for item in items %}
-  <div class="item-card">
+<div class="inventory-page">
 
-    <!-- 画像 -->
-    {% if item.image %}
-      <img src="{{ item.image.url }}" style="width:56px; height:56px; object-fit:cover; border-radius:8px;">
+  <p class="inventory-breadcrumb">在庫一覧</p>
+
+  <h1 class="inventory-title">在庫一覧</h1>
+
+  {% with select_mode=request.GET.select_mode %}
+    {% if select_mode == "1" %}
+      <a class="mode-btn"
+         href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=0">
+        選択モードOFF
+      </a>
     {% else %}
-      <div style="width:56px; height:56px; border-radius:8px; background:#eee; display:flex; align-items:center; justify-content:center; font-size:12px; color:#666;">
-        No Image
-      </div>
+      <a class="mode-btn"
+         href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=1">
+        選択モードON
+      </a>
     {% endif %}
+  {% endwith %}
 
-    {# ★ここから「色を付けたい範囲」をまとめて包む #}
-    <div class="item-body
-      {% if item.is_alert_red %} alert-red
-      {% elif item.is_alert_blue %} alert-blue
+  <div class="inventory-top-row">
+    <div class="inventory-mode">
+      {% if request.GET.select_mode == "1" %}
+        選択モードON
       {% endif %}
-    ">
-
-      <div class="row-top">
-
-        {% if request.GET.select_mode == "1" %}
-          <input type="checkbox" name="selected_ids" value="{{ item.id }}" form="bulkForm">
-        {% endif %}
-
-        {% if item.category %}
-          <span class="cat-tag" style="background: {{ item.category.color|default:'#f1e8ff' }};">
-            {{ item.category.name }}
-          </span>
-        {% else %}
-          <span class="cat-tag" style="background:#eee;">未分類</span>
-        {% endif %}
-
-        {% if item.is_alert_red %}
-          <span class="alert-icon" style="font-weight:700;" title="アラート（在庫0 または 期限0日）">🔔</span>
-        {% elif item.is_alert_blue %}
-          <span class="alert-icon" style="font-weight:700;" title="注意（設定した個数・期限内）">🔔</span>
-        {% endif %}
-
-        {% if request.GET.select_mode == "1" %}
-          <span class="item-name">{{ item.name }}</span>
-        {% else %}
-          <a href="{% url 'inventory:inventory_detail' item.pk %}" class="item-name">
-            {{ item.name }}
-          </a>
-        {% endif %}
-      </div>
-
-      <div class="meta">
-        <span>数量：{{ item.quantity }}</span>
-
-        {% if item.expiry_date %}
-          <span>賞味期限：{{ item.expiry_date }}</span>
-        {% else %}
-          <span>賞味期限：未設定</span>
-        {% endif %}
-
-        {% if item.days_left is not None %}
-          <span>残り：{{ item.days_left }}日</span>
-        {% endif %}
-
-        {% if item.storage_location %}
-          <span>保管：{{ item.storage_location.name }}</span>
-        {% else %}
-          <span>保管：未設定</span>
-        {% endif %}
-      </div>
-
     </div>
-    {# ★ここまで wrapper #}
-
+    <a href="{% url 'inventory:inventory_history' %}" class="inventory-history-link">履歴一覧へ</a>
   </div>
-{% endfor %}
 
+  {% if request.GET.select_mode == "1" %}
+    <div class="bulk-bar">
+      <a class="bulk-btn bulk-btn-gray"
+         href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=0">
+        選択解除
+      </a>
 
+      <button type="submit"
+              class="bulk-btn bulk-btn-green"
+              form="bulkForm"
+              formaction="{% url 'inventory:inventory_bulk_duplicate' %}">
+        複製
+      </button>
+
+      <button type="submit"
+              class="bulk-btn bulk-btn-red"
+              form="bulkForm"
+              formaction="{% url 'inventory:inventory_bulk_delete' %}">
+        削除
+      </button>
+    </div>
+  {% endif %}
+
+  <form method="get" action="{% url 'inventory:inventory_list' %}">
+    <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">
+    <input type="hidden" name="category" value="{{ selected_category }}">
+    <input type="hidden" name="storage" value="{{ selected_storage }}">
+    <input type="hidden" name="select_mode" value="{{ request.GET.select_mode|default:'0' }}">
+
+    <div class="sort-row">
+      <button type="submit" name="sort" value="expiry">期限が近い順</button>
+      <button type="submit" name="sort" value="quantity">数量が少ない順</button>
+      <button type="submit" name="sort" value="name">名前順</button>
+    </div>
+  </form>
+
+  <form method="get" action="{% url 'inventory:inventory_list' %}">
+    <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
+    <input type="hidden" name="select_mode" value="{{ request.GET.select_mode|default:'0' }}">
+
+    <div class="search-row">
+      <input
+        type="text"
+        name="q"
+        placeholder="商品名で検索"
+        value="{{ request.GET.q|default:'' }}"
+        class="search-input"
+      >
+      <button type="submit" class="search-btn">検索</button>
+    </div>
+
+    <label class="filter-label" for="category-select">分類</label>
+    <select id="category-select" name="category" class="filter-select" onchange="this.form.submit()">
+      <option value="">すべて</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:"s" %}selected{% endif %}>
+          {{ c.name }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label class="filter-label" for="storage-select">保管場所</label>
+    <select id="storage-select" name="storage" class="filter-select" onchange="this.form.submit()">
+      <option value="">すべて</option>
+      {% for s in storages %}
+        <option value="{{ s.id }}" {% if selected_storage == s.id|stringformat:"s" %}selected{% endif %}>
+          {{ s.name }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <div class="clear-link-wrap">
+      <a class="clear-link" href="{% url 'inventory:inventory_list' %}">解除</a>
+    </div>
+  </form>
+
+  <form id="bulkForm" method="post">
+    {% csrf_token %}
+  </form>
+
+  <hr class="inventory-divider">
+
+  <p class="inventory-summary">合計：{{ total_items }}件 / 数量合計：{{ total_quantity }}</p>
+  <a href="{% url 'inventory:inventory_add' %}" class="inventory-add-link">＋ 在庫を追加</a>
+
+  {% if items %}
+    {% for item in items %}
+      <div class="item-card">
+
+        {% if item.image %}
+          <img src="{{ item.image.url }}" class="item-thumb" alt="{{ item.name }}">
+        {% else %}
+          <div class="item-thumb">No Image</div>
+        {% endif %}
+
+        <div class="item-main">
+          <div class="item-body
+            {% if item.is_alert_red %} alert-red
+            {% elif item.is_alert_blue %} alert-blue
+            {% endif %}
+          ">
+            <div class="item-top">
+
+              {% if request.GET.select_mode == "1" %}
+                <input type="checkbox" name="selected_ids" value="{{ item.id }}" form="bulkForm">
+              {% endif %}
+
+              {% if item.category %}
+                <span class="cat-tag" style="background: {{ item.category.color|default:'#f1e8ff' }};">
+                  {{ item.category.name }}
+                </span>
+              {% else %}
+                <span class="cat-tag" style="background:#eee;">未分類</span>
+              {% endif %}
+
+              {% if item.is_alert_red %}
+                <span class="alert-icon" title="アラート（在庫0 または 期限0日）">🔔</span>
+              {% elif item.is_alert_blue %}
+                <span class="alert-icon" title="注意（設定した個数・期限内）">🔔</span>
+              {% endif %}
+
+              {% if request.GET.select_mode == "1" %}
+                <span class="item-name">{{ item.name }}</span>
+              {% else %}
+                <a href="{% url 'inventory:inventory_detail' item.pk %}" class="item-name">
+                  {{ item.name }}
+                </a>
+              {% endif %}
+            </div>
+
+            <div class="meta">
+              <span>数量：{{ item.quantity }}</span>
+
+              {% if item.expiry_date %}
+                <span>賞味期限：{{ item.expiry_date }}</span>
+              {% else %}
+                <span>賞味期限：未設定</span>
+              {% endif %}
+
+              {% if item.days_left is not None %}
+                <span>残り：{{ item.days_left }}日</span>
+              {% endif %}
+
+              {% if item.storage_location %}
+                <span>保管：{{ item.storage_location.name }}</span>
+              {% else %}
+                <span>保管：未設定</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="empty-text">在庫はまだありません。</p>
+  {% endif %}
+
+</div>
 {% endblock %}

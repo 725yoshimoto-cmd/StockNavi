@@ -17,10 +17,6 @@
 --------------------------------- #}
 {% block app_header %}{% endblock %}
 
-{# ---------------------------------
-  ログイン画面では共通ページタイトル不要
---------------------------------- #}
-{% block page_title_area %}{% endblock %}
 
 {# ---------------------------------
   ログイン画面では下ナビ不要
@@ -34,17 +30,14 @@
     上余白を減らして、ロゴをもっと上に寄せる
   --------------------------------- */
   .login-page {
-    min-height: calc(100vh - 24px);
+    min-height: 100vh;
     padding: 0 0 40px;
   }
 
-  /* ---------------------------------
-     ロゴ
-     一番上に表示する
-  --------------------------------- */
   .login-logo-wrap {
     text-align: center;
-    margin-bottom: 6px;
+    margin: 0 0 6px;
+    padding-top: 0;
   }
 
   .login-logo {
@@ -308,7 +301,7 @@
 
       <p class="login-links-forgot">
         パスワードを忘れた方は
-        <a href="{% url 'password_reset' %}">こちら</a>
+        <a href="{% url 'accounts:password_reset' %}">こちら</a>
       </p>
     </div>
 
@@ -331,27 +324,21 @@
   }
 
   // オートログイン（簡易版）
-  // メールアドレスのみ保存する
-  const usernameInput = document.getElementById("{{ form.username.id_for_label }}");
-  const rememberEmail = document.getElementById("rememberEmail");
-  const savedEmail = localStorage.getItem("stocknavi_saved_email");
-  const savedRemember = localStorage.getItem("stocknavi_remember_email");
+  // アカウント名を保存する
+  const savedUsername = localStorage.getItem("stocknavi_saved_username");
+  const savedRemember = localStorage.getItem("stocknavi_remember_username");
 
   if (savedRemember === "true" && usernameInput) {
     rememberEmail.checked = true;
-    usernameInput.value = savedEmail || "";
+    usernameInput.value = savedUsername || "";
   }
 
-  const loginForm = document.querySelector(".login-container form");
-
-  if (loginForm) {
-    loginForm.addEventListener("submit", function () {
-      if (rememberEmail.checked && usernameInput) {
-        localStorage.setItem("stocknavi_saved_email", usernameInput.value);
-        localStorage.setItem("stocknavi_remember_email", "true");
-      } else {
-        localStorage.removeItem("stocknavi_saved_email");
-        localStorage.removeItem("stocknavi_remember_email");
+  ...
+  localStorage.setItem("stocknavi_saved_username", usernameInput.value);
+  localStorage.setItem("stocknavi_remember_username", "true");
+  ...
+  localStorage.removeItem("stocknavi_saved_username");
+  localStorage.removeItem("stocknavi_remember_username");
       }
     });
   }

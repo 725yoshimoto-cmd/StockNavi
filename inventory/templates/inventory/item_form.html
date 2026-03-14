@@ -1,17 +1,131 @@
 {% extends "base.html" %}
-{% block title %}在庫を追加 / 編集{% endblock %}
+{% block title %}
+  {% if form.instance.pk %}在庫を編集{% else %}在庫を追加{% endif %} | StockNavi
+{% endblock %}
 
 {% block content %}
-  <h1>在庫を追加 / 編集</h1>
 
-  <p><a href="{% url 'inventory:inventory_list' %}">一覧へ戻る</a></p>
+  {% if form.instance.pk %}
+    <p class="breadcrumb" style="margin: 0 0 16px; font-size: 14px;">
+      <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞
+      <a href="{% url 'inventory:inventory_detail' form.instance.pk %}">商品情報</a> ＞
+      在庫を編集
+    </p>
+    <h1>在庫を編集</h1>
+  {% else %}
+    <p class="breadcrumb" style="margin: 0 0 16px; font-size: 14px;">
+      <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞ 在庫を追加
+    </p>
+    <h1>在庫を追加</h1>
+  {% endif %}
 
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-
     {{ form.non_field_errors }}
-    {{ form.as_p }}
+
+    <div style="margin-bottom: 20px;">
+      <label for="{{ form.category.id_for_label }}" style="display:block; margin-bottom:8px; font-weight:bold;">分類</label>
+      {{ form.category }}
+      {{ form.category.errors }}
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label for="{{ form.storage_location.id_for_label }}" style="display:block; margin-bottom:8px; font-weight:bold;">保管場所</label>
+      {{ form.storage_location }}
+      {{ form.storage_location.errors }}
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label for="{{ form.name.id_for_label }}" style="display:block; margin-bottom:8px; font-weight:bold;">在庫名</label>
+      {{ form.name }}
+      {{ form.name.errors }}
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label for="{{ form.quantity.id_for_label }}" style="display:block; margin-bottom:8px; font-weight:bold;">数量</label>
+      {{ form.quantity }}
+      {{ form.quantity.errors }}
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label for="{{ form.content_amount.id_for_label }}" style="display:block; margin-bottom:8px; font-weight:bold;">内容量</label>
+      {{ form.content_amount }}
+      {{ form.content_amount.errors }}
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label for="{{ form.expiry_date.id_for_label }}" style="display:block; margin-bottom:8px; font-weight:bold;">賞味期限</label>
+      {{ form.expiry_date }}
+      {{ form.expiry_date.errors }}
+    </div>
+
+    <div style="margin-bottom: 24px;">
+      <label style="display:block; margin-bottom:8px; font-weight:bold;">商品画像</label>
+
+      {% if form.instance.image %}
+        <div style="margin: 12px 0;">
+          <img
+            src="{{ form.instance.image.url }}"
+            alt="{{ form.instance.name }}"
+            style="width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid #ddd;"
+          >
+        </div>
+        <p style="margin: 0 0 12px; font-size: 14px; color: #555;">
+          現在の画像を変更する場合は、下から新しい画像を選択してください。
+        </p>
+      {% else %}
+        <p style="margin: 0 0 12px; font-size: 14px; color: #555;">
+          画像を登録する場合は、下から画像を選択してください。
+        </p>
+      {% endif %}
+
+      <input
+        type="file"
+        name="image"
+        id="id_image_custom"
+        accept="image/*"
+        style="display:none;"
+      >
+
+      <label for="id_image_custom"
+             class="btn"
+             style="display:inline-block; margin-bottom:8px;">
+        画像を選択
+      </label>
+
+      <p id="selected-file-name" style="margin:0; font-size:14px; color:#555;">
+        {% if form.instance.image %}
+          新しい画像はまだ選択されていません
+        {% else %}
+          画像はまだ選択されていません
+        {% endif %}
+      </p>
+
+      {% if form.image.errors %}
+        <div style="margin-top:8px;">
+          {{ form.image.errors }}
+        </div>
+      {% endif %}
+    </div>
 
     <button type="submit" class="btn btn-primary">保存</button>
   </form>
+
+  <script>
+    (function () {
+      const input = document.getElementById("id_image_custom");
+      const fileName = document.getElementById("selected-file-name");
+
+      if (input && fileName) {
+        input.addEventListener("change", function () {
+          if (input.files && input.files.length > 0) {
+            fileName.textContent = "選択中: " + input.files[0].name;
+          } else {
+            fileName.textContent = "新しい画像はまだ選択されていません";
+          }
+        });
+      }
+    })();
+  </script>
+
 {% endblock %}

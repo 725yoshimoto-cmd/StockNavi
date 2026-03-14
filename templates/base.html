@@ -269,24 +269,31 @@
     }
 
     .bottom-nav a {
-
       flex: 1;
-
       display: flex;
-
       align-items: center;
       justify-content: center;
-
-      font-size: 12px;
-
+      font-size: 13px;
+      font-weight: 600;
       text-align: center;
-
+      padding: 0 4px;
     }
 
     /* ---------------------------------
       認証画面（ログイン・登録など）専用
       body に auth-page クラスが付いたとき用
     --------------------------------- */
+    /* 認証画面ではロゴを最上部に見せるため、
+   app-shell の角丸・影・上の余白感をなくす */
+    .auth-page .app-shell {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #fff;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
     .auth-page {
       background: #f3f4f6;
     }
@@ -332,6 +339,11 @@
     <!-- メインコンテンツ -->
     <main class="app-main">
 
+    <!-- ページタイトル -->
+    {% if page_title %}
+    <h1 class="page-title">{{ page_title }}</h1>
+    {% endif %}
+
     <!-- Djangoメッセージ -->
     {% if messages %}
 
@@ -349,10 +361,6 @@
 
     {% endif %}
 
-    <!-- ページタイトル -->
-    {% if page_title %}
-    <h1 class="page-title">{{ page_title }}</h1>
-    {% endif %}
 
       <!-- 各ページの内容 -->
       {% block content %}

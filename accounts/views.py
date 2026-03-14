@@ -20,7 +20,7 @@ from .models import AlertSetting, Household
 # 既存：世帯必須のMixin（プロジェクトにあるやつ）
 from inventory.mixins import HouseholdRequiredMixin
 from inventory.models import InviteToken   # ← InviteToken の場所に合わせて修正
-from inventory.views import HouseholdRequiredMixin
+
 
 User = get_user_model()
 

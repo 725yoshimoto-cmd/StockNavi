@@ -98,12 +98,6 @@
     cursor: pointer;
   }
 
-  .mypage-message {
-    font-size: 13px;
-    color: #333;
-    margin: 0;
-  }
-
   .mypage-logout-wrap {
     margin-top: 8px;
   }
@@ -122,7 +116,7 @@
   }
 
   .mypage-member-link {
-    margin-top: 18px;
+    margin-top: 32px;
   }
 
   .mypage-member-link a {
@@ -176,17 +170,13 @@
 
     <button type="submit" class="mypage-save-btn">保存</button>
 
-    {% if messages %}
-      {% for message in messages %}
-        <p class="mypage-message">{{ message }}</p>
-      {% endfor %}
-    {% endif %}
   </form>
 
   <hr class="mypage-divider">
 
   <div class="mypage-logout-wrap">
-    <form method="post" action="{% url 'logout' %}">
+    <form method="post" action="{% url 'logout' %}"
+          onsubmit="return confirm('ログアウトしますか？');">
       {% csrf_token %}
       <button type="submit" class="mypage-logout-btn">ログアウト</button>
     </form>

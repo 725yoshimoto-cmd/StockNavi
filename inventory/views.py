@@ -1,6 +1,6 @@
 # Django標準の便利機能の読み込み
 from django.shortcuts import render
-from django.http import HttpResponse
+
 
 # 自分のアプリのモデル
 from .models import InventoryItem, Category, StorageLocation, Memo
@@ -44,8 +44,6 @@ from django.db.models import Sum, Count
 # 在庫sort 処理
 from django.db import models
 
-# 「カテゴリ一覧を渡す」と「GETで絞る」
-from django.utils.http import urlencode  # なくてもOKだが後で便利
 
 # バランス確認
 from .services.balance import calc_category_amounts
@@ -61,7 +59,6 @@ from accounts.forms import CustomUserCreationForm
 # ★ 追加：世帯ごとの閾値（AlertSetting）を取得する
 # 「世帯で1つだけ」の設定値を在庫一覧の判定基準として使う
 from accounts.models import AlertSetting
-from accounts.views import AlertSetting
 from accounts.forms import AlertSettingForm
 
 # ★追加：在庫フォーム（期限入力対応）
@@ -79,9 +76,6 @@ from django.conf import settings
 
 # Django：DBの同時実行（同じ招待リンクを同時に使われても壊れないようにする）
 from django.db import transaction
-
-# DBにデータが無い場合、自動で404にしてくれる便利関数
-from django.shortcuts import get_object_or_404
 
 # 処理後にページを移動させる
 from django.shortcuts import redirect
@@ -125,28 +119,6 @@ class PortfolioView(TemplateView):
 # ----------------------------
 class HouseholdRequiredView(TemplateView):
     template_name = "inventory/household_required.html"
-
-# ----------------------------
-# 世帯チェック（dispatch）は「ログイン済み」になってから見る
-# ----------------------------
-class HouseholdRequiredMixin:
-    """
-    household 未設定ユーザーを弾くMixin
-
-    目的：
-    - request.user.household が未設定のユーザーが各機能ページに来た場合、
-      DB検索や保存処理に入る前に案内ページへ誘導する（エラー画面を出さない）
-    """
-
-    def dispatch(self, request, *args, **kwargs):
-        """
-        dispatch は CBV の入口（GET/POST 共通で最初に通る）
-        """
-        # ★household が未設定なら案内ページへ
-        if not getattr(request.user, "household", None):
-            return redirect(reverse("inventory:no_household"))
-
-        return super().dispatch(request, *args, **kwargs)
     
 # ----------------------------
 # 案内画面
@@ -154,22 +126,6 @@ class HouseholdRequiredMixin:
 class NoHouseholdView(TemplateView):
     template_name = "inventory/no_household.html"
 
-# ----------------------------
-# ユーザー新規登録画面
-# ----------------------------
-class SignupView(CreateView):
-    """
-    新規登録ページ（サインアップ）
-    登録に成功したらログインページへ戻す
-    """
-    # ★ カスタムユーザー用フォームを使用する
-    form_class = CustomUserCreationForm
-
-    # 表示に使うテンプレート
-    template_name = "registration/signup.html"
-
-    # 登録成功後の遷移先（login のURL名へ）
-    success_url = reverse_lazy("login")
 
 
 # ----------------------------
@@ -234,7 +190,6 @@ class InviteCreateView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
         return self.render_to_response(context)
 
     def redirect_top(self):
-        from django.shortcuts import redirect
         return redirect("inventory:inventory_list")
 
 
@@ -686,7 +641,7 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
         self.object.save()
         return redirect(self.success_url)
 
-# 在庫を一括削除（確認ページ表示）
+# 在庫を一括削除（実行）
 class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         selected_ids = request.POST.getlist("selected_ids")
@@ -1181,35 +1136,6 @@ class SettingsCategoryGoalView(LoginRequiredMixin, HouseholdRequiredMixin, View)
             "sort": sort,
         })              
 
-# ----------------------------
-# タブ用：各機能Viewを「薄く継承」して、テンプレだけ共通化する
-# ----------------------------
-class SettingsCategoryTabView(SettingsCategoryGoalView):
-    """
-    分類/目標（初期表示タブ）
-    既存の SettingsCategoryGoalView の処理はそのまま使い、
-    表示だけ tabs.html に差し替える
-    """
-    template_name = "inventory/settings/tabs.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["active_tab"] = "category"
-        ctx["tab_title"] = "分類 / 目標"
-        return ctx
-
-
-class SettingsStorageTabView(StorageLocationListView):
-    """
-    保管場所タブ：既存の一覧/検索/並び替え/削除などを流用
-    """
-    template_name = "inventory/settings/tabs.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["active_tab"] = "storage"
-        ctx["tab_title"] = "保管場所"
-        return ctx
 
 # ----------------------------
 # 1ページ統合：/inventory/settings/ だけでタブを切り替える
@@ -1406,20 +1332,8 @@ class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     def get_queryset(self):
         return Memo.objects.filter(household=self.request.user.household)
 
-        # ✅ 検索（タイトル＋本文っぽいフィールド）
-        q = (self.request.GET.get("q") or "").strip()
-        if q:
-            qs = qs.filter(
-                Q(title__icontains=q)
-                | Q(content__icontains=q)
-                | Q(body__icontains=q)
-                | Q(text__icontains=q)
-                | Q(note__icontains=q)
-            )
     
     def form_valid(self, form):
-        print("★ MemoCreateView.form_valid called")  # ←確認用（あとで消す）
-        print("★ user household =", getattr(self.request.user, "household", None))
         form.instance.household = self.request.user.household
         form.instance.user = self.request.user
         return super().form_valid(form)
@@ -1448,8 +1362,4 @@ class MemoBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
         messages.success(request, "選択したメモを削除しました。")
         return redirect("inventory:memo_list")
     
-# ----------------------------
-# マイページ
-# ----------------------------
-class MyPageView(LoginRequiredMixin, TemplateView):
-    template_name = "accounts/mypage.html"
+

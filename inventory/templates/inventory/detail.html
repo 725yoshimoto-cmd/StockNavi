@@ -1,40 +1,72 @@
 {% extends "base.html" %}
+{% block title %}商品情報 | StockNavi{% endblock %}
+
 {% block content %}
+
+<p class="breadcrumb" style="margin: 0 0 16px; font-size: 14px;">
+  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞ 商品情報
+</p>
 
 <h1>商品情報</h1>
 
-<p>商品名：{{ item.name }}</p>
+<div style="margin: 16px 0 24px;">
+  {% if item.image %}
+    <img
+      src="{{ item.image.url }}"
+      alt="{{ item.name }}"
+      style="width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid #ddd;"
+    >
+  {% else %}
+    <div style="width: 120px; height: 120px; display:flex; align-items:center; justify-content:center; border:1px solid #ddd; border-radius:12px; color:#666;">
+      画像なし
+    </div>
+  {% endif %}
+</div>
 
-<p>分類：
-  {% if item.category %}{{ item.category.name }}{% else %}未分類{% endif %}
-</p>
+<div style="display: grid; gap: 18px; margin-bottom: 24px;">
+  <p style="margin:0;">商品名：{{ item.name }}</p>
 
-<p>保管場所：
-  {% if item.storage_location %}{{ item.storage_location.name }}{% else %}未設定{% endif %}
-</p>
+  <p style="margin:0;">
+    分類：
+    {% if item.category %}{{ item.category.name }}{% else %}未分類{% endif %}
+  </p>
 
-<p>数量：{{ item.quantity }}</p>
+  <p style="margin:0;">
+    保管場所：
+    {% if item.storage_location %}{{ item.storage_location.name }}{% else %}未設定{% endif %}
+  </p>
 
-<p>賞味期限：
-  {% if item.expiry_date %}{{ item.expiry_date }}{% else %}未設定{% endif %}
-</p>
+  <p style="margin:0;">数量：{{ item.quantity }}</p>
 
-<p>内容量：{{ item.content_amount }}</p>
+  <p style="margin:0;">
+    賞味期限：
+    {% if item.expiry_date %}{{ item.expiry_date|date:"Y/m/d" }}{% else %}未設定{% endif %}
+  </p>
 
-<hr>
+  <p style="margin:0;">内容量：{{ item.content_amount }}</p>
+</div>
 
-<a href="{% url 'inventory:inventory_edit' item.pk %}">編集</a>
+<hr style="margin: 24px 0;">
 
-<form method="post" action="{% url 'inventory:inventory_delete' item.pk %}" style="display:inline;">
-  {% csrf_token %}
-  <button type="submit" class="btn btn-danger">削除</button>
-</form>
+<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+  <a href="{% url 'inventory:inventory_edit' item.pk %}" class="btn">編集</a>
 
-<form method="post" action="{% url 'inventory:inventory_duplicate' item.pk %}" style="display:inline;">
-  {% csrf_token %}
-  <<button type="submit" class="btn btn-success">複製</button>
-</form>
+  <form method="post"
+        action="{% url 'inventory:inventory_delete' item.pk %}"
+        style="display:inline;"
+        onsubmit="return confirm('この商品を削除しますか？\n削除後は過去の登録履歴から確認できます。');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">削除</button>
+  </form>
 
-<a href="{% url 'inventory:inventory_list' %}">一覧に戻る</a>
+  <form method="post"
+        action="{% url 'inventory:inventory_duplicate' item.pk %}"
+        style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">複製</button>
+  </form>
+
+  <a href="{% url 'inventory:inventory_list' %}">一覧に戻る</a>
+</div>
 
 {% endblock %}

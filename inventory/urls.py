@@ -7,9 +7,6 @@ urlpatterns = [
     # household未設定の案内ページ
     path("household-required/", views.HouseholdRequiredView.as_view(), name="household_required"),
 
-    # 新規登録ページ
-    path("signup/", views.SignupView.as_view(), name="signup"),
-
     # 案内ページ
     path("no-household/", views.NoHouseholdView.as_view(), name="no_household"),
 
