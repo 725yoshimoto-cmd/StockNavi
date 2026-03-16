@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}メモ一覧{% endblock %}
 {% block content %}
 
@@ -51,10 +53,11 @@
       style="display:inline-block;">
   {% csrf_token %}
   <button type="submit"
-          class="btn btn-danger"
+          class="icon-btn"
           title="選択メモを削除"
+          aria-label="選択メモを削除"
           onclick="return confirm('選択したメモを削除しますか？');">
-    削除
+    <img src="{% static 'images/trash.png' %}" alt="削除">
   </button>
 </form>
 

@@ -1,14 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>{% if object %}保管場所を編集{% else %}保管場所を追加{% endif %}</h2>
 
-  <form method="post">
-    <input type="hidden" name="next" value="{{ request.GET.next }}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">登録</button>
-  </form>
+<p class="breadcrumb">
+  <a href="{% url 'inventory:settings_tabs' %}">設定</a>
+  <span>＞</span>
+  <span>保管場所登録</span>
+</p>
 
-  <p><a href="{{ request.GET.next|default:'{% url "inventory:settings_tabs" %}?tab=storage' }}">一覧に戻る</a></p>
+<h1 class="page-title">保管場所を追加</h1>
+
+<form method="post">
+  {% csrf_token %}
+
+  <label for="{{ form.name.id_for_label }}">保管場所名</label>
+  {{ form.name }}
+
+  <div class="form-submit-center">
+    <button type="submit" class="btn-primary-mid">登録</button>
+  </div>
+</form>
+
+<p><a href="{% url 'inventory:settings_tabs' %}?tab=storage">一覧に戻る</a></p>
+
 {% endblock %}

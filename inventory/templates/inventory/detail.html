@@ -1,3 +1,4 @@
+{% load static %}
 {% extends "base.html" %}
 {% block title %}商品情報 | StockNavi{% endblock %}
 
@@ -57,8 +58,8 @@
     <form method="post"
           onsubmit="return confirm('この在庫を削除します。よろしいですか？');">
       {% csrf_token %}
-      <button type="submit" class="btn-delete">
-        削除
+      <button type="submit" class="icon-btn" aria-label="在庫を削除">
+        <img src="{% static 'images/trash.png' %}" alt="削除">
       </button>
     </form>
   </form>

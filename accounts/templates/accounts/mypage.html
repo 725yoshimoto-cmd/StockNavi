@@ -86,18 +86,6 @@
     box-sizing: border-box;
   }
 
-  .mypage-save-btn {
-    width: 100%;
-    height: 50px;
-    border: none;
-    border-radius: 14px;
-    background: #19a848;
-    color: #fff;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
   .mypage-logout-wrap {
     margin-top: 8px;
   }
@@ -168,8 +156,9 @@
       {{ form.email }}
     </div>
 
-    <button type="submit" class="mypage-save-btn">保存</button>
-
+    <div class="form-submit-center">
+      <button type="submit" class="btn-primary-mid">保存</button>
+    </div>
   </form>
 
   <hr class="mypage-divider">

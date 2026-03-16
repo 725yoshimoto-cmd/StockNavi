@@ -1,4 +1,5 @@
 <!doctype html>
+{% load static %}
 <html lang="ja">
 
 <head>
@@ -395,12 +396,56 @@
     }
 
     /* ----------------------------
-    フォーム送信ボタン中央寄せ
+      フォーム送信ボタン中央寄せ
     ---------------------------- */
-    .form-submit-center {
-      display: flex;
+    .form-submit-center{
+      display:flex;
+      justify-content:center;
+      margin:24px 0 16px;
+    }
+
+    /* ----------------------------
+      中サイズの共通ボタン
+      保存・登録で使う
+    ---------------------------- */
+    .btn-primary-mid{
+      min-width:180px;
+      height:52px;
+      padding:0 28px;
+      border:none;
+      border-radius:16px;
+      background:#20b24b;
+      color:#fff;
+      font-size:18px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    /* ----------------------------
+       ゴミ箱削除ボタン
+       ---------------------------- */
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
       justify-content: center;
-      margin: 20px 0 16px;
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .icon-btn img {
+      width: 28px;
+      height: 28px;
+      display: block;
+    }
+
+    .delete-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin: 12px 0 16px;
     }
   </style>
 

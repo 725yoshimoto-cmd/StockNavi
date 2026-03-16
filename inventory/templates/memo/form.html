@@ -1,13 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>メモを追加</h1>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">登録</button>
-  </form>
+<p class="breadcrumb">
+  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+  <span>＞</span>
+  <a href="{% url 'inventory:memo_list' %}">メモ</a>
+  <span>＞</span>
+  <span>メモ登録</span>
+</p>
 
-  <p><a href="{% url 'inventory:memo_list' %}">一覧に戻る</a></p>
+<h1 class="page-title">メモを追加</h1>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+
+  <div class="form-submit-center">
+    <button type="submit" class="btn-primary-mid">登録</button>
+  </div>
+</form>
+
+<p><a href="{% url 'inventory:memo_list' %}">一覧に戻る</a></p>
+
 {% endblock %}

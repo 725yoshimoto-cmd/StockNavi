@@ -1,65 +1,46 @@
-{# templates/category/form.html #}
 {% extends "base.html" %}
+
 {% block content %}
 
-<h1>分類</h1>
+<p class="breadcrumb">
+  <a href="{% url 'inventory:settings_tabs' %}">設定</a>
+  <span>＞</span>
+  <span>分類登録</span>
+</p>
+
+<h1 class="page-title">分類を追加</h1>
 
 <form method="post">
   {% csrf_token %}
-    <input type="hidden" name="next" value="{{ request.GET.next }}">
-  <!-- ----------------------------
-       分類名
-       ---------------------------- -->
-  <div>
-    <label for="{{ form.name.id_for_label }}">カテゴリ名：</label>
-    {{ form.name }}
-    {% if form.name.errors %}
-      <div style="color:red;">{{ form.name.errors }}</div>
-    {% endif %}
-  </div>
 
-  <!-- 概要欄 -->
-  <div style="margin-top: 8px;">
-    <label for="{{ form.description.id_for_label }}">概要：</label>
+  <label for="{{ form.name.id_for_label }}">カテゴリ名</label>
+  {{ form.name }}
+
+  {% if form.description %}
+    <label for="{{ form.description.id_for_label }}">概要</label>
     {{ form.description }}
-    {% if form.description.errors %}
-      <div style="color:red;">{{ form.description.errors }}</div>
-    {% endif %}
-  </div>
+  {% endif %}
 
-  <!-- 分類カラー（HTML5 color picker）
-       - form.color.value が None のときもあるので default を用意
-       ---------------------------- -->
-  <div style="margin-top:12px;">
-    <label for="id_color">カラー：</label>
-    <input
-      type="color"
-      id="id_color"
-      name="color"
-      value="{{ form.color.value|default:'#f1e8ff' }}"
-    >
-    {% if form.color.errors %}
-      <div style="color:red;">{{ form.color.errors }}</div>
-    {% endif %}
-  </div>
+  {% if form.color %}
+    <label for="{{ form.color.id_for_label }}">カラー</label>
+    {{ form.color }}
+  {% endif %}
 
-  <!-- ✅追加：目標量 & 単位 -->
-  <p>
-    目標：
+  {% if form.goal_amount %}
+    <label for="{{ form.goal_amount.id_for_label }}">目標</label>
     {{ form.goal_amount }}
-    {{ form.goal_unit }}
-    <small>（例：36 個 / 10 L）</small>
-  </p>
+  {% endif %}
 
-  <div style="margin-top:16px;">
-    <button type="submit" class="btn btn-primary">保存</button>
+  {% if form.goal_unit %}
+    {{ form.goal_unit }}
+    <p style="font-size:14px; color:#666;">（例：36 個 / 10 L）</p>
+  {% endif %}
+
+  <div class="form-submit-center">
+    <button type="submit" class="btn-primary-mid">保存</button>
   </div>
 </form>
 
-    {% if request.GET.next %}
-      <a href="{{ request.GET.next }}">一覧へ戻る</a>
-    {% else %}
-      <a href="{% url 'inventory:category_list' %}">一覧へ戻る</a>
-    {% endif %}
+<p><a href="{% url 'inventory:settings_tabs' %}?tab=category">一覧へ戻る</a></p>
 
 {% endblock %}

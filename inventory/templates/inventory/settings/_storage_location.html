@@ -1,8 +1,12 @@
+{% load static %}
+
 <div class="settings-actions">
+  <div class="fab-wrap">
   <a href="{% url 'inventory:storage_location_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dstorage"
-     class="btn btn-primary">
-    ＋ 保管場所を追加
+    class="fab">
+  +
   </a>
+  </div>
 </div>
 
 <form method="get" action="" style="margin: 8px 0;">
@@ -31,8 +35,10 @@
     <input type="hidden" name="tab" value="storage">
     <input type="hidden" name="action" value="bulk_delete_storage">
 
-    <div class="settings-delete-wrap">
-      <button type="submit" class="btn btn-danger">選択削除</button>
+    <div class="delete-actions">
+      <button type="submit" class="icon-btn" aria-label="保管場所を削除">
+        <img src="{% static 'images/trash.png' %}" alt="削除">
+      </button>
     </div>
 
     <ul class="settings-list">

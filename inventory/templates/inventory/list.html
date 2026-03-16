@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}在庫一覧 | StockNavi{% endblock %}
 
 {% block content %}
@@ -326,12 +328,10 @@
         複製
       </button>
 
-      <button type="submit"
-              class="bulk-btn bulk-btn-red"
-              form="bulkForm"
-              formaction="{% url 'inventory:inventory_bulk_delete' %}">
-        削除
+      <button type="submit" class="icon-btn" aria-label="在庫を削除">
+        <img src="{% static 'images/trash.png' %}" alt="削除">
       </button>
+
     </div>
   {% endif %}
 

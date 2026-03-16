@@ -1,4 +1,4 @@
-
+{% load static %}
 
 <h3>目標備蓄日数</h3>
 
@@ -35,7 +35,7 @@
 
   <br><br>
   <div class="form-submit-center">
-    <button type="submit" class="btn btn-primary">保存</button>
+    <button type="submit" class="btn-primary-mid">保存</button>
   </div>
 </form>
 
@@ -79,7 +79,11 @@
     <input type="hidden" name="tab" value="category">
     <input type="hidden" name="action" value="bulk_delete_category">
 
-    <button type="submit" class="btn btn-danger">選択削除</button>
+    <div class="delete-actions">
+      <button type="submit" class="icon-btn" aria-label="分類を削除">
+        <img src="{% static 'images/trash.png' %}" alt="削除">
+      </button>
+    </div>
 
     <ul style="list-style:none; padding:0;">
       {% for c in categories %}
