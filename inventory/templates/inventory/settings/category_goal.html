@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>分類・目標設定</h2>
-
-<hr>
-
-<h3>目標備蓄日数</h3>
+<p class="breadcrumb">
+  <a href="{% url 'inventory:settings_tabs' %}">設定</a>
+  <span>＞</span>
+  <span>分類・目標設定</span>
+</p>
 
 <form method="post" action="{% url 'inventory:settings_category_goal' %}">
   {% csrf_token %}
@@ -69,19 +69,19 @@
     {% csrf_token %}
     <input type="hidden" name="action" value="bulk_delete">
 
-    <p style="margin:8px 0;">
+    <div class="settings-delete-wrap">
       <button type="submit" class="btn btn-danger">選択削除</button>
-    </p>
+    </div>
 
-    <ul style="list-style:none; padding:0;">
+    <ul class="settings-list">
       {% for c in categories %}
-        <li style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #ddd;">
+        <li class="settings-item">
 
           <!-- ✅ チェック -->
           <input type="checkbox" name="selected_ids" value="{{ c.id }}">
 
           <!-- ✅ 名前（編集へ） -->
-          <a href="{% url 'inventory:category_edit' c.id %}" style="flex:1;">
+          <a href="{% url 'inventory:category_edit' c.id %}" class="settings-item-main">
             {{ c.name }}
           </a>
 
@@ -93,4 +93,43 @@
 {% else %}
   <p>分類はありません。</p>
 {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .settings-actions {
+    margin: 0 0 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .settings-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .settings-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .settings-item-main {
+    flex: 1;
+  }
+
+  .settings-subtext {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .settings-delete-wrap {
+    margin: 12px 0 16px;
+  }
+</style>
 {% endblock %}

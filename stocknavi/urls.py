@@ -11,17 +11,17 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("inventory/", include("inventory.urls")),
 
-    # ★標準ログイン/ログアウト
-    path("accounts/", include("django.contrib.auth.urls")),
-    # ★mypageなど自作
+    # ★mypage・signup・alert_setting・password reset など自作側を先に読む
     path("accounts/", include("accounts.urls")),
 
-    #要件どおり /invite/ でアクセスできるようにする
+    # ★標準ログイン/ログアウトは後ろ
+    path("accounts/", include("django.contrib.auth.urls")),
+
+    # 要件どおり /invite/ でアクセスできるようにする
     path("invite/", inv_views.InviteCreateView.as_view(), name="invite_create_root"),
     path("invite/<str:token>/", inv_views.InviteAcceptView.as_view(), name="invite_accept_root"),
-
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])    
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])

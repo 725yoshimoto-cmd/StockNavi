@@ -114,6 +114,39 @@
 
     }
 
+        /* ----------------------------
+       ロゴ
+       ---------------------------- */
+
+    .app-logo {
+      display: inline-block;
+      font-size: 18px;
+      font-weight: bold;
+      color: #16a34a;
+      text-decoration: none;
+    }
+
+    /* ----------------------------
+       パンくず
+       各画面で class="breadcrumb" を使えば統一される
+       ---------------------------- */
+
+    .breadcrumb {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+
+    .breadcrumb a {
+      color: #6b7280;
+      text-decoration: none;
+    }
+
+    .breadcrumb span {
+      margin: 0 4px;
+    }
+
     /* ----------------------------
        メッセージ表示
        （成功・エラーなど）
@@ -314,6 +347,29 @@
       padding-bottom: 24px;
     }
 
+    /* 設定ページのリンクタブ */
+    .tabs {
+      display:flex;
+      gap:10px;
+      border-bottom:1px solid #ddd;
+      margin-bottom:16px;
+    }
+
+    .tabs a{
+      padding:8px 14px;
+      text-decoration:none;
+      border-radius:6px 6px 0 0;
+      background:#f5f5f5;
+      color:#333;
+    }
+
+    .tabs a.active{
+      background:#fff;
+      border:1px solid #ddd;
+      border-bottom:none;
+      font-weight:bold;
+    }
+
   </style>
 
   {% block extra_css %}{% endblock %}
@@ -329,9 +385,11 @@
     {% block app_header %}
     <header class="app-header">
       <div class="app-header-title">
-        {% block header_title %}
-        StockNavi
-        {% endblock %}
+        <a href="{% url 'portfolio' %}" class="app-logo">
+          {% block header_title %}
+          StockNavi
+          {% endblock %}
+        </a>
       </div>
     </header>
     {% endblock %}
@@ -369,7 +427,7 @@
     </main>
 
     <!-- 下部ナビ -->
-    {% block bottom_nav %}
+    {% if user.is_authenticated %}
     <nav class="bottom-nav">
       <a href="{% url 'inventory:inventory_list' %}">在庫</a>
       <a href="{% url 'inventory:balance' %}">バランス</a>
@@ -377,7 +435,7 @@
       <a href="{% url 'accounts:mypage' %}">マイページ</a>
       <a href="{% url 'inventory:settings_tabs' %}">設定</a>
     </nav>
-    {% endblock %}
+    {% endif %}
   </div>
 
   {% block extra_js %}{% endblock %}
