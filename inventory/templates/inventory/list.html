@@ -289,8 +289,6 @@
 
   <p class="inventory-breadcrumb">在庫一覧</p>
 
-  <h1 class="inventory-title">在庫一覧</h1>
-
   {% with select_mode=request.GET.select_mode %}
     {% if select_mode == "1" %}
       <a class="mode-btn"
@@ -397,8 +395,11 @@
   <hr class="inventory-divider">
 
   <p class="inventory-summary">合計：{{ total_items }}件 / 数量合計：{{ total_quantity }}</p>
-  <a href="{% url 'inventory:inventory_add' %}" class="inventory-add-link">＋ 在庫を追加</a>
-
+  <div class="fab-wrap">
+    <a href="{% url 'inventory:inventory_add' %}" class="fab" aria-label="在庫を追加">
+      +
+    </a>
+  </div>
   {% if items %}
     {% for item in items %}
       <div class="item-card">

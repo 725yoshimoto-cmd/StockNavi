@@ -34,7 +34,9 @@
   </label>
 
   <br><br>
-  <button type="submit" class="btn btn-primary">保存</button>
+  <div class="form-submit-center">
+    <button type="submit" class="btn btn-primary">保存</button>
+  </div>
 </form>
 
 <hr>
@@ -42,9 +44,12 @@
 <h3>分類</h3>
 
 <p>
-  <a href="{% url 'inventory:category_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
-    ＋分類を追加
+  <div class="fab-wrap">
+  <a href="{% url 'inventory:category_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory"
+    class="fab">
+  +
   </a>
+  </div>
 </p>
 
 <form method="get" action="" style="margin: 8px 0;">

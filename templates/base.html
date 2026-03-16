@@ -370,6 +370,38 @@
       font-weight:bold;
     }
 
+    /* ----------------------------
+      追加ボタン（FAB）
+    ---------------------------- */
+
+    .fab-wrap{
+      display:flex;
+      justify-content:flex-end;
+      margin:10px 0 16px;
+    }
+
+    .fab{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      background:#d9a441;
+      color:white;
+      font-size:28px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      box-shadow:0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    /* ----------------------------
+    フォーム送信ボタン中央寄せ
+    ---------------------------- */
+    .form-submit-center {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0 16px;
+    }
   </style>
 
   {% block extra_css %}{% endblock %}
