@@ -1,76 +1,322 @@
-{% load static %}
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}商品情報 | StockNavi{% endblock %}
 
 {% block content %}
+<style>
+  .detail-page {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 12px 16px 24px;
+  }
 
-<p class="breadcrumb" style="margin: 0 0 16px; font-size: 14px;">
-  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞ 商品情報
-</p>
+  .detail-breadcrumb {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: #666;
+  }
 
-<h1>商品情報</h1>
+  .detail-breadcrumb a {
+    color: #666;
+    text-decoration: none;
+  }
 
-<div style="margin: 16px 0 24px;">
-  {% if item.image %}
-    <img
-      src="{{ item.image.url }}"
-      alt="{{ item.name }}"
-      style="width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid #ddd;"
-    >
-  {% else %}
-    <div style="width: 120px; height: 120px; display:flex; align-items:center; justify-content:center; border:1px solid #ddd; border-radius:12px; color:#666;">
-      画像なし
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .detail-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+    color: #222;
+  }
+
+  .edit-icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    text-decoration: none;
+    font-size: 26px;
+    color: #9a9a9a;
+    line-height: 1;
+  }
+
+  .detail-image-wrap {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .detail-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .detail-image-placeholder {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f5f5f5;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .detail-fields {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .detail-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .detail-label {
+    font-size: 14px;
+    color: #444;
+  }
+
+  .detail-value {
+    background: #f1f1f1;
+    min-height: 20px;
+    padding: 10px 12px;
+    border-radius: 2px;
+    font-size: 16px;
+    color: #222;
+    word-break: break-word;
+  }
+
+  .detail-actions {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .btn-duplicate {
+    display: inline-block;
+    min-width: 110px;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 999px;
+    background: #68be73;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .detail-delete {
+    text-align: center;
+    padding-top: 14px;
+    border-top: 1px solid #d9d9d9;
+  }
+
+  .btn-delete-outline {
+    display: inline-block;
+    padding: 9px 18px;
+    border: 1px solid #ef6b63;
+    border-radius: 999px;
+    background: #fff;
+    color: #ef6b63;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .delete-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 16px;
+  }
+
+  .delete-modal-box {
+    width: 260px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 16px 16px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  }
+
+  .delete-modal-title {
+    margin: 0 0 14px;
+    font-size: 28px;
+    color: #ef3b2d;
+    font-weight: bold;
+  }
+
+  .delete-modal-text {
+    margin: 0 0 14px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #444;
+  }
+
+  .delete-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .btn-modal-yes,
+  .btn-modal-no {
+    min-width: 62px;
+    padding: 7px 0;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .btn-modal-yes {
+    background: #ef6b63;
+  }
+
+  .btn-modal-no {
+    background: #6ea6ff;
+  }
+</style>
+
+<div class="detail-page">
+  <p class="detail-breadcrumb">
+    <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+    <span>＞</span>
+    <span>商品情報</span>
+  </p>
+
+  <div class="detail-header">
+    <h1 class="detail-title">商品情報</h1>
+
+    <a href="{% url 'inventory:inventory_edit' item.pk %}" class="edit-icon-link" aria-label="商品編集">
+      ✎
+    </a>
+  </div>
+
+  <div class="detail-image-wrap">
+    {% if item.image %}
+      <img src="{{ item.image.url }}" alt="{{ item.name }}" class="detail-image">
+    {% else %}
+      <div class="detail-image-placeholder">PHOTO</div>
+    {% endif %}
+  </div>
+
+  <div class="detail-fields">
+    <div class="detail-row">
+      <div class="detail-label">商品名</div>
+      <div class="detail-value">{{ item.name }}</div>
     </div>
-  {% endif %}
-</div>
 
-<div style="display: grid; gap: 18px; margin-bottom: 24px;">
-  <p style="margin:0;">商品名：{{ item.name }}</p>
+    <div class="detail-row">
+      <div class="detail-label">分類</div>
+      <div class="detail-value">
+        {% if item.category %}{{ item.category.name }}{% else %}-{% endif %}
+      </div>
+    </div>
 
-  <p style="margin:0;">
-    分類：
-    {% if item.category %}{{ item.category.name }}{% else %}未分類{% endif %}
-  </p>
+    <div class="detail-row">
+      <div class="detail-label">★内容量</div>
+      <div class="detail-value">{{ item.content_amount }}</div>
+    </div>
 
-  <p style="margin:0;">
-    保管場所：
-    {% if item.storage_location %}{{ item.storage_location.name }}{% else %}未設定{% endif %}
-  </p>
+    <div class="detail-row">
+      <div class="detail-label">個数</div>
+      <div class="detail-value">{{ item.quantity }}</div>
+    </div>
 
-  <p style="margin:0;">数量：{{ item.quantity }}</p>
+    <div class="detail-row">
+      <div class="detail-label">★購入日</div>
+      <div class="detail-value">
+        {% if item.purchase_date %}{{ item.purchase_date|date:"Y/m" }}{% else %}-{% endif %}
+      </div>
+    </div>
 
-  <p style="margin:0;">
-    賞味期限：
-    {% if item.expiry_date %}{{ item.expiry_date|date:"Y/m/d" }}{% else %}未設定{% endif %}
-  </p>
+    <div class="detail-row">
+      <div class="detail-label">(消費・賞味)期限</div>
+      <div class="detail-value">
+        {% if item.expiry_date %}{{ item.expiry_date|date:"Y/m/d" }}{% else %}-{% endif %}
+      </div>
+    </div>
 
-  <p style="margin:0;">内容量：{{ item.content_amount }}</p>
-</div>
+    <div class="detail-row">
+      <div class="detail-label">保管場所</div>
+      <div class="detail-value">
+        {% if item.storage_location %}{{ item.storage_location.name }}{% else %}-{% endif %}
+      </div>
+    </div>
+  </div>
 
-<hr style="margin: 24px 0;">
-
-<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-  <a href="{% url 'inventory:inventory_edit' item.pk %}" class="btn">編集</a>
-
-  <form method="post"
-        onsubmit="return confirm('この在庫を削除します。よろしいですか？');">
-    {% csrf_token %}
-    <form method="post"
-          onsubmit="return confirm('この在庫を削除します。よろしいですか？');">
+  <div class="detail-actions">
+    <form method="post" action="{% url 'inventory:inventory_duplicate' item.pk %}">
       {% csrf_token %}
-      <button type="submit" class="icon-btn" aria-label="在庫を削除">
-        <img src="{% static 'images/trash.png' %}" alt="削除">
-      </button>
+      <button type="submit" class="btn-duplicate">複製</button>
     </form>
-  </form>
+  </div>
 
-  <form method="post"
-        action="{% url 'inventory:inventory_duplicate' item.pk %}"
-        style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-primary">複製</button>
-  </form>
-
+  <div class="detail-delete">
+    <button type="button" class="btn-delete-outline" onclick="openDeleteModal()">
+      この商品を削除
+    </button>
+  </div>
 </div>
 
+<div id="deleteModal" class="delete-modal-overlay">
+  <div class="delete-modal-box">
+    <h2 class="delete-modal-title">削除確認</h2>
+
+    <p class="delete-modal-text">
+      商品一覧から<br>
+      本当に削除しますか？
+    </p>
+
+    <p class="delete-modal-text">
+      削除後は<br>
+      過去の登録履歴から<br>
+      確認できます。
+    </p>
+
+    <div class="delete-modal-actions">
+      <form method="post" action="{% url 'inventory:inventory_delete' item.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-modal-yes">はい</button>
+      </form>
+
+      <button type="button" class="btn-modal-no" onclick="closeDeleteModal()">いいえ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openDeleteModal() {
+    document.getElementById("deleteModal").style.display = "flex";
+  }
+
+  function closeDeleteModal() {
+    document.getElementById("deleteModal").style.display = "none";
+  }
+</script>
 {% endblock %}

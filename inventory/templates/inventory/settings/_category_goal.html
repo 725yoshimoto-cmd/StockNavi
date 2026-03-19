@@ -1,5 +1,196 @@
 {% load static %}
 
+<style>
+  /* ===== 分類・目標設定（このファイル専用）===== */
+
+  /* 検索行 */
+  .sn-cat-search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+  }
+
+  .sn-cat-search-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .sn-cat-search-wrap input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 一覧表 */
+  .sn-cat-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .sn-cat-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: #fff;
+  }
+
+  .sn-cat-table th,
+  .sn-cat-table td {
+    border: 1px solid #bdbdbd;
+    padding: 8px 6px;
+    vertical-align: middle;
+    font-size: 14px;
+    word-break: break-word;
+  }
+
+  .sn-cat-table th {
+    background: #e9e9e9;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .sn-cat-col-check {
+    width: 44px;
+    text-align: center;
+  }
+
+  .sn-cat-col-color {
+    width: 34px;
+    text-align: center;
+  }
+
+  .sn-cat-col-name {
+    width: 90px;
+  }
+
+  .sn-cat-col-desc {
+    width: auto;
+  }
+
+  .sn-cat-col-goal {
+    width: 88px;
+  }
+
+  .sn-cat-chip {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+  }
+
+  .sn-cat-name-link {
+    color: inherit;
+    text-decoration: underline;
+    font-weight: 700;
+  }
+
+  .sn-cat-empty {
+    margin: 12px 0;
+  }
+
+  /* モーダル */
+  .sn-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 9998;
+  }
+
+  .sn-modal-backdrop.is-open {
+    display: block;
+  }
+
+  .sn-modal {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    max-width: calc(100vw - 32px);
+    background: #fff;
+    border: 1px solid #888;
+    border-radius: 14px;
+    padding: 18px 16px 16px;
+    z-index: 9999;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .sn-modal.is-open {
+    display: block;
+  }
+
+  .sn-modal-title {
+    color: #e53935;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .sn-modal-text {
+    color: #444;
+    line-height: 1.7;
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+
+  .sn-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .sn-btn-modal {
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  .sn-btn-modal-danger {
+    background: #ef5350;
+  }
+
+  .sn-btn-modal-cancel {
+    background: #4f8df7;
+  }
+
+  @media (max-width: 600px) {
+    .sn-cat-search-row {
+      gap: 8px;
+    }
+
+    .sn-cat-table th,
+    .sn-cat-table td {
+      font-size: 13px;
+      padding: 7px 5px;
+    }
+
+    .sn-cat-col-check {
+      width: 40px;
+    }
+
+    .sn-cat-col-color {
+      width: 30px;
+    }
+
+    .sn-cat-col-name {
+      width: 82px;
+    }
+
+    .sn-cat-col-goal {
+      width: 82px;
+    }
+  }
+</style>
+
 <h3>目標備蓄日数</h3>
 
 <form method="post" action="{% url 'inventory:settings_tabs' %}">
@@ -7,32 +198,68 @@
   <input type="hidden" name="tab" value="category">
   <input type="hidden" name="action" value="save_target_days">
 
-  <div class="target-days-group">
+  <div style="margin: 12px 0 20px;">
 
-    <label class="target-days-row">
-      <input type="radio" name="target_choice" value="3"
-        {% if household.target_days == 3 %}checked{% endif %}>
-      <span>3日分</span>
-    </label>
+    <div style="display:grid; grid-template-columns: 28px 1fr; row-gap: 14px; column-gap: 10px; align-items:center;">
 
-    <label class="target-days-row">
-      <input type="radio" name="target_choice" value="7"
-        {% if household.target_days == 7 %}checked{% endif %}>
-      <span>7日分</span>
-    </label>
+      <input
+        id="target_3"
+        type="radio"
+        name="target_choice"
+        value="3"
+        {% if household.target_days == 3 %}checked{% endif %}
+        style="margin:0; width:18px; height:18px; justify-self:start; align-self:center;"
+      >
+      <label for="target_3" style="margin:0; white-space:nowrap; line-height:1.4; display:inline-block;">
+        3日分
+      </label>
 
-    <label class="target-days-row">
-      <input type="radio" name="target_choice" value="14"
-        {% if household.target_days == 14 %}checked{% endif %}>
-      <span>14日分</span>
-    </label>
+      <input
+        id="target_7"
+        type="radio"
+        name="target_choice"
+        value="7"
+        {% if household.target_days == 7 %}checked{% endif %}
+        style="margin:0; width:18px; height:18px; justify-self:start; align-self:center;"
+      >
+      <label for="target_7" style="margin:0; white-space:nowrap; line-height:1.4; display:inline-block;">
+        7日分
+      </label>
 
-    <label class="target-days-row target-days-custom">
-      <input type="radio" name="target_choice" value="custom"
-        {% if household.target_days != 3 and household.target_days != 7 and household.target_days != 14 %}checked{% endif %}>
-      <span>カスタム：</span>
-      <input type="number" name="custom_days" value="{{ household.target_days }}" min="1">
-    </label>
+      <input
+        id="target_14"
+        type="radio"
+        name="target_choice"
+        value="14"
+        {% if household.target_days == 14 %}checked{% endif %}
+        style="margin:0; width:18px; height:18px; justify-self:start; align-self:center;"
+      >
+      <label for="target_14" style="margin:0; white-space:nowrap; line-height:1.4; display:inline-block;">
+        14日分
+      </label>
+
+      <input
+        id="target_custom"
+        type="radio"
+        name="target_choice"
+        value="custom"
+        {% if household.target_days != 3 and household.target_days != 7 and household.target_days != 14 %}checked{% endif %}
+        style="margin:0; width:18px; height:18px; justify-self:start; align-self:center;"
+      >
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <label for="target_custom" style="margin:0; white-space:nowrap; line-height:1.4; display:inline-block;">
+          カスタム：
+        </label>
+        <input
+          type="number"
+          name="custom_days"
+          value="{{ household.target_days }}"
+          min="1"
+          style="width:110px; max-width:100%; box-sizing:border-box;"
+        >
+      </div>
+
+    </div>
 
   </div>
 
@@ -45,12 +272,12 @@
 
 <h3>分類</h3>
 
-<form method="post" action="{% url 'inventory:settings_tabs' %}">
+<form method="post" action="{% url 'inventory:settings_tabs' %}" id="category-delete-form">
   {% csrf_token %}
   <input type="hidden" name="tab" value="category">
 
-  <div class="settings-search-row">
-    <div class="search-input-wrap">
+  <div class="sn-cat-search-row">
+    <div class="sn-cat-search-wrap">
       <input type="text" name="q" value="{{ q }}" placeholder="分類を検索">
     </div>
 
@@ -67,55 +294,139 @@
       <span>＋</span>
     </a>
 
-    <button type="submit"
-            name="action"
-            value="bulk_delete_category"
+    <button type="button"
             class="icon-btn"
             aria-label="分類を削除"
-            onclick="return confirm('選択した分類を削除しますか？');">
+            id="open-category-delete-modal">
       <img src="{% static 'images/trash.png' %}" alt="削除">
     </button>
   </div>
 
-  <p>
-    並び替え：
-    <a href="?tab=category&sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
-    <a href="?tab=category&sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
-  </p>
-
   {% if categories %}
-    <ul class="settings-list">
-      {% for c in categories %}
-        <li class="settings-item">
-          <input type="checkbox" name="selected_ids" value="{{ c.id }}">
-
-          <span class="settings-color-chip"
-                style="background: {{ c.color|default:'#f1e8ff' }};"></span>
-
-          <div class="settings-item-main">
-            <a href="{% url 'inventory:category_edit' c.id %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
-              <strong>{{ c.name }}</strong>
-            </a>
-
-            {% if c.description %}
-              <div class="settings-subtext">{{ c.description }}</div>
-            {% endif %}
-
-            <div class="settings-subtext">
-              目標：
-              {% if c.goal_amount %}
-                {{ c.goal_amount }}{{ c.goal_unit }}
-              {% else %}
-                未設定
-              {% endif %}
-            </div>
-          </div>
-        </li>
-      {% empty %}
-        <li>分類がありません。</li>
-      {% endfor %}
-    </ul>
+    <div class="sn-cat-table-wrap">
+      <table class="sn-cat-table">
+        <thead>
+          <tr>
+            <th class="sn-cat-col-check">選択</th>
+            <th class="sn-cat-col-color">色</th>
+            <th class="sn-cat-col-name">
+              <a href="?tab=category&sort=name{% if q %}&q={{ q }}{% endif %}"
+                 style="color: inherit; text-decoration: none;">
+                分類▽
+              </a>
+            </th>
+            <th class="sn-cat-col-desc">概要</th>
+            <th class="sn-cat-col-goal">目標</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in categories %}
+            <tr>
+              <td class="sn-cat-col-check">
+                <input type="checkbox" name="selected_ids" value="{{ c.id }}">
+              </td>
+              <td class="sn-cat-col-color">
+                <span class="sn-cat-chip" style="background: {{ c.color|default:'#f1e8ff' }};"></span>
+              </td>
+              <td class="sn-cat-col-name">
+                <a class="sn-cat-name-link"
+                   href="{% url 'inventory:category_edit' c.id %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
+                  {{ c.name }}
+                </a>
+              </td>
+              <td class="sn-cat-col-desc">
+                {% if c.description %}
+                  {{ c.description }}
+                {% else %}
+                  未設定
+                {% endif %}
+              </td>
+              <td class="sn-cat-col-goal">
+                {% if c.goal_amount %}
+                  {{ c.goal_amount }}
+                  {% if c.goal_unit == "PCS" %}
+                    個
+                  {% elif c.goal_unit == "L" %}
+                    L
+                  {% elif c.goal_unit == "KG" %}
+                    kg
+                  {% elif c.goal_unit == "G" %}
+                    g
+                  {% elif c.goal_unit == "ML" %}
+                    ml
+                  {% else %}
+                    {{ c.goal_unit }}
+                  {% endif %}
+                {% else %}
+                  未設定
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% else %}
-    <p>分類がありません。</p>
+    <p class="sn-cat-empty">分類がありません。</p>
   {% endif %}
 </form>
+
+<div class="sn-modal-backdrop" id="category-delete-backdrop"></div>
+
+<div class="sn-modal" id="category-delete-modal" role="dialog" aria-modal="true" aria-labelledby="category-delete-title">
+  <div class="sn-modal-title" id="category-delete-title">削除確認</div>
+  <div class="sn-modal-text">
+    この商品を削除すると<br>
+    元に戻せません。<br>
+    本当に削除しますか？
+  </div>
+  <div class="sn-modal-actions">
+    <button type="button" class="sn-btn-modal sn-btn-modal-danger" id="submit-category-delete">
+      はい
+    </button>
+    <button type="button" class="sn-btn-modal sn-btn-modal-cancel" id="close-category-delete-modal">
+      いいえ
+    </button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const openBtn = document.getElementById('open-category-delete-modal');
+    const closeBtn = document.getElementById('close-category-delete-modal');
+    const submitBtn = document.getElementById('submit-category-delete');
+    const modal = document.getElementById('category-delete-modal');
+    const backdrop = document.getElementById('category-delete-backdrop');
+    const form = document.getElementById('category-delete-form');
+
+    if (!openBtn || !closeBtn || !submitBtn || !modal || !backdrop || !form) return;
+
+    function openModal() {
+      const checked = form.querySelectorAll('input[name="selected_ids"]:checked');
+      if (checked.length === 0) {
+        alert('削除する分類を選択してください。');
+        return;
+      }
+      modal.classList.add('is-open');
+      backdrop.classList.add('is-open');
+    }
+
+    function closeModal() {
+      modal.classList.remove('is-open');
+      backdrop.classList.remove('is-open');
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', closeModal);
+
+    submitBtn.addEventListener('click', function() {
+      const hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = 'action';
+      hidden.value = 'bulk_delete_category';
+      form.appendChild(hidden);
+      form.submit();
+    });
+  })();
+</script>

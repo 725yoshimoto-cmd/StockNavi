@@ -848,21 +848,23 @@
     background: #3b82f6;
   }
 
-  /* =========================================================
+/* =========================================================
    27. 設定タブ
    ========================================================= */
   .tabs {
     display: flex;
     gap: 0;
-    border-bottom: 1px solid #d6d3d1;
-    margin: 0 0 20px;
+    border-bottom: 1px solid #d8d1bf;
+    margin: 0;
+    background: transparent;
+    padding-top: 8px;
   }
 
   .tabs a {
     min-width: 120px;
     text-align: center;
     padding: 12px 18px;
-    background: #efefef;
+    background: #efefef;   /* 未選択タブは薄グレー */
     color: #333;
     border: 1px solid #d6d3d1;
     border-bottom: none;
@@ -870,39 +872,11 @@
     margin-right: 10px;
     font-size: 16px;
     font-weight: 500;
+    text-decoration: none;
   }
 
   .tabs a.active {
-    background: #d9d2bf;   /* グレージュ */
-    color: #222;
-    font-weight: 700;
-  }
-  /* =========================================================
-   27. 設定タブ
-   ========================================================= */
-  .tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid #d6d3d1;
-    margin: 0 0 20px;
-  }
-
-  .tabs a {
-    min-width: 120px;
-    text-align: center;
-    padding: 12px 18px;
-    background: #efefef;
-    color: #333;
-    border: 1px solid #d6d3d1;
-    border-bottom: none;
-    border-radius: 10px 10px 0 0;
-    margin-right: 10px;
-    font-size: 16px;
-    font-weight: 500;
-  }
-
-  .tabs a.active {
-    background: #d9d2bf;   /* グレージュ */
+    background: #f5f1e3;   /* 選択タブだけベージュ */
     color: #222;
     font-weight: 700;
   }

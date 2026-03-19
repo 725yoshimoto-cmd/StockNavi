@@ -603,11 +603,13 @@ class InventoryDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
             name=src.name,
             quantity=src.quantity,
             content_amount=src.content_amount,
+            purchase_date=src.purchase_date,
             expiry_date=src.expiry_date,
+            image=src.image,
         )
 
-        return redirect("inventory:inventory_edit", pk=new_item.pk) 
-
+        return redirect("inventory:inventory_edit", pk=new_item.pk)
+    
 # 在庫を削除する画面（ログイン必須）
 class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     """
@@ -643,21 +645,25 @@ class InventoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView
 
 # 在庫を一括削除（実行）
 class InventoryBulkDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
+    template_name = "inventory/bulk_delete_confirm.html"
+
     def post(self, request, *args, **kwargs):
         selected_ids = request.POST.getlist("selected_ids")
 
         if not selected_ids:
             messages.warning(request, "削除する在庫を選択してください。")
-            return redirect("inventory:inventory_list")
+            return redirect(reverse("inventory:inventory_list") + "?select_mode=1")
 
-        updated_count = InventoryItem.objects.filter(
+        items = InventoryItem.objects.filter(
             household=request.user.household,
             id__in=selected_ids,
             is_deleted=False
-        ).update(is_deleted=True)
+        )
 
-        messages.success(request, f"{updated_count}件を履歴に移動しました。")
-        return redirect("inventory:inventory_list")
+        return render(request, self.template_name, {
+            "items": items,
+            "selected_ids": selected_ids,
+        })
 
 # 在庫を一括削除（実行）
 class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
@@ -675,18 +681,13 @@ class InventoryBulkDeleteExecuteView(LoginRequiredMixin, HouseholdRequiredMixin,
         )
 
         delete_count = qs.count()
-
-        # ★物理削除ではなく履歴へ
         qs.update(is_deleted=True)
 
         messages.success(request, f"{delete_count}件の在庫を履歴に移動しました。")
-
         return redirect("inventory:inventory_list")
-
+    
 # 在庫を一括複製（確認ページ表示）
 class InventoryBulkDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
-    template_name = "inventory/bulk_duplicate_confirm.html"
-
     def post(self, request, *args, **kwargs):
         selected_ids = request.POST.getlist("selected_ids")
 
@@ -694,16 +695,32 @@ class InventoryBulkDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, Vie
             messages.warning(request, "複製する在庫を選択してください。")
             return redirect(reverse("inventory:inventory_list") + "?select_mode=1")
 
-        items = InventoryItem.objects.filter(
+        if len(selected_ids) != 1:
+            messages.warning(request, "複製は1件ずつ選択してください。")
+            return redirect(reverse("inventory:inventory_list") + "?select_mode=1")
+
+        src = get_object_or_404(
+            InventoryItem,
             household=request.user.household,
-            id__in=selected_ids
+            pk=selected_ids[0],
+            is_deleted=False
         )
 
-        return render(request, self.template_name, {
-            "items": items,
-            "selected_ids": selected_ids,
-        })
+        new_item = InventoryItem.objects.create(
+            household=src.household,
+            category=src.category,
+            storage_location=src.storage_location,
+            name=src.name,
+            quantity=src.quantity,
+            content_amount=src.content_amount,
+            purchase_date=src.purchase_date,
+            expiry_date=src.expiry_date,
+            image=src.image,
+        )
 
+        messages.success(request, "在庫を複製しました。内容を確認・編集してください。")
+        return redirect("inventory:inventory_edit", pk=new_item.pk)
+    
 # 在庫を一括複製（実行）
 class InventoryBulkDuplicateExecuteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     def post(self, request, *args, **kwargs):
@@ -1149,16 +1166,22 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
 
+        # =========================
         # どのタブを表示するか
+        # =========================
         tab = self.request.GET.get("tab", "category")
         if tab not in ["category", "storage", "alert"]:
             tab = "category"
         ctx["tab"] = tab
 
+        # =========================
         # 世帯情報
+        # =========================
         ctx["household"] = self.request.user.household
 
-        # ===== タブ①：分類 =====
+        # =========================
+        # タブ①：分類
+        # =========================
         q = self.request.GET.get("q", "")
         sort = self.request.GET.get("sort", "created")
 
@@ -1178,7 +1201,9 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
         ctx["q"] = q
         ctx["sort"] = sort
 
-        # ===== タブ②：保管場所 =====
+        # =========================
+        # タブ②：保管場所
+        # =========================
         loc_q = self.request.GET.get("loc_q", "")
         loc_sort = self.request.GET.get("loc_sort", "created")
 
@@ -1198,24 +1223,37 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
         ctx["loc_q"] = loc_q
         ctx["loc_sort"] = loc_sort
 
-        # ===== タブ③：アラート（フォームをcontextに渡す）=====
-        # accounts側のフォームをそのまま使う（Viewをimportしないので安全）
+        # =========================
+        # タブ③：アラート
+        # =========================
+        # 世帯ごとのアラート設定を1件取得
+        # なければ自動作成する
         alert_setting, _ = AlertSetting.objects.get_or_create(
             household=self.request.user.household
         )
+
+        # フォームをテンプレートへ渡す
         ctx["form"] = AlertSettingForm(instance=alert_setting)
 
-        return ctx 
-    
+        # テンプレートで現在値を直接表示しやすいよう、
+        # 実データもそのまま渡しておく
+        ctx["alert_setting"] = alert_setting
+
+        return ctx
+
     def post(self, request, *args, **kwargs):
+        # どのタブから送信されたかを取得
         tab = request.POST.get("tab") or request.GET.get("tab") or "category"
 
         # settings の同じタブに戻す
         redirect_url = reverse("inventory:settings_tabs") + f"?tab={tab}"
 
+        # どの保存・削除処理をしたいかを取得
         action = request.POST.get("action")
 
-        # --- 分類：目標備蓄日数を保存 ---
+        # =========================
+        # 分類：目標備蓄日数を保存
+        # =========================
         if action == "save_target_days":
             household = request.user.household
             target_choice = request.POST.get("target_choice")
@@ -1244,7 +1282,9 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
             messages.error(request, "目標備蓄日数を選択してください。")
             return redirect(redirect_url)
 
-        # --- 分類：選択削除 ---
+        # =========================
+        # 分類：選択削除
+        # =========================
         if action == "bulk_delete_category":
             selected_ids = request.POST.getlist("selected_ids")
             if not selected_ids:
@@ -1259,7 +1299,9 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
             messages.success(request, "分類を削除しました。")
             return redirect(redirect_url)
 
-        # --- 保管場所：選択削除 ---
+        # =========================
+        # 保管場所：選択削除
+        # =========================
         if action == "bulk_delete_storage":
             selected_ids = request.POST.getlist("selected_ids")
             if not selected_ids:
@@ -1274,9 +1316,41 @@ class SettingsTabsView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView)
             messages.success(request, "保管場所を削除しました。")
             return redirect(redirect_url)
 
-        # 想定外は元のタブへ
+        # =========================
+        # アラート：保存
+        # =========================
+        # 以前のコードとの互換性のため、
+        # "save_alert_setting" と "save_alert" の両方を受け付ける
+        if action in ["save_alert_setting", "save_alert"]:
+            alert_setting, _ = AlertSetting.objects.get_or_create(
+                household=request.user.household
+            )
+
+            # POSTデータを既存インスタンスに上書きする形でフォーム生成
+            form = AlertSettingForm(request.POST, instance=alert_setting)
+
+            if form.is_valid():
+                # fields に household を含めていないので、
+                # 念のため save(commit=False) 後に household を再セットして保存
+                alert_obj = form.save(commit=False)
+                alert_obj.household = request.user.household
+                alert_obj.save()
+
+                messages.success(request, "変更が保存されました。")
+                return redirect(redirect_url)
+
+            # エラー時
+            messages.error(
+                request,
+                "アラート設定を保存できませんでした。入力内容を確認してください。"
+            )
+            return redirect(redirect_url)
+
+        # =========================
+        # 想定外は元のタブへ戻す
+        # =========================
         return redirect(redirect_url)
-        
+            
 # ----------------------------
 # メモ（ログイン必須）
 # ----------------------------

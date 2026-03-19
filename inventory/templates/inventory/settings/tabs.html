@@ -28,14 +28,29 @@
   </a>
 </div>
 
-{% if tab == "category" %}
-  {% include "inventory/settings/_category_goal.html" %}
-{% elif tab == "storage" %}
-  {% include "inventory/settings/_storage_location.html" %}
-{% elif tab == "alert" %}
-  {% include "inventory/settings/_alert.html" %}
-{% else %}
-  <p>タブが見つかりません。</p>
-{% endif %}
+<!-- ★ここから追加 -->
+<style>
+  .settings-tab-body {
+    background: #f5f1e3;
+    padding: 16px;
+    border-top: 1px solid #d8d1bf;
+    min-height: calc(100vh - 60px);
+    box-sizing: border-box;
+  }
+</style>
+
+<div class="settings-tab-body">
+  {% if tab == "category" %}
+    {% include "inventory/settings/_category_goal.html" %}
+  {% elif tab == "storage" %}
+    {% include "inventory/settings/_storage_location.html" %}
+  {% elif tab == "alert" %}
+    {% include "inventory/settings/_alert.html" %}
+  {% else %}
+    <p>タブが見つかりません。</p>
+  {% endif %}
+</div>
+
+<!-- ★ここまで追加 -->
 
 {% endblock %}

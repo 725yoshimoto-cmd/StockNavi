@@ -39,15 +39,32 @@ class AlertSettingForm(forms.ModelForm):
     """
     アラート設定用フォーム
 
-    accounts/views.py で import されているため必要
+    このフォームでは、
+    - 個数アラート
+    - 期限アラート
+    の2項目だけを扱う。
+
+    household はログイン中ユーザーの世帯を View 側で決めるため、
+    フォームには含めない。
     """
+
     class Meta:
         model = AlertSetting
 
-        # いったん安全のため全項目にする
-        # もし後で FieldError が出たら、その時点で元定義に合わせて絞る
-        fields = "__all__"
+        # AlertSetting モデルの本当のフィールド名に合わせる
+        fields = ["quantity_threshold", "expiry_days"]
 
+        # 入力欄を number にし、0未満を入れられないようにする
+        widgets = {
+            "quantity_threshold": forms.NumberInput(attrs={"min": 0}),
+            "expiry_days": forms.NumberInput(attrs={"min": 0}),
+        }
+
+        # 画面に出す名前
+        labels = {
+            "quantity_threshold": "個数アラート",
+            "expiry_days": "期限アラート",
+        }
 
 class SignUpForm(UserCreationForm):
     """

@@ -40,12 +40,19 @@ class InventoryItem(models.Model):
     # 既存データがあっても落ちないよう default を入れる
     content_amount = models.FloatField(default=1.0)
 
-    # ★追加：期限日（アラート判定用）
+    # ★購入日・期限日（アラート判定用）
+    purchase_date = models.DateField(
+        "購入日",
+        null=True,   # 既存データがあるため必須にしない
+        blank=True   # フォーム未入力を許可
+    )
+    
     expiry_date = models.DateField(
         "賞味期限",
         null=True,   # 既存データがあるため必須にしない
         blank=True   # フォーム未入力を許可
     )
+
     # 保存されるたびに自動で今の時刻が入る（履歴にも使える）
     updated_at = models.DateTimeField("更新日時", auto_now=True)
     
