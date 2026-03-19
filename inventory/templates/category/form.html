@@ -2,38 +2,153 @@
 
 {% block content %}
 
+<style>
+  .category-form-page {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .category-form-group {
+    margin-bottom: 12px;
+  }
+
+  .category-form-page label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .category-form-page input,
+  .category-form-page select,
+  .category-form-page textarea {
+    margin-top: 0;
+  }
+
+  .category-color-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .category-color-picker {
+    width: 56px;
+    height: 44px;
+    padding: 4px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .category-color-code {
+    flex: 1;
+  }
+
+  .category-goal-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .category-goal-row input {
+    flex: 1;
+  }
+
+  .category-goal-row select {
+    width: 110px;
+    flex-shrink: 0;
+  }
+
+  .category-note {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: #666;
+  }
+</style>
+
 <p class="breadcrumb">
-  <a href="{% url 'inventory:settings_tabs' %}">設定</a>
+  <a href="{% url 'inventory:settings_tabs' %}?tab=category">設定一覧</a>
   <span>＞</span>
-  <span>分類登録</span>
+  <a href="{% url 'inventory:settings_tabs' %}?tab=category">分類・目標設定</a>
+  <span>＞</span>
+  <span>{% if object %}分類編集{% else %}分類登録{% endif %}</span>
 </p>
 
 <h1 class="page-title">分類を追加</h1>
 
-<form method="post">
+<form method="post" class="category-form-page">
   {% csrf_token %}
 
-  <label for="{{ form.name.id_for_label }}">カテゴリ名</label>
-  {{ form.name }}
+  <div class="category-form-group">
+    <label for="{{ form.name.id_for_label }}">カテゴリ名</label>
+    {{ form.name }}
+  </div>
 
   {% if form.description %}
-    <label for="{{ form.description.id_for_label }}">概要</label>
-    {{ form.description }}
+    <div class="category-form-group">
+      <label for="{{ form.description.id_for_label }}">概要</label>
+      {{ form.description }}
+    </div>
   {% endif %}
 
   {% if form.color %}
-    <label for="{{ form.color.id_for_label }}">カラー</label>
-    {{ form.color }}
+    <div class="category-form-group">
+      <label for="id_color_picker">カラー</label>
+
+      <div class="category-color-row">
+        <input
+          type="color"
+          id="id_color_picker"
+          value="{{ form.color.value|default:'#f1e8ff' }}"
+          class="category-color-picker"
+        >
+
+        <input
+          type="text"
+          name="color"
+          id="id_color"
+          value="{{ form.color.value|default:'#f1e8ff' }}"
+          placeholder="#f1e8ff"
+          class="category-color-code"
+        >
+      </div>
+    </div>
+
+    <script>
+      const colorPicker = document.getElementById("id_color_picker");
+      const colorInput = document.getElementById("id_color");
+
+      if (colorPicker && colorInput) {
+        colorPicker.addEventListener("input", function () {
+          colorInput.value = colorPicker.value;
+        });
+
+        colorInput.addEventListener("input", function () {
+          const v = colorInput.value.trim();
+          if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+            colorPicker.value = v;
+          }
+        });
+      }
+    </script>
   {% endif %}
 
-  {% if form.goal_amount %}
-    <label for="{{ form.goal_amount.id_for_label }}">目標</label>
-    {{ form.goal_amount }}
-  {% endif %}
+  {% if form.goal_amount or form.goal_unit %}
+    <div class="category-form-group">
+      <label for="{{ form.goal_amount.id_for_label }}">目標</label>
 
-  {% if form.goal_unit %}
-    {{ form.goal_unit }}
-    <p style="font-size:14px; color:#666;">（例：36 個 / 10 L）</p>
+      <div class="category-goal-row">
+        {% if form.goal_amount %}
+          {{ form.goal_amount }}
+        {% endif %}
+
+        {% if form.goal_unit %}
+          {{ form.goal_unit }}
+        {% endif %}
+      </div>
+
+      <p class="category-note">（例：36 個 / 10 L）</p>
+    </div>
   {% endif %}
 
   <div class="form-submit-center">

@@ -3,9 +3,11 @@
 {% block content %}
 
 <p class="breadcrumb">
-  <a href="{% url 'inventory:settings_tabs' %}">設定</a>
+  <a href="{% url 'inventory:settings_tabs' %}?tab=storage">設定一覧</a>
   <span>＞</span>
-  <span>保管場所登録</span>
+  <a href="{% url 'inventory:settings_tabs' %}?tab=storage">保管場所設定</a>
+  <span>＞</span>
+  <span>{% if object %}保管場所編集{% else %}保管場所登録{% endif %}</span>
 </p>
 
 <h1 class="page-title">保管場所を追加</h1>

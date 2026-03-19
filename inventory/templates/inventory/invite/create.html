@@ -1,7 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
+<p style="color:red; font-weight:bold;">INVITE-CREATE-TEMPLATE</p>
+
+  <p class="breadcrumb">
+    <a href="{% url 'accounts:mypage' %}">マイページ</a>
+    <span>＞</span>
+    <span>メンバー招待</span>
+  </p>
+
 <div class="container" style="max-width: 520px; margin: 0 auto; padding: 16px;">
   <h1 style="font-size: 20px; margin-bottom: 12px;">メンバー招待</h1>
+
+  <p style="margin: 0 0 20px; font-size: 15px; color: #333;">
+    <strong>所属世帯名：</strong> {{ request.user.household.name }}
+  </p>
 
   <p style="margin-bottom: 12px;">
     招待リンクを発行して、家族/メンバーに共有してください。

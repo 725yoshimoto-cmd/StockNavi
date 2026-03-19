@@ -81,9 +81,15 @@
 </style>
 
 <div class="member-page">
-  <div class="member-breadcrumb">
-    <a href="{% url 'accounts:mypage' %}">マイページ</a> ＞ メンバー一覧
-  </div>
+  <p class="breadcrumb">
+    <a href="{% url 'accounts:mypage' %}">マイページ</a>
+    <span>＞</span>
+    <span>メンバー一覧</span>
+  </p>
+
+  <p style="margin: 0 0 18px; font-size: 15px; color: #333;">
+    <strong>所属世帯名：</strong> {{ request.user.household.name }}
+  </p>
 
   <div class="member-header">
     {# 招待リンク発行履歴ページへ移動 既存実装に合わせてURL名を使う #}

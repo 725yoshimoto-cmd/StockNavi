@@ -4,36 +4,38 @@
 
 <form method="post" action="{% url 'inventory:settings_tabs' %}">
   {% csrf_token %}
+  <input type="hidden" name="tab" value="category">
   <input type="hidden" name="action" value="save_target_days">
 
-  <label>
-    <input type="radio" name="target_choice" value="3"
-      {% if household.target_days == 3 %}checked{% endif %}>
-    3日分
-  </label><br>
+  <div class="target-days-group">
 
-  <label>
-    <input type="radio" name="target_choice" value="7"
-      {% if household.target_days == 7 %}checked{% endif %}>
-    7日分
-  </label><br>
+    <label class="target-days-row">
+      <input type="radio" name="target_choice" value="3"
+        {% if household.target_days == 3 %}checked{% endif %}>
+      <span>3日分</span>
+    </label>
 
-  <label>
-    <input type="radio" name="target_choice" value="14"
-      {% if household.target_days == 14 %}checked{% endif %}>
-    14日分
-  </label><br>
+    <label class="target-days-row">
+      <input type="radio" name="target_choice" value="7"
+        {% if household.target_days == 7 %}checked{% endif %}>
+      <span>7日分</span>
+    </label>
 
-  <label>
-    <input type="radio" name="target_choice" value="custom"
-      {% if household.target_days != 3 and household.target_days != 7 and household.target_days != 14 %}checked{% endif %}>
-    カスタム：
-    <input type="number" name="custom_days"
-           value="{{ household.target_days }}"
-           min="1">
-  </label>
+    <label class="target-days-row">
+      <input type="radio" name="target_choice" value="14"
+        {% if household.target_days == 14 %}checked{% endif %}>
+      <span>14日分</span>
+    </label>
 
-  <br><br>
+    <label class="target-days-row target-days-custom">
+      <input type="radio" name="target_choice" value="custom"
+        {% if household.target_days != 3 and household.target_days != 7 and household.target_days != 14 %}checked{% endif %}>
+      <span>カスタム：</span>
+      <input type="number" name="custom_days" value="{{ household.target_days }}" min="1">
+    </label>
+
+  </div>
+
   <div class="form-submit-center">
     <button type="submit" class="btn-primary-mid">保存</button>
   </div>
@@ -43,86 +45,77 @@
 
 <h3>分類</h3>
 
-<p>
-  <div class="fab-wrap">
-  <a href="{% url 'inventory:category_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory"
-    class="fab">
-  +
-  </a>
-  </div>
-</p>
-
-<form method="get" action="" style="margin: 8px 0;">
-  <!-- ★ タブ固定 -->
+<form method="post" action="{% url 'inventory:settings_tabs' %}">
+  {% csrf_token %}
   <input type="hidden" name="tab" value="category">
 
-  <input type="text" name="q" value="{{ q }}" placeholder="分類を検索">
-  <input type="hidden" name="sort" value="{{ sort }}">
-
-  <button type="submit">検索</button>
-
-  {% if q %}
-    <a href="?tab=category&sort={{ sort }}">クリア</a>
-  {% endif %}
-</form>
-
-<p>
-  並び替え：
-  <a href="?tab=category&sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
-  <a href="?tab=category&sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
-</p>
-
-{% if categories %}
-  <form method="post" action="{% url 'inventory:settings_tabs' %}"
-        onsubmit="return confirm('選択した分類を削除しますか？');">
-    {% csrf_token %}
-    <input type="hidden" name="tab" value="category">
-    <input type="hidden" name="action" value="bulk_delete_category">
-
-    <div class="delete-actions">
-      <button type="submit" class="icon-btn" aria-label="分類を削除">
-        <img src="{% static 'images/trash.png' %}" alt="削除">
-      </button>
+  <div class="settings-search-row">
+    <div class="search-input-wrap">
+      <input type="text" name="q" value="{{ q }}" placeholder="分類を検索">
     </div>
 
-    <ul style="list-style:none; padding:0;">
+    <button type="submit"
+            formaction="{% url 'inventory:settings_tabs' %}"
+            formmethod="get"
+            class="search-icon-btn"
+            aria-label="検索">
+      <img src="{% static 'images/検索.png' %}" alt="検索">
+    </button>
+
+    <a href="{% url 'inventory:category_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory"
+       class="fab" aria-label="分類を追加">
+      <span>＋</span>
+    </a>
+
+    <button type="submit"
+            name="action"
+            value="bulk_delete_category"
+            class="icon-btn"
+            aria-label="分類を削除"
+            onclick="return confirm('選択した分類を削除しますか？');">
+      <img src="{% static 'images/trash.png' %}" alt="削除">
+    </button>
+  </div>
+
+  <p>
+    並び替え：
+    <a href="?tab=category&sort=created{% if q %}&q={{ q }}{% endif %}">登録順</a> |
+    <a href="?tab=category&sort=name{% if q %}&q={{ q }}{% endif %}">50音順</a>
+  </p>
+
+  {% if categories %}
+    <ul class="settings-list">
       {% for c in categories %}
-        <li style="display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid #ddd;">
+        <li class="settings-item">
+          <input type="checkbox" name="selected_ids" value="{{ c.id }}">
 
-          <!-- 選択 -->
-          <input type="checkbox" name="selected_ids" value="{{ c.id }}" style="margin-top:4px;">
+          <span class="settings-color-chip"
+                style="background: {{ c.color|default:'#f1e8ff' }};"></span>
 
-          <!-- 色チップ -->
-          <span style="width:14px; height:14px; border-radius:4px; background:{{ c.color|default:'#f1e8ff' }}; margin-top:4px;"></span>
-
-          <!-- 名前＋概要 -->
-          <div style="flex:1;">
+          <div class="settings-item-main">
             <a href="{% url 'inventory:category_edit' c.id %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory">
-              {{ c.name }}
+              <strong>{{ c.name }}</strong>
             </a>
 
             {% if c.description %}
-              <div style="font-size:12px; color:#666; margin-top:4px;">
-                {{ c.description }}
-              </div>
+              <div class="settings-subtext">{{ c.description }}</div>
             {% endif %}
 
-            <div style="font-size:12px; color:#666; margin-top:4px;">
+            <div class="settings-subtext">
               目標：
-              {% if c.goal_amount and c.goal_amount > 0 %}
-                {{ c.goal_amount|floatformat:"-1" }}{{ c.goal_unit }}
+              {% if c.goal_amount %}
+                {{ c.goal_amount }}{{ c.goal_unit }}
               {% else %}
                 未設定
               {% endif %}
             </div>
           </div>
-
         </li>
       {% empty %}
-        <li>分類がありません</li>
+        <li>分類がありません。</li>
       {% endfor %}
     </ul>
-  </form>
-{% else %}
-  <p>分類がありません</p>
-{% endif %}
+  {% else %}
+    <p>分類がありません。</p>
+  {% endif %}
+</form>

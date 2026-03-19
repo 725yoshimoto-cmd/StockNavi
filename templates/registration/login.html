@@ -25,27 +25,6 @@
 
 {% block content %}
 <style>
-  /* ---------------------------------
-    画面全体
-    上余白を減らして、ロゴをもっと上に寄せる
-  --------------------------------- */
-  .login-page {
-    min-height: 100vh;
-    padding: 0 0 40px;
-  }
-
-  .login-logo-wrap {
-    text-align: center;
-    margin: 0 0 6px;
-    padding-top: 0;
-  }
-
-  .login-logo {
-    width: 230px;
-    max-width: 78%;
-    height: auto;
-    display: inline-block;
-  }
 
   /* ---------------------------------
      ログイン内容の本体
@@ -58,6 +37,20 @@
     margin: 0 auto;
   }
 
+    /* ---------------------------------
+     ロゴ
+  --------------------------------- */
+  .login-logo-wrap {
+    text-align: center;
+    margin: 0 0 18px;
+  }
+
+  .login-logo {
+    height: 50px;
+    width: auto;
+    display: inline-block;
+  }
+  
   /* ---------------------------------
      見出し
   --------------------------------- */
@@ -209,6 +202,7 @@
     font-size: 14px;
     line-height: 1.5;
   }
+
 </style>
 
 <div class="login-page">

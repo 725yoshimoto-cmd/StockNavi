@@ -2,22 +2,30 @@
 {% block title %}在庫削除{% endblock %}
 
 {% block content %}
-<!--
-在庫削除確認ページ
-ファイル場所：
-inventory/templates/inventory/inventory_confirm_delete.html
--->
-
-<h1>削除確認</h1>
-
-<p>この在庫を削除しますか？</p>
-<p><strong>{{ object.name }}</strong></p>
 
 <form method="post">
   {% csrf_token %}
-  <button class="btn btn-danger" type="submit">削除する</button>
-</form>
 
-<p><a href="{% url 'inventory:inventory_list' %}">キャンセル</a></p>
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <h2 class="modal-title modal-title-danger">削除確認</h2>
+
+      <p class="modal-body">
+        この在庫を削除すると<br>
+        元に戻せません。<br>
+        本当に削除しますか？
+      </p>
+
+      <div style="margin: 0 0 18px; font-size: 16px; font-weight: 700; color: #333;">
+        {{ object.name }}
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="modal-btn modal-btn-danger">はい</button>
+        <a href="{% url 'inventory:inventory_list' %}" class="modal-btn modal-btn-cancel">いいえ</a>
+      </div>
+    </div>
+  </div>
+</form>
 
 {% endblock %}

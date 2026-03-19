@@ -1,23 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1>削除確認</h1>
-<p>選択した在庫を削除します。よろしいですか？</p>
-
-<ul>
-  {% for item in items %}
-    <li>{{ item.name }}（数量: {{ item.quantity }}）</li>
-  {% endfor %}
-</ul>
-
 <form method="post" action="{% url 'inventory:inventory_bulk_delete_execute' %}">
   {% csrf_token %}
   {% for id in selected_ids %}
     <input type="hidden" name="selected_ids" value="{{ id }}">
   {% endfor %}
 
-  <button type="submit" class="btn btn-danger">削除する</button>
-  <a class="btn" href="{% url 'inventory:inventory_list' %}?select_mode=1">キャンセル</a>
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <h2 class="modal-title modal-title-danger">削除確認</h2>
+
+      <p class="modal-body">
+        選択した在庫を削除すると<br>
+        元に戻せません。<br>
+        本当に削除しますか？
+      </p>
+
+      {% if items %}
+        <div style="margin: 0 0 18px; text-align:left; font-size:14px; color:#555;">
+          {% for item in items %}
+            <div style="margin-bottom:6px;">
+              ・{{ item.name }}（数量: {{ item.quantity }}）
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="modal-actions">
+        <button type="submit" class="modal-btn modal-btn-danger">はい</button>
+        <a href="{% url 'inventory:inventory_list' %}?select_mode=1" class="modal-btn modal-btn-cancel">いいえ</a>
+      </div>
+    </div>
+  </div>
 </form>
 
 {% endblock %}

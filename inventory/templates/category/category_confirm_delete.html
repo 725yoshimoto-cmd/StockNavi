@@ -1,37 +1,36 @@
 {% extends "base.html" %}
-{% block title %}削除{% endblock %}
+{% block title %}分類削除{% endblock %}
+
 {% block content %}
-
-<!--
-カテゴリ削除確認ページ（category/confirm_delete.html）
-
-ポイント：
-- Category を削除すると、紐づいている InventoryItem.category は NULL になる
-  （models.py で on_delete=SET_NULL のため）
-- 在庫データは削除されないが、カテゴリ表示が「未分類」になるので注意喚起する
--->
-
-<h1>削除確認</h1>
-
-<p>この分類を削除しますか？</p>
-<p><strong>{{ object.name }}</strong></p>
-
-<!-- ★注意喚起：SET_NULL の挙動をユーザーに伝える -->
-<p style="color:#b00;">
-  ※この分類を削除すると、この分類が付いている在庫は「未分類」になります。
-  在庫データ自体は削除されません。
-</p>
 
 <form method="post">
   {% csrf_token %}
 
-  <!-- 削除は危険操作なので btn-danger を付ける -->
-  <button class="btn btn-danger" type="submit">
-    削除する
-  </button>
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <h2 class="modal-title modal-title-danger">削除確認</h2>
 
+      <p class="modal-body">
+        この分類を削除すると<br>
+        元に戻せません。<br>
+        本当に削除しますか？
+      </p>
+
+      <div style="margin: 0 0 12px; font-size: 16px; font-weight: 700; color: #333;">
+        {{ object.name }}
+      </div>
+
+      <p style="margin: 0 0 18px; font-size: 13px; line-height: 1.7; color: #b91c1c;">
+        ※この分類を削除すると、この分類が付いている在庫は「未分類」になります。<br>
+        在庫データ自体は削除されません。
+      </p>
+
+      <div class="modal-actions">
+        <button type="submit" class="modal-btn modal-btn-danger">はい</button>
+        <a href="{% url 'inventory:category_list' %}" class="modal-btn modal-btn-cancel">いいえ</a>
+      </div>
+    </div>
+  </div>
 </form>
-
-<p><a href="{% url 'inventory:category_list' %}">キャンセル</a></p>
 
 {% endblock %}

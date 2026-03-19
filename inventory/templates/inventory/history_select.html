@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 
 <p class="breadcrumb" style="margin:8px 0 14px 0; font-size:14px;">
@@ -25,12 +26,10 @@
     在庫一覧に複製
   </button>
 
-  <button type="submit"
-          class="btn btn-danger"
-          form="historyBulkForm"
-          formaction="{% url 'inventory:inventory_history_delete' %}">
-    削除
+  <button type="submit" class="icon-btn" aria-label="削除">
+    <img src="{% static 'images/trash.png' %}" alt="削除">
   </button>
+
 </div>
 
 <form id="historyBulkForm" method="post">

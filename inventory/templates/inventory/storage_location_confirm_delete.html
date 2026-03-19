@@ -1,14 +1,30 @@
 {# inventory/templates/inventory/storage_location_confirm_delete.html #}
 {% extends "base.html" %}
 {% block content %}
-  <h1>保管場所を削除</h1>
 
-  <p>「{{ object.name }}」を削除します。よろしいですか？</p>
+<form method="post">
+  {% csrf_token %}
 
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">削除する</button>
-  </form>
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <h2 class="modal-title modal-title-danger">削除確認</h2>
 
-  <a href="{% url 'inventory:storage_location_list' %}">キャンセル</a>
+      <p class="modal-body">
+        この保管場所を削除すると<br>
+        元に戻せません。<br>
+        本当に削除しますか？
+      </p>
+
+      <div style="margin: 0 0 18px; font-size: 16px; font-weight: 700; color: #333;">
+        {{ object.name }}
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="modal-btn modal-btn-danger">はい</button>
+        <a href="{% url 'inventory:storage_location_list' %}" class="modal-btn modal-btn-cancel">いいえ</a>
+      </div>
+    </div>
+  </div>
+</form>
+
 {% endblock %}

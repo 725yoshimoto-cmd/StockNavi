@@ -1,95 +1,54 @@
 {% load static %}
 
-<div class="settings-actions">
-  <div class="fab-wrap">
-  <a href="{% url 'inventory:storage_location_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dstorage"
-    class="fab">
-  +
-  </a>
-  </div>
-</div>
-
-<form method="get" action="" style="margin: 8px 0;">
+<form method="post" action="{% url 'inventory:settings_tabs' %}">
+  {% csrf_token %}
   <input type="hidden" name="tab" value="storage">
 
-  <input type="text" name="loc_q" value="{{ loc_q }}" placeholder="保管場所を検索">
-  <input type="hidden" name="loc_sort" value="{{ loc_sort }}">
-
-  <button type="submit">検索</button>
-
-  {% if loc_q %}
-    <a href="?tab=storage&loc_sort={{ loc_sort }}">クリア</a>
-  {% endif %}
-</form>
-
-<p>
-  並び替え：
-  <a href="?tab=storage&loc_sort=created{% if loc_q %}&loc_q={{ loc_q }}{% endif %}">登録順</a> |
-  <a href="?tab=storage&loc_sort=name{% if loc_q %}&loc_q={{ loc_q }}{% endif %}">50音順</a>
-</p>
-
-{% if locations %}
-  <form method="post" action="{% url 'inventory:settings_tabs' %}"
-        onsubmit="return confirm('選択した保管場所を削除しますか？');">
-    {% csrf_token %}
-    <input type="hidden" name="tab" value="storage">
-    <input type="hidden" name="action" value="bulk_delete_storage">
-
-    <div class="delete-actions">
-      <button type="submit" class="icon-btn" aria-label="保管場所を削除">
-        <img src="{% static 'images/trash.png' %}" alt="削除">
-      </button>
+  <div class="settings-search-row">
+    <div class="search-input-wrap">
+      <input type="text" name="loc_q" value="{{ loc_q }}" placeholder="保管場所を検索">
     </div>
 
+    <button type="submit" formaction="{% url 'inventory:settings_tabs' %}" formmethod="get"
+            class="search-icon-btn" aria-label="検索">
+      <img src="{% static 'images/検索.png' %}" alt="検索">
+    </button>
+
+    <a href="{% url 'inventory:storage_location_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dstorage"
+       class="fab" aria-label="保管場所を追加">
+      <span>＋</span>
+    </a>
+
+    <button type="submit" name="action" value="bulk_delete_storage"
+            class="icon-btn" aria-label="保管場所を削除"
+            onclick="return confirm('選択した保管場所を削除しますか？');">
+      <img src="{% static 'images/trash.png' %}" alt="削除">
+    </button>
+  </div>
+
+  <p>
+    並び替え：
+    <a href="?tab=storage&loc_sort=created{% if loc_q %}&loc_q={{ loc_q }}{% endif %}">登録順</a> |
+    <a href="?tab=storage&loc_sort=name{% if loc_q %}&loc_q={{ loc_q }}{% endif %}">50音順</a>
+  </p>
+
+  {% if locations %}
     <ul class="settings-list">
       {% for loc in locations %}
         <li class="settings-item">
           <input type="checkbox" name="selected_ids" value="{{ loc.id }}">
-          <a href="{% url 'inventory:storage_location_edit' loc.pk %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dstorage"
-            class="settings-item-main">
-            {{ loc.name }}
-          </a>
+
+          <div class="settings-item-main">
+            <a href="{% url 'inventory:storage_location_edit' loc.pk %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dstorage">
+              <strong>{{ loc.name }}</strong>
+            </a>
+          </div>
         </li>
+      {% empty %}
+        <li>保管場所はありません。</li>
       {% endfor %}
     </ul>
-  </form>
-{% else %}
-  <p>保管場所はありません。</p>
-{% endif %}
-
-<style>
-  .settings-actions {
-    margin: 0 0 16px;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .settings-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .settings-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px 0;
-    border-bottom: 1px solid #ddd;
-  }
-
-  .settings-item-main {
-    flex: 1;
-  }
-
-  .settings-subtext {
-    font-size: 12px;
-    color: #666;
-    margin-top: 4px;
-    line-height: 1.5;
-  }
-
-  .settings-delete-wrap {
-    margin: 12px 0 16px;
-  }
-</style>
+  {% else %}
+    <p>保管場所はありません。</p>
+  {% endif %}
+</form>

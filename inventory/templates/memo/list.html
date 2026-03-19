@@ -4,31 +4,40 @@
 {% block title %}メモ一覧{% endblock %}
 {% block content %}
 
-<p class="breadcrumb" style="margin:8px 0 14px 0; font-size:14px;">
-  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> &gt; メモ
+<p class="breadcrumb">
+  <span>メモ</span>
 </p>
 
-<div class="fab-wrap">
+<form method="get" class="memo-toolbar">
+  <div class="memo-search-wrap">
+    <input
+      type="text"
+      name="q"
+      value="{{ request.GET.q|default:'' }}"
+      placeholder="キーワード検索"
+    >
+  </div>
+
+  <button type="submit" class="search-icon-btn" aria-label="検索">
+    <img src="{% static 'images/検索.png' %}" alt="検索">
+  </button>
+
   <a href="{% url 'inventory:memo_add' %}" class="fab" aria-label="メモを追加">
     +
   </a>
-</div>
 
-<hr>
+  <button type="submit"
+          form="bulkDeleteForm"
+          class="icon-btn"
+          aria-label="選択メモを削除"
+          title="選択メモを削除"
+          onclick="return confirm('選択したメモを削除しますか？');">
+    <img src="{% static 'images/trash.png' %}" alt="削除">
+  </button>
+</form>
 
-<!-- =========================
-     ① 検索・並び替え（GET）
-     ========================= -->
-<form method="get" style="display:inline-block; margin-right:8px;">
-  <input
-    type="text"
-    name="q"
-    value="{{ request.GET.q|default:'' }}"
-    placeholder="キーワード検索"
-    style="padding:6px 10px; width:220px;"
-  />
-
-  <select name="sort" style="padding:6px 10px;" onchange="this.form.submit()">
+<form method="get" class="memo-sort-form">
+  <select name="sort" onchange="this.form.submit()">
     <option value="created_desc" {% if request.GET.sort == "created_desc" or not request.GET.sort %}selected{% endif %}>
       作成日：新しい順
     </option>
@@ -36,30 +45,16 @@
       作成日：古い順
     </option>
   </select>
-
-  <button type="submit" class="btn">検索</button>
-
-  {% if request.GET.q or request.GET.sort %}
-    <a class="btn" href="{% url 'inventory:memo_list' %}">リセット</a>
+  {% if request.GET.q %}
+    <input type="hidden" name="q" value="{{ request.GET.q }}">
   {% endif %}
 </form>
 
-<!-- =========================
-     ② 選択削除（POST）※GETフォームの外！
-     ========================= -->
-<form id="bulkDeleteForm"
-      method="post"
-      action="{% url 'inventory:memo_bulk_delete' %}"
-      style="display:inline-block;">
+<form id="bulkDeleteForm" method="post" action="{% url 'inventory:memo_bulk_delete' %}">
   {% csrf_token %}
-  <button type="submit"
-          class="icon-btn"
-          title="選択メモを削除"
-          aria-label="選択メモを削除"
-          onclick="return confirm('選択したメモを削除しますか？');">
-    <img src="{% static 'images/trash.png' %}" alt="削除">
-  </button>
 </form>
+
+<hr>
 
 <script>
   // チェックされた memo の id を hidden に詰めて POST 送信
@@ -81,9 +76,8 @@
       this.appendChild(h);
     });
   });
+  
 </script>
-
-<hr>
 
 <!-- =========================
      ③ メモ一覧（縦並び）

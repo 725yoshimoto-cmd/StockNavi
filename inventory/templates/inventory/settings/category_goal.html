@@ -48,7 +48,13 @@
 
 <h3>分類</h3>
 
-<p><a href="{% url 'inventory:category_add' %}">＋分類を追加</a></p>
+<p>  
+  <a href="{% url 'inventory:category_add' %}?next={% url 'inventory:settings_tabs' %}%3Ftab%3Dcategory"
+    class="fab"
+    aria-label="分類を追加">
+    <span class="fab-plus">＋</span>
+  </a>
+</p>
 
 <form method="get" action="" style="margin: 8px 0;">
   <input type="text" name="q" value="{{ q }}" placeholder="分類を検索">

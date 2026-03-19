@@ -289,104 +289,186 @@
 
 <div class="inventory-page">
 
-  <p class="inventory-breadcrumb">在庫一覧</p>
+{% if request.GET.select_mode == "1" %}
+  <p class="breadcrumb">
+    <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+    <span>＞</span>
+    <span>商品選択</span>
+  </p>
+{% else %}
+  <p class="breadcrumb">在庫一覧</p>
+{% endif %}
 
-  {% with select_mode=request.GET.select_mode %}
-    {% if select_mode == "1" %}
-      <a class="mode-btn"
-         href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=0">
-        選択モードOFF
-      </a>
-    {% else %}
-      <a class="mode-btn"
-         href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=1">
-        選択モードON
-      </a>
-    {% endif %}
-  {% endwith %}
-
-  <div class="inventory-top-row">
-    <div class="inventory-mode">
-      {% if request.GET.select_mode == "1" %}
-        選択モードON
-      {% endif %}
-    </div>
-    <a href="{% url 'inventory:inventory_history' %}" class="inventory-history-link">履歴一覧へ</a>
-  </div>
+  <!-- =========================
+       通常時 / 選択モード時 の上部操作列
+       ========================= -->
 
   {% if request.GET.select_mode == "1" %}
-    <div class="bulk-bar">
-      <a class="bulk-btn bulk-btn-gray"
-         href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=0">
-        選択解除
+    <!-- 選択モード時 -->
+    <div class="top-toolbar">
+      <div class="top-toolbar-left">
+        <a href="{% url 'inventory:inventory_list' %}?sort=expiry"
+          class="icon-link" aria-label="並び替え">
+          <img src="{% static 'images/並び替え.png' %}" alt="並び替え">
+        </a>
+
+        {% if request.GET.select_mode == "1" %}
+          <a href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}"
+            class="icon-link" aria-label="選択モード終了">
+            <img src="{% static 'images/選択.png' %}" alt="選択">
+          </a>
+        {% else %}
+          <a href="{% url 'inventory:inventory_list' %}?q={{ request.GET.q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort }}&select_mode=1"
+            class="icon-link" aria-label="選択モード開始">
+            <img src="{% static 'images/選択.png' %}" alt="選択">
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="top-toolbar-center">
+        <form method="get" action="{% url 'inventory:inventory_list' %}" class="top-toolbar" style="margin:0;">
+          <input type="hidden" name="category" value="{{ selected_category }}">
+          <input type="hidden" name="storage" value="{{ selected_storage }}">
+          <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
+          <input type="hidden" name="select_mode" value="{{ request.GET.select_mode|default:'0' }}">
+
+          <div class="top-toolbar-center">
+            <input type="text" name="q" value="{{ q }}" placeholder="商品名で検索">
+          </div>
+
+          <button type="submit" class="search-icon-btn" aria-label="検索">
+            <img src="{% static 'images/検索.png' %}" alt="検索">
+          </button>
+        </form>
+      </div>
+
+      <div class="top-toolbar-right">
+        {% if request.GET.select_mode == "1" %}
+          <button type="submit" form="bulkForm" formaction="{% url 'inventory:inventory_bulk_duplicate' %}"
+                  class="copy-icon-btn" aria-label="複製">
+            <img src="{% static 'images/copy.png' %}" alt="複製">
+          </button>
+
+          <button type="submit" form="bulkForm" formaction="{% url 'inventory:inventory_bulk_delete' %}"
+                  class="icon-btn" aria-label="削除">
+            <img src="{% static 'images/trash.png' %}" alt="削除">
+          </button>
+        {% else %}
+          <a href="{% url 'inventory:inventory_add' %}" class="fab" aria-label="在庫を追加">
+            <span>＋</span>
+          </a>
+
+          <a href="{% url 'inventory:inventory_history' %}" class="icon-link" aria-label="登録履歴">
+            <img src="{% static 'images/履歴.png' %}" alt="履歴">
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+  {% else %}
+    <!-- 通常時 -->
+    <div class="inventory-toolbar-row">
+
+      <!-- 並び替え -->
+      <button type="button" class="icon-btn" id="sortOpenBtn" aria-label="並び替え">
+        <img src="{% static 'images/並び替え.png' %}" alt="並び替え">
+      </button>
+
+      <!-- 選択モード -->
+      <a href="{% url 'inventory:inventory_list' %}?q={{ q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort|default:'' }}&select_mode=1"
+         class="select-icon-btn"
+         aria-label="選択モード">
+        <img src="{% static 'images/選択.png' %}" alt="選択">
       </a>
 
-      <button type="submit"
-              class="bulk-btn bulk-btn-green"
-              form="bulkForm"
-              formaction="{% url 'inventory:inventory_bulk_duplicate' %}">
-        複製
-      </button>
+      <!-- 検索 -->
+      <form method="get" action="{% url 'inventory:inventory_list' %}" class="inventory-toolbar-row" style="flex:1; margin:0;">
+        <input type="hidden" name="category" value="{{ selected_category }}">
+        <input type="hidden" name="storage" value="{{ selected_storage }}">
+        <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
+        <input type="hidden" name="select_mode" value="0">
 
-      <button type="submit" class="icon-btn" aria-label="在庫を削除">
-        <img src="{% static 'images/trash.png' %}" alt="削除">
-      </button>
+        <div class="inventory-search-wrap">
+          <input type="text" name="q" value="{{ q }}" placeholder="商品名で検索">
+        </div>
 
+        <button type="submit" class="search-icon-btn" aria-label="検索">
+          <img src="{% static 'images/検索.png' %}" alt="検索">
+        </button>
+      </form>
+
+      <!-- 追加 -->
+      <a href="{% url 'inventory:inventory_add' %}" class="fab" aria-label="在庫を追加">+</a>
+
+      <!-- 登録履歴 -->
+      <a href="{% url 'inventory:inventory_history' %}" class="icon-btn" aria-label="登録履歴">
+        <img src="{% static 'images/履歴.png' %}" alt="履歴">
+      </a>
     </div>
   {% endif %}
 
+  <!-- =========================
+       分類・保管場所（横一列）
+       ========================= -->
   <form method="get" action="{% url 'inventory:inventory_list' %}">
-    <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">
-    <input type="hidden" name="category" value="{{ selected_category }}">
-    <input type="hidden" name="storage" value="{{ selected_storage }}">
-    <input type="hidden" name="select_mode" value="{{ request.GET.select_mode|default:'0' }}">
-
-    <div class="sort-row">
-      <button type="submit" name="sort" value="expiry">期限が近い順</button>
-      <button type="submit" name="sort" value="quantity">数量が少ない順</button>
-      <button type="submit" name="sort" value="name">名前順</button>
-    </div>
-  </form>
-
-  <form method="get" action="{% url 'inventory:inventory_list' %}">
+    <input type="hidden" name="q" value="{{ q|default:'' }}">
     <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
     <input type="hidden" name="select_mode" value="{{ request.GET.select_mode|default:'0' }}">
 
-    <div class="search-row">
-      <input
-        type="text"
-        name="q"
-        placeholder="商品名で検索"
-        value="{{ request.GET.q|default:'' }}"
-        class="search-input"
-      >
-      <button type="submit" class="search-btn">検索</button>
-    </div>
+    <div class="inventory-filter-row">
+      <div class="inventory-filter-group">
+        <label for="category-select">分類</label>
+        <select id="category-select" name="category" onchange="this.form.submit()">
+          <option value="">すべて</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:"s" %}selected{% endif %}>
+              {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
 
-    <label class="filter-label" for="category-select">分類</label>
-    <select id="category-select" name="category" class="filter-select" onchange="this.form.submit()">
-      <option value="">すべて</option>
-      {% for c in categories %}
-        <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:"s" %}selected{% endif %}>
-          {{ c.name }}
-        </option>
-      {% endfor %}
-    </select>
-
-    <label class="filter-label" for="storage-select">保管場所</label>
-    <select id="storage-select" name="storage" class="filter-select" onchange="this.form.submit()">
-      <option value="">すべて</option>
-      {% for s in storages %}
-        <option value="{{ s.id }}" {% if selected_storage == s.id|stringformat:"s" %}selected{% endif %}>
-          {{ s.name }}
-        </option>
-      {% endfor %}
-    </select>
-
-    <div class="clear-link-wrap">
-      <a class="clear-link" href="{% url 'inventory:inventory_list' %}">解除</a>
+      <div class="inventory-filter-group">
+        <label for="storage-select">保管場所</label>
+        <select id="storage-select" name="storage" onchange="this.form.submit()">
+          <option value="">すべて</option>
+          {% for s in storages %}
+            <option value="{{ s.id }}" {% if selected_storage == s.id|stringformat:"s" %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
   </form>
+
+  <!-- =========================
+       並び替えモーダル
+       ========================= -->
+  <div class="sort-modal-backdrop" id="sortModalBackdrop"></div>
+
+  <div class="sort-modal" id="sortModal">
+    <h2 class="sort-modal-title">並び替え</h2>
+
+    <div class="sort-modal-list">
+      <a class="sort-modal-link"
+         href="{% url 'inventory:inventory_list' %}?q={{ q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort=expiry&select_mode=0">
+        賞味期限の近い順
+      </a>
+
+      <a class="sort-modal-link"
+         href="{% url 'inventory:inventory_list' %}?q={{ q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort=quantity&select_mode=0">
+        在庫数の少ない順
+      </a>
+
+      <a class="sort-modal-link"
+         href="{% url 'inventory:inventory_list' %}?q={{ q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort=name&select_mode=0">
+        名前順
+      </a>
+    </div>
+
+    <button type="button" class="sort-modal-close" id="sortCloseBtn">閉じる</button>
+  </div>
 
   <form id="bulkForm" method="post">
     {% csrf_token %}
@@ -395,11 +477,7 @@
   <hr class="inventory-divider">
 
   <p class="inventory-summary">合計：{{ total_items }}件 / 数量合計：{{ total_quantity }}</p>
-  <div class="fab-wrap">
-    <a href="{% url 'inventory:inventory_add' %}" class="fab" aria-label="在庫を追加">
-      +
-    </a>
-  </div>
+
   {% if items %}
     {% for item in items %}
       <div class="item-card">
@@ -473,4 +551,38 @@
   {% endif %}
 
 </div>
+
+<script>
+  const sortOpenBtn = document.getElementById("sortOpenBtn");
+  const sortCloseBtn = document.getElementById("sortCloseBtn");
+  const sortModal = document.getElementById("sortModal");
+  const sortModalBackdrop = document.getElementById("sortModalBackdrop");
+
+  function openSortModal() {
+    if (sortModal && sortModalBackdrop) {
+      sortModal.classList.add("is-open");
+      sortModalBackdrop.classList.add("is-open");
+    }
+  }
+
+  function closeSortModal() {
+    if (sortModal && sortModalBackdrop) {
+      sortModal.classList.remove("is-open");
+      sortModalBackdrop.classList.remove("is-open");
+    }
+  }
+
+  if (sortOpenBtn) {
+    sortOpenBtn.addEventListener("click", openSortModal);
+  }
+
+  if (sortCloseBtn) {
+    sortCloseBtn.addEventListener("click", closeSortModal);
+  }
+
+  if (sortModalBackdrop) {
+    sortModalBackdrop.addEventListener("click", closeSortModal);
+  }
+</script>
+
 {% endblock %}

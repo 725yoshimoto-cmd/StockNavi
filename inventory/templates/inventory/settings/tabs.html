@@ -2,9 +2,18 @@
 {% block content %}
 
 <p class="breadcrumb">
-  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+  <a href="{% url 'inventory:settings_tabs' %}">設定一覧</a>
   <span>＞</span>
-  <span>設定</span>
+
+  {% if tab == "category" %}
+    <span>分類・目標設定</span>
+  {% elif tab == "storage" %}
+    <span>保管場所設定</span>
+  {% elif tab == "alert" %}
+    <span>アラート設定</span>
+  {% else %}
+    <span>設定一覧</span>
+  {% endif %}
 </p>
 
 <div class="tabs">

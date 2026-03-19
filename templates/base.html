@@ -11,443 +11,1024 @@
   <!-- ページタイトル（各ページで上書き可能） -->
   <title>{% block title %}StockNavi{% endblock %}</title>
 
-  <style>
-
-    /* ----------------------------
-       基本設定
-       ---------------------------- */
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        "Hiragino Sans",
-        "Yu Gothic",
-        sans-serif;
-
-      background: #f7f8fb;
-      color: #333;
-    }
-
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-
-    /* ----------------------------
-       アプリ全体の枠
-       スマホ幅で中央に表示
-       ---------------------------- */
-
-    .app-shell {
-
-      max-width: 430px;
-      margin: 0 auto;
-
-      min-height: 100vh;
-
-      background: white;
-
-      box-shadow: 0 0 0 1px #e5e7eb;
-
-      position: relative;
-
-      overflow: hidden;
-      border-radius: 12px;
-    }
-
-    /* ----------------------------
-       ヘッダー
-       ---------------------------- */
-
-    .app-header {
-
-      /* 上部に固定 */
-      position: sticky;
-      top: 0;
-
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
-
-      padding: 14px 16px;
-
-      z-index: 100;
-    }
-
-    .app-header-title {
-
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-
-    }
-
-    /* ----------------------------
-       メインコンテンツ
-       ---------------------------- */
-
-    .app-main {
-
-      padding: 16px;
-
-      /* 下ナビに隠れない余白 */
-      padding-bottom: 90px;
-    }
-
-    /* ----------------------------
-       ページタイトル
-       ---------------------------- */
-
-    .page-title {
-
-      margin-top: 0;
-      margin-bottom: 12px;
-
-      font-size: 22px;
-      text-align: center;
-
-    }
-
-        /* ----------------------------
-       ロゴ
-       ---------------------------- */
-
-    .app-logo {
-      display: inline-block;
-      font-size: 18px;
-      font-weight: bold;
-      color: #16a34a;
-      text-decoration: none;
-    }
-
-    /* ----------------------------
-       パンくず
-       各画面で class="breadcrumb" を使えば統一される
-       ---------------------------- */
-
-    .breadcrumb {
-      margin: 0 0 12px;
-      font-size: 13px;
-      color: #6b7280;
-      line-height: 1.5;
-    }
-
-    .breadcrumb a {
-      color: #6b7280;
-      text-decoration: none;
-    }
-
-    .breadcrumb span {
-      margin: 0 4px;
-    }
-
-    /* ----------------------------
-       メッセージ表示
-       （成功・エラーなど）
-       ---------------------------- */
-
-    .messages {
-
-      margin-bottom: 16px;
-
-    }
-
-    .message {
-
-      padding: 10px 12px;
-      border-radius: 10px;
-
-      margin-bottom: 8px;
-
-      font-size: 14px;
-
-    }
-
-    .message.success {
-
-      background: #ecfdf3;
-      border: 1px solid #bbf7d0;
-      color: #166534;
-
-    }
-
-    .message.error {
-
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #991b1b;
-
-    }
-
-    .message.warning {
-
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #9a3412;
-
-    }
-
-    /* ----------------------------
-       カードデザイン
-       ---------------------------- */
-
-    .card {
-
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-
-      padding: 14px;
-      margin-bottom: 14px;
-
-      background: white;
-
-    }
-
-    /* ----------------------------
-       共通ボタン
-       ---------------------------- */
-
-    .btn {
-
-      display: inline-block;
-
-      padding: 10px 14px;
-
-      border-radius: 10px;
-
-      font-weight: bold;
-
-      border: none;
-
-      cursor: pointer;
-
-    }
-
-    .btn-primary {
-
-      background: #16a34a;
-      color: white;
-
-    }
-
-    .btn-danger {
-
-      background: #dc2626;
-      color: white;
-
-    }
-
-    /* ----------------------------
-       入力フォーム
-       ---------------------------- */
-
-    input,
-    select,
-    textarea {
-
-      width: 100%;
-
-      padding: 10px;
-
-      border-radius: 10px;
-
-      border: 1px solid #d1d5db;
-
-      margin-top: 6px;
-
-    }
-
-    label {
-
-      display: block;
-      margin-bottom: 12px;
-
-      font-size: 14px;
-      font-weight: bold;
-
-    }
-
-    /* ----------------------------
-       下部ナビ
-       ---------------------------- */
-
-    .bottom-nav {
-
-      position: fixed;
-
-      bottom: 0;
-
-      left: 50%;
-      transform: translateX(-50%);
-
-      width: 100%;
-      max-width: 430px;
-
-      height: 64px;
-
-      background: white;
-
-      border-top: 1px solid #e5e7eb;
-
-      display: flex;
-
-      z-index: 200;
-
-    }
-
-    .bottom-nav a {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      text-align: center;
-      padding: 0 4px;
-    }
-
-    /* ---------------------------------
-      認証画面（ログイン・登録など）専用
-      body に auth-page クラスが付いたとき用
-    --------------------------------- */
-    /* 認証画面ではロゴを最上部に見せるため、
-   app-shell の角丸・影・上の余白感をなくす */
-    .auth-page .app-shell {
-      max-width: 430px;
-      margin: 0 auto;
-      min-height: 100vh;
-      background: #fff;
-      box-shadow: none;
-      border-radius: 0;
-    }
-
-    .auth-page {
-      background: #f3f4f6;
-    }
-
-    /* 認証画面では共通ヘッダーを消す */
-    .auth-page .app-header {
-      display: none;
-    }
-
-    /* 認証画面では下ナビを消す */
-    .auth-page .bottom-nav {
-      display: none;
-    }
-
-    /* 認証画面では下の余白を減らす
-      （下ナビが無いので 90px も不要） */
-    .auth-page .app-main {
-      padding-bottom: 24px;
-    }
-
-    /* 設定ページのリンクタブ */
-    .tabs {
-      display:flex;
-      gap:10px;
-      border-bottom:1px solid #ddd;
-      margin-bottom:16px;
-    }
-
-    .tabs a{
-      padding:8px 14px;
-      text-decoration:none;
-      border-radius:6px 6px 0 0;
-      background:#f5f5f5;
-      color:#333;
-    }
-
-    .tabs a.active{
-      background:#fff;
-      border:1px solid #ddd;
-      border-bottom:none;
-      font-weight:bold;
-    }
-
-    /* ----------------------------
-      追加ボタン（FAB）
-    ---------------------------- */
-
-    .fab-wrap{
-      display:flex;
-      justify-content:flex-end;
-      margin:10px 0 16px;
-    }
-
-    .fab{
-      width:48px;
-      height:48px;
-      border-radius:50%;
-      background:#d9a441;
-      color:white;
-      font-size:28px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-decoration:none;
-      box-shadow:0 3px 8px rgba(0,0,0,0.15);
-    }
-
-    /* ----------------------------
-      フォーム送信ボタン中央寄せ
-    ---------------------------- */
-    .form-submit-center{
-      display:flex;
-      justify-content:center;
-      margin:24px 0 16px;
-    }
-
-    /* ----------------------------
-      中サイズの共通ボタン
-      保存・登録で使う
-    ---------------------------- */
-    .btn-primary-mid{
-      min-width:180px;
-      height:52px;
-      padding:0 28px;
-      border:none;
-      border-radius:16px;
-      background:#20b24b;
-      color:#fff;
-      font-size:18px;
-      font-weight:700;
-      cursor:pointer;
-    }
-
-    /* ----------------------------
-       ゴミ箱削除ボタン
-       ---------------------------- */
-    .icon-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .icon-btn img {
-      width: 28px;
-      height: 28px;
-      display: block;
-    }
-
-    .delete-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin: 12px 0 16px;
-    }
-  </style>
+<style>
+  /* =========================================================
+     1. 基本設定
+     ========================================================= */
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Hiragino Sans",
+      "Yu Gothic",
+      sans-serif;
+    background: #f7f8fb;
+    color: #333;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* =========================================================
+     2. アプリ全体の枠
+     スマホ幅で中央に表示
+     ========================================================= */
+  .app-shell {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #fff;
+    box-shadow: 0 0 0 1px #e5e7eb;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  /* =========================================================
+     3. ヘッダー / ロゴ
+     ========================================================= */
+  .app-header {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 8px 16px;
+    z-index: 100;
+  }
+
+  .app-header-title {
+    text-align: center;
+    line-height: 1;
+  }
+
+  .app-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+  }
+
+  .app-logo-img {
+    height: 50px;
+    width: auto;
+    display: block;
+  }
+
+  /* =========================================================
+     4. メインコンテンツ
+     下ナビに隠れない余白を確保
+     ========================================================= */
+  .app-main {
+    padding: 16px;
+    padding-bottom: 90px;
+  }
+
+  /* =========================================================
+     5. 見出し / パンくず
+     ========================================================= */
+  .page-title {
+    margin: 0 0 12px;
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .breadcrumb {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  .breadcrumb a {
+    color: #6b7280;
+    text-decoration: none;
+  }
+
+  .breadcrumb span {
+    margin: 0 4px;
+  }
+
+  /* =========================================================
+     6. メッセージ表示
+     ========================================================= */
+  .messages {
+    margin-bottom: 16px;
+  }
+
+  .message {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+
+  .message.success {
+    background: #ecfdf3;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+
+  .message.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+
+  .message.warning {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+  }
+
+  /* =========================================================
+     7. カード
+     ========================================================= */
+  .card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+    background: #fff;
+  }
+
+  /* =========================================================
+     8. 共通ボタン
+     ========================================================= */
+  .btn {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: #16a34a;
+    color: #fff;
+  }
+
+  .btn-danger {
+    background: #dc2626;
+    color: #fff;
+  }
+
+  /* =========================================================
+     9. 入力フォーム
+     ========================================================= */
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    margin-top: 6px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  /* =========================================================
+     10. 下部ナビ
+     ========================================================= */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    height: 64px;
+    background: #efefed;
+    border-top: 1px solid #d7d7d2;
+    display: flex;
+    z-index: 200;
+  }
+
+  .bottom-nav a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    padding: 4px 2px;
+    line-height: 1.2;
+  }
+
+  .bottom-nav-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* =========================================================
+     11. 認証画面専用
+     ログイン・パスワード再設定など
+     ========================================================= */
+  .auth-page {
+    background: #f3f4f6;
+  }
+
+  .auth-page .app-shell {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #fff;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .auth-page .app-header {
+    display: none;
+  }
+
+  .auth-page .bottom-nav {
+    display: none;
+  }
+
+  .auth-page .app-main {
+    padding-bottom: 24px;
+  }
+
+  /* =========================================================
+    13. 追加ボタン（FAB）
+    ※ 追加だけ丸背景あり
+    ========================================================= */
+
+  .fab {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #d9a441;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .fab-plus {
+    display: block;
+    font-size: 40px;
+    font-weight: 400;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
+
+  /* =========================================================
+     14. フォーム送信ボタン
+     保存・登録はオレンジで統一
+     ========================================================= */
+  .form-submit-center {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0 16px;
+  }
+
+  .btn-primary-mid {
+    min-width: 240px;
+    height: 56px;
+    padding: 0 24px;
+    border: none;
+    border-radius: 18px;
+    background: #d9a441;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* =========================================================
+     15. 複製ボタン
+     複製は緑
+     ========================================================= */
+  .btn-copy {
+    background: #3aa76d;
+    color: #fff;
+  }
+
+  /* =========================================================
+     16. アイコンボタン
+     検索・削除・複製・選択など
+     ※ 丸背景なし
+     ========================================================= */
+  .search-icon-btn,
+  .copy-icon-btn,
+  .icon-btn,
+  .select-icon-btn {
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-icon-btn img,
+  .copy-icon-btn img,
+  .icon-btn img,
+  .select-icon-btn img {
+    width: 28px;
+    height: 28px;
+    display: block;
+    object-fit: contain;
+  }
+
+  .delete-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: 12px 0 16px;
+  }
+
+  /* =========================================================
+     17. メモ一覧のツールバー
+     ========================================================= */
+  .memo-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 16px;
+  }
+
+  .memo-search-wrap {
+    flex: 1;
+  }
+
+  .memo-search-wrap input {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .memo-sort-form {
+    margin: 0 0 16px;
+  }
+
+  .memo-sort-form select {
+    width: 100%;
+  }
+
+  /* =========================================================
+     18. 在庫一覧のツールバー
+     検索欄＋検索＋複製などを横並び
+     ========================================================= */
+  .search-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 16px;
+  }
+
+  .search-input-wrap {
+    flex: 1;
+  }
+
+  .search-input-wrap input {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .inventory-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 16px;
+  }
+
+  .inventory-search-wrap {
+    flex: 1;
+  }
+
+  .inventory-search-wrap input {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  /* =========================================================
+     19. 汎用補助
+     ========================================================= */
+  .clear-link-wrap {
+    margin: 8px 0 0;
+  }
+
+  .clear-link {
+    font-size: 14px;
+    color: #666;
+    text-decoration: underline;
+  }
+
+  .filter-label {
+    margin-top: 10px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  /* =========================================================
+   20. 在庫一覧 上部アイコン列
+   ========================================================= */
+  .inventory-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 16px;
+  }
+
+  .inventory-top-actions .inventory-search-wrap {
+    flex: 1;
+  }
+
+  .inventory-top-actions .inventory-search-wrap input {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .sort-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.28);
+    z-index: 400;
+  }
+
+  .sort-modal-backdrop.is-open {
+    display: block;
+  }
+
+  .sort-modal {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 180px;
+    transform: translateX(-50%);
+    width: calc(100% - 48px);
+    max-width: 280px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+    z-index: 500;
+    padding: 18px 16px 14px;
+  }
+
+  .sort-modal.is-open {
+    display: block;
+  }
+
+  .sort-modal-title {
+    margin: 0 0 14px;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    color: #555;
+  }
+
+  .sort-modal-list {
+    display: grid;
+    gap: 0;
+    margin-bottom: 14px;
+  }
+
+  .sort-modal-link {
+    display: block;
+    padding: 14px 6px;
+    text-align: center;
+    font-size: 18px;
+    color: #555;
+    border-top: 1px solid #ddd;
+  }
+
+  .sort-modal-close {
+    width: 100%;
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    background: #efefef;
+    color: #666;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* =========================================================
+   20. 在庫一覧 上部操作列
+   ========================================================= */
+  .inventory-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 14px;
+  }
+
+  .inventory-toolbar-row .inventory-search-wrap {
+    flex: 1;
+  }
+
+  .inventory-toolbar-row .inventory-search-wrap input {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .inventory-toolbar-row .select-icon-btn img,
+  .inventory-toolbar-row .search-icon-btn img,
+  .inventory-toolbar-row .copy-icon-btn img,
+  .inventory-toolbar-row .icon-btn img {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* =========================================================
+    21. 在庫一覧 絞り込み行
+    分類・保管場所を横一列
+    ========================================================= */
+  .inventory-filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin: 0 0 12px;
+  }
+
+  .inventory-filter-group {
+    flex: 1;
+  }
+
+  .inventory-filter-group label {
+    margin-bottom: 6px;
+  }
+
+  .inventory-filter-group select {
+    margin-top: 0;
+  }
+
+  /* =========================================================
+    22. 並び替えモーダル
+    ========================================================= */
+  .sort-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.28);
+    z-index: 400;
+  }
+
+  .sort-modal-backdrop.is-open {
+    display: block;
+  }
+
+  .sort-modal {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 180px;
+    transform: translateX(-50%);
+    width: calc(100% - 48px);
+    max-width: 280px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+    z-index: 500;
+    padding: 18px 16px 14px;
+  }
+
+  .sort-modal.is-open {
+    display: block;
+  }
+
+  .sort-modal-title {
+    margin: 0 0 14px;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    color: #555;
+  }
+
+  .sort-modal-list {
+    display: grid;
+    gap: 0;
+    margin-bottom: 14px;
+  }
+
+  .sort-modal-link {
+    display: block;
+    padding: 14px 6px;
+    text-align: center;
+    font-size: 18px;
+    color: #555;
+    border-top: 1px solid #ddd;
+  }
+
+  .sort-modal-close {
+    width: 100%;
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    background: #efefef;
+    color: #666;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* =========================================================
+   23. 目標備蓄日数
+   ========================================================= */
+  .target-days-group {
+    display: grid;
+    gap: 14px;
+    margin: 12px 0 0;
+  }
+
+  .target-days-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .target-days-row input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .target-days-row span {
+    line-height: 1.2;
+  }
+
+  .target-days-custom input[type="number"] {
+    width: 96px;
+    margin-top: 0;
+    margin-left: 6px;
+  }
+
+  /* =========================================================
+   24. 設定画面 検索＋追加 1行
+   ========================================================= */
+  .settings-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 16px;
+  }
+
+  .settings-search-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    margin: 0;
+  }
+
+  .settings-search-wrap {
+    flex: 1;
+  }
+
+  .settings-search-wrap input {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  /* =========================================================
+   25. 設定一覧（分類・保管場所）
+   横並びレイアウト
+   ========================================================= */
+  .settings-item-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .settings-item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .settings-check-col {
+    width: 22px;
+    flex-shrink: 0;
+    margin: 2px 0 0;
+  }
+
+  .settings-check-col input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+  }
+
+  .settings-color-chip {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .settings-main-col {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .settings-item-name {
+    display: inline-block;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .settings-sub-line {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #6b7280;
+  }
+
+  /* =========================================================
+   26. モーダル共通
+   ========================================================= */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.32);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 999;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 320px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 18px;
+    padding: 20px 18px 18px;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  .modal-title {
+    margin: 0 0 14px;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .modal-title-danger {
+    color: #ef4444;
+  }
+
+  .modal-body {
+    margin: 0 0 18px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #444;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .modal-btn {
+    min-width: 74px;
+    height: 42px;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .modal-btn-danger {
+    background: #ef4444;
+  }
+
+  .modal-btn-cancel {
+    background: #3b82f6;
+  }
+
+  /* =========================================================
+   27. 設定タブ
+   ========================================================= */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #d6d3d1;
+    margin: 0 0 20px;
+  }
+
+  .tabs a {
+    min-width: 120px;
+    text-align: center;
+    padding: 12px 18px;
+    background: #efefef;
+    color: #333;
+    border: 1px solid #d6d3d1;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    margin-right: 10px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .tabs a.active {
+    background: #d9d2bf;   /* グレージュ */
+    color: #222;
+    font-weight: 700;
+  }
+  /* =========================================================
+   27. 設定タブ
+   ========================================================= */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #d6d3d1;
+    margin: 0 0 20px;
+  }
+
+  .tabs a {
+    min-width: 120px;
+    text-align: center;
+    padding: 12px 18px;
+    background: #efefef;
+    color: #333;
+    border: 1px solid #d6d3d1;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    margin-right: 10px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .tabs a.active {
+    background: #d9d2bf;   /* グレージュ */
+    color: #222;
+    font-weight: 700;
+  }
+
+  /* ----------------------------
+   一覧上部ツールバー共通
+  ---------------------------- */
+  .top-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 18px;
+  }
+
+  .top-toolbar-left,
+  .top-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .top-toolbar-center {
+    flex: 1;
+  }
+
+  .top-toolbar-center input {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .icon-link,
+  .icon-btn,
+  .search-icon-btn,
+  .copy-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .icon-link img,
+  .icon-btn img,
+  .search-icon-btn img,
+  .copy-icon-btn img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .fab {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #d9a441;
+    color: white;
+    font-size: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    line-height: 1;
+  }
+
+  .fab span {
+    display: inline-block;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
+
+  .settings-search-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 18px;
+  }
+
+  .settings-search-row .search-input-wrap {
+    flex: 1;
+  }
+
+  .settings-search-row .search-input-wrap input {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .settings-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .settings-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .settings-item-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .settings-color-chip {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .settings-subtext {
+    font-size: 14px;
+    color: #666;
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+</style>
 
   {% block extra_css %}{% endblock %}
 
@@ -463,9 +1044,7 @@
     <header class="app-header">
       <div class="app-header-title">
         <a href="{% url 'portfolio' %}" class="app-logo">
-          {% block header_title %}
-          StockNavi
-          {% endblock %}
+          <img src="{% static 'images/stocknavi_logo.png' %}" alt="StockNavi" class="app-logo-img">
         </a>
       </div>
     </header>
@@ -506,11 +1085,30 @@
     <!-- 下部ナビ -->
     {% if user.is_authenticated %}
     <nav class="bottom-nav">
-      <a href="{% url 'inventory:inventory_list' %}">在庫</a>
-      <a href="{% url 'inventory:balance' %}">バランス</a>
-      <a href="{% url 'inventory:memo_list' %}">メモ</a>
-      <a href="{% url 'accounts:mypage' %}">マイページ</a>
-      <a href="{% url 'inventory:settings_tabs' %}">設定</a>
+      <a href="{% url 'inventory:inventory_list' %}">
+        <img src="{% static 'images/HOME.png' %}" alt="" class="bottom-nav-icon">
+        <span>在庫</span>
+      </a>
+
+      <a href="{% url 'inventory:balance' %}">
+        <img src="{% static 'images/バランス.png' %}" alt="" class="bottom-nav-icon">
+        <span>バランス</span>
+      </a>
+
+      <a href="{% url 'inventory:memo_list' %}">
+        <img src="{% static 'images/メモ.png' %}" alt="" class="bottom-nav-icon">
+        <span>メモ</span>
+      </a>
+
+      <a href="{% url 'accounts:mypage' %}">
+        <img src="{% static 'images/アカウント.png' %}" alt="" class="bottom-nav-icon">
+        <span>マイページ</span>
+      </a>
+
+      <a href="{% url 'inventory:settings_tabs' %}">
+        <img src="{% static 'images/設定.png' %}" alt="" class="bottom-nav-icon">
+        <span>設定</span>
+      </a>
     </nav>
     {% endif %}
   </div>
