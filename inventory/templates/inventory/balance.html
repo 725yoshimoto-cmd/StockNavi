@@ -7,37 +7,59 @@
 </p>
 
 <style>
-  /* 進捗バー */
-  .progress-wrap { width: 180px; background: #eee; border-radius: 999px; overflow: hidden; }
-  .progress-bar { height: 10px; }
-  .progress-text { font-size: 12px; }
 
   /* 画面上部の行：左(ドロップダウン) / 右(目標) */
   .top-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    flex-wrap:wrap;
-    margin: 10px 0 6px;
+    margin: 10px 0 14px;
   }
   .top-left{
     display:flex;
+    justify-content:flex-end;
     align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom: 14px;
   }
+  .top-left label{
+    font-weight:bold;
+    margin:0;
+  }
+  .top-left select{
+    width: 160px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+  }
+  .balance-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:12px;
+    margin: 8px 0 12px;
+  }
+
+  .balance-head h2{
+    margin:0;
+  }
+
   .top-right{
     text-align:right;
     font-weight:bold;
     line-height:1.2;
+    margin:0;
+    padding-bottom: 4px;
   }
+
   .top-right .num{
     font-size:22px;
   }
 
   /* 円グラフはスマホ幅に合わせる */
-  #balancePie { max-width: 100%; height: auto; }
+  #balancePie {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto 8px;
+  }
 
   /* テーブルをスクロール化 */
   .table-wrap{
@@ -64,15 +86,16 @@
     z-index:1;
     text-align:left;
   }
+  .balance-subtitle{
+    margin: 8px 0 12px;
+  }
 </style>
-
-<h1>備蓄バランス確認</h1>
 
 <!-- ✅ 上段：保管場所プルダウン（自動切替）＋ 目標日数 -->
 <form method="get" class="top-row">
   <div class="top-left">
     <label for="storageSelect">保管場所</label>
-    <select id="storageSelect" name="storage" onchange="this.form.submit()" style="padding:6px 10px;">
+    <select id="storageSelect" name="storage" onchange="this.form.submit()">
       <option value="">すべて</option>
       {% for s in storages %}
         <option value="{{ s.id }}" {% if storage_id|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>
@@ -81,22 +104,21 @@
       {% endfor %}
     </select>
   </div>
+</form>
+
+<div class="balance-head">
+  <h3>備蓄全体バランス</h3>
 
   <div class="top-right">
     備蓄目標<br>
     <span class="num">{{ target_days }}</span> 日分
   </div>
-</form>
+</div>
 
-<hr>
-
-<h2>分類別の割合</h2>
 <!-- ✅ 円グラフ（復旧） -->
 <canvas id="balancePie"></canvas>
 
-<hr style="margin: 18px 0;">
-
-<h2>分類ごとの達成度</h2>
+<h3 class="balance-subtitle">分類ごとの達成度</h3>
 
 <div class="table-wrap">
   <table>
@@ -106,7 +128,6 @@
         <th>目標</th>
         <th>現在</th>
         <th>達成度</th>
-        <th>割合</th>
       </tr>
     </thead>
 
@@ -117,7 +138,7 @@
 
           <td>
             {% if r.goal_amount %}
-              {{ r.goal_amount }} {{ r.goal_unit }}
+              {{ r.goal_amount }}
             {% else %}
               -
             {% endif %}
@@ -125,32 +146,14 @@
 
           <td>
             {{ r.current_amount|floatformat:1 }}
-            {% if r.goal_unit %} {{ r.goal_unit }}{% endif %}
           </td>
 
-          <td>
-            <div class="progress-text">
-              {{ r.achievement_percent|floatformat:0 }} %
-            </div>
-
-            <div class="progress-wrap">
-              <div class="progress-bar"
-                style="
-                  width: {% if r.achievement_percent > 100 %}100{% else %}{{ r.achievement_percent|floatformat:0 }}{% endif %}%;
-                  background-color: {% if r.achievement_percent < 100 %}#f44336{% else %}#4caf50{% endif %};
-                ">
-              </div>
-            </div>
-          </td>
-
-          <td>{{ r.share_percent|floatformat:0 }} %</td>
+          <td>{{ r.achievement_percent|floatformat:0 }} %</td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
-
-<p style="margin-top:10px;">合計：{{ total|floatformat:1 }}</p>
 
 <!-- ✅ Chart.js（既存通り） -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
