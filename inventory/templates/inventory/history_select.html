@@ -8,50 +8,278 @@
   履歴選択
 </p>
 
-<h2>過去の登録履歴</h2>
+<div style="
+  display:grid;
+  grid-template-columns: 1fr 40px 32px 32px;
+  align-items:center;
+  column-gap:10px;
+  margin:12px 0 18px;
+">
+  <form method="get" action="{% url 'inventory:inventory_history_select' %}" style="display:contents;">
+    <input type="hidden" name="category" value="{{ selected_category }}">
+    <input type="hidden" name="storage" value="{{ selected_storage }}">
+    <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
 
-<p>
-  <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline">
-    在庫一覧へ戻る
-  </a>
-</p>
+    <div style="width:100%; min-width:0;">
+      <input
+        type="text"
+        name="q"
+        value="{{ q }}"
+        placeholder="商品名で検索"
+        style="
+          width:100%;
+          height:40px;
+          padding:0 14px;
+          border:1px solid #bfc7d4;
+          border-radius:12px;
+          background:#fff;
+          font-size:16px;
+          color:#333;
+          box-sizing:border-box;
+        "
+      >
+    </div>
 
-<hr>
+    <button type="submit" aria-label="検索"
+            style="
+              width:40px; height:40px; border:none; background:transparent;
+              display:flex; align-items:center; justify-content:center;
+              padding:0; margin:0; cursor:pointer;
+            ">
+      <img src="{% static 'images/検索.png' %}" alt="検索"
+           style="width:26px; height:26px; object-fit:contain; display:block;">
+    </button>
+  </form>
 
-<div style="display:flex; gap:8px; margin:12px 0;">
-  <button type="submit"
-          class="btn btn-success"
-          form="historyBulkForm"
-          formaction="{% url 'inventory:inventory_history_bulk_duplicate' %}">
-    在庫一覧に複製
+  <button type="submit" form="historyBulkForm"
+          formaction="{% url 'inventory:inventory_history_bulk_duplicate' %}"
+          aria-label="複製"
+          style="
+            width:32px; height:40px; border:none; background:transparent;
+            display:flex; align-items:center; justify-content:center;
+            padding:0; margin:0; cursor:pointer;
+          ">
+    <img src="{% static 'images/copy.png' %}" alt="複製"
+         style="width:26px; height:26px; object-fit:contain; display:block;">
   </button>
 
-  <button type="submit"
-          class="icon-btn"
+  <button type="button"
+          id="openDeleteModal"
           aria-label="削除"
-          form="historyBulkForm"
-          formaction="{% url 'inventory:inventory_history_delete' %}"
-          onclick="return confirm('選択した履歴を削除しますか？');">
-    <img src="{% static 'images/trash.png' %}" alt="削除">
+          style="
+            width:32px; height:40px; border:none; background:transparent;
+            display:flex; align-items:center; justify-content:center;
+            padding:0; margin:0; cursor:pointer;
+          ">
+    <img src="{% static 'images/trash.png' %}" alt="削除"
+         style="width:26px; height:26px; object-fit:contain; display:block;">
   </button>
 </div>
+
+<form method="get" action="{% url 'inventory:inventory_history_select' %}">
+  <input type="hidden" name="q" value="{{ q|default:'' }}">
+  <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
+
+  <div style="
+    display:grid;
+    grid-template-columns: auto 1fr auto 1fr;
+    column-gap:10px;
+    align-items:center;
+    margin:6px 0 14px;
+  ">
+    <label for="category-select"
+          style="font-size:15px; font-weight:700; color:#333; white-space:nowrap; margin:0;">
+      分類
+    </label>
+
+    <select id="category-select" name="category" onchange="this.form.submit()"
+            style="
+              width:100%;
+              min-width:0;
+              height:40px;
+              padding:0 10px;
+              border:1px solid #c8ced8;
+              border-radius:12px;
+              background:#fff;
+              font-size:15px;
+              color:#222;
+              box-sizing:border-box;
+            ">
+      <option value="">すべて</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:"s" %}selected{% endif %}>
+          {{ c.name }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="storage-select"
+          style="font-size:15px; font-weight:700; color:#333; white-space:nowrap; margin:0;">
+      保管場所
+    </label>
+
+    <select id="storage-select" name="storage" onchange="this.form.submit()"
+            style="
+              width:100%;
+              min-width:0;
+              height:40px;
+              padding:0 10px;
+              border:1px solid #c8ced8;
+              border-radius:12px;
+              background:#fff;
+              font-size:15px;
+              color:#222;
+              box-sizing:border-box;
+            ">
+      <option value="">すべて</option>
+      {% for s in storages %}
+        <option value="{{ s.id }}" {% if selected_storage == s.id|stringformat:"s" %}selected{% endif %}>
+          {{ s.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
 
 <form id="historyBulkForm" method="post">
   {% csrf_token %}
 
   {% for item in items %}
-    <div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
-      <input type="checkbox" name="selected_ids" value="{{ item.id }}">
+    <div style="
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+      padding:14px 10px;
+      border-bottom:1px solid #e5e5e5;
+    ">
+      <div style="padding-top:8px;">
+        <input type="checkbox" name="selected_ids" value="{{ item.id }}" style="width:22px; height:22px;">
+      </div>
 
-      <strong>{{ item.name }}</strong><br>
-      {% if item.category %}分類：{{ item.category.name }}<br>{% endif %}
-      個数：{{ item.quantity }}<br>
-      {% if item.expiry_date %}賞味期限：{{ item.expiry_date }}<br>{% endif %}
-      {% if item.storage_location %}保管：{{ item.storage_location.name }}<br>{% endif %}
+      <div style="
+        width:72px;
+        height:72px;
+        background:#f0f0f0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:#11b57c;
+        font-weight:bold;
+        font-size:14px;
+        text-align:center;
+        line-height:1.4;
+        flex-shrink:0;
+      ">
+        {% if item.image %}
+          <img src="{{ item.image.url }}" alt="{{ item.name }}" style="width:72px; height:72px; object-fit:cover;">
+        {% else %}
+          商品<br>画像
+        {% endif %}
+      </div>
+
+      <div style="flex:1; min-width:0;">
+        <div style="
+          color:#11b57c;
+          font-size:18px;
+          font-weight:700;
+          line-height:1.5;
+          word-break:break-word;
+          margin-bottom:6px;
+        ">
+          {{ item.name }}
+        </div>
+      </div>
+
+      <div style="
+        width:130px;
+        flex-shrink:0;
+        color:#11b57c;
+        font-size:16px;
+        line-height:1.7;
+        text-align:left;
+      ">
+        {% if item.category %}<div>分類：{{ item.category.name }}</div>{% endif %}
+        <div>個数：{{ item.quantity }}</div>
+        {% if item.storage_location %}<div>保管：{{ item.storage_location.name }}</div>{% endif %}
+      </div>
     </div>
   {% empty %}
     <p>履歴はありません。</p>
   {% endfor %}
 </form>
+
+<div id="deleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:1000;">
+  <div style="
+    width:280px;
+    margin:180px auto 0;
+    background:#fff;
+    border:1px solid #999;
+    border-radius:16px;
+    padding:20px;
+    text-align:center;
+  ">
+    <div style="color:#e53935; font-size:28px; font-weight:700; margin-bottom:20px;">
+      削除確認
+    </div>
+
+    <div style="font-size:18px; line-height:1.7; margin-bottom:20px; color:#333;">
+      この商品を削除すると<br>
+      元に戻せません。<br>
+      本当に削除しますか？
+    </div>
+
+    <div style="display:flex; justify-content:center; gap:16px;">
+      <button type="button" id="confirmDeleteBtn"
+              style="background:#ef5350; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-weight:bold;">
+        はい
+      </button>
+
+      <button type="button" id="cancelDeleteBtn"
+              style="background:#4f83ff; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-weight:bold;">
+        いいえ
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const openDeleteModalBtn = document.getElementById("openDeleteModal");
+  const deleteModal = document.getElementById("deleteModal");
+  const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+  const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+  const historyBulkForm = document.getElementById("historyBulkForm");
+
+  if (openDeleteModalBtn) {
+    openDeleteModalBtn.addEventListener("click", function () {
+      const checked = document.querySelectorAll('input[name="selected_ids"]:checked');
+      if (checked.length === 0) {
+        alert("削除する履歴を選択してください。");
+        return;
+      }
+      deleteModal.style.display = "block";
+    });
+  }
+
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener("click", function () {
+      deleteModal.style.display = "none";
+    });
+  }
+
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener("click", function () {
+      historyBulkForm.action = "{% url 'inventory:inventory_history_delete' %}";
+      historyBulkForm.submit();
+    });
+  }
+
+  if (deleteModal) {
+    deleteModal.addEventListener("click", function (e) {
+      if (e.target === deleteModal) {
+        deleteModal.style.display = "none";
+      }
+    });
+  }
+</script>
 
 {% endblock %}

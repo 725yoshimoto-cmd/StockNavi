@@ -753,16 +753,59 @@ class InventoryHistoryListView(LoginRequiredMixin, HouseholdRequiredMixin, ListV
     context_object_name = "items"
 
     def get_queryset(self):
-        return (
+        household = self.request.user.household
+
+        qs = (
             InventoryItem.objects
             .filter(
-                household=self.request.user.household,
-                is_deleted=True
+                household=household,
+                is_deleted=True  # ←ここが違うだけ！！
             )
             .select_related("storage_location", "category")
-            .order_by("name")
         )
 
+        # 分類絞り込み
+        category_id = self.request.GET.get("category")
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+
+        # 保管場所絞り込み
+        storage_id = self.request.GET.get("storage")
+        if storage_id:
+            qs = qs.filter(storage_location_id=storage_id)
+
+        # 検索
+        q = self.request.GET.get("q")
+        if q:
+            qs = qs.filter(name__icontains=q)
+
+        # 並び替え
+        sort = self.request.GET.get("sort", "")
+
+        if sort == "expiry":
+            qs = qs.order_by(models.F("expiry_date").asc(nulls_last=True), "name")
+        elif sort == "quantity":
+            qs = qs.order_by("quantity", "name")
+        elif sort == "name":
+            qs = qs.order_by("name")
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        household = self.request.user.household
+
+        context["categories"] = Category.objects.filter(household=household).order_by("name")
+        context["storages"] = StorageLocation.objects.filter(household=household).order_by("name")
+
+        context["selected_category"] = self.request.GET.get("category", "")
+        context["selected_storage"] = self.request.GET.get("storage", "")
+        context["q"] = self.request.GET.get("q", "")
+        context["sort"] = self.request.GET.get("sort", "")
+
+        return context
+    
 # 履歴選択画面（HistorySelectView）（ログイン必須）
 class InventoryHistorySelectView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
     model = InventoryItem
@@ -770,15 +813,60 @@ class InventoryHistorySelectView(LoginRequiredMixin, HouseholdRequiredMixin, Lis
     context_object_name = "items"
 
     def get_queryset(self):
-        return (
+        household = self.request.user.household
+
+        qs = (
             InventoryItem.objects
             .filter(
-                household=self.request.user.household,
+                household=household,
                 is_deleted=True
             )
-            .order_by("name")
+            .select_related("storage_location", "category")
         )
 
+        # 分類絞り込み
+        category_id = self.request.GET.get("category")
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+
+        # 保管場所絞り込み
+        storage_id = self.request.GET.get("storage")
+        if storage_id:
+            qs = qs.filter(storage_location_id=storage_id)
+
+        # 商品名検索
+        q = self.request.GET.get("q")
+        if q:
+            qs = qs.filter(name__icontains=q)
+
+        # 並び替え
+        sort = self.request.GET.get("sort", "")
+        if sort == "name":
+            qs = qs.order_by("name")
+        elif sort == "new":
+            qs = qs.order_by("-id")
+        elif sort == "old":
+            qs = qs.order_by("id")
+        else:
+            qs = qs.order_by("name")
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        household = self.request.user.household
+
+        context["categories"] = Category.objects.filter(household=household).order_by("name")
+        context["storages"] = StorageLocation.objects.filter(household=household).order_by("name")
+
+        context["selected_category"] = self.request.GET.get("category", "")
+        context["selected_storage"] = self.request.GET.get("storage", "")
+        context["q"] = self.request.GET.get("q", "")
+        context["sort"] = self.request.GET.get("sort", "")
+
+        return context
+    
 # 履歴完全削除画面（HistoryDeleteView）（ログイン必須）
 class InventoryHistoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     def post(self, request):
