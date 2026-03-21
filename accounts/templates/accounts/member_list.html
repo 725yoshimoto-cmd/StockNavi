@@ -92,8 +92,7 @@
   </p>
 
   <div class="member-header">
-    {# 招待リンク発行履歴ページへ移動 既存実装に合わせてURL名を使う #}
-    <a href="{% url 'inventory:invite_token_list' %}" class="member-add-btn" aria-label="メンバーを招待する">＋</a>
+    <a href="{% url 'inventory:invite_create' %}" class="member-add-btn" aria-label="メンバーを招待する">＋</a>
   </div>
 
   {% if members %}
