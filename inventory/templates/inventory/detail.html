@@ -6,7 +6,8 @@
 {% block content %}
 <style>
   .detail-page {
-    max-width: 420px;
+    width: 100%;
+    max-width: 560px;
     margin: 0 auto;
     padding: 12px 16px 24px;
   }
@@ -29,25 +30,29 @@
     margin-bottom: 20px;
   }
 
-  .detail-title {
-    margin: 0;
-    font-size: 28px;
-    font-weight: bold;
-    color: #222;
+  .detail-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;  /* 左にタイトル、右に鉛筆 */
+    margin: 0 0 18px;
   }
 
-  .edit-icon-link {
+  .detail-title {
+    margin: 0;
+  }
+
+  .detail-edit-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    text-decoration: none;
-    font-size: 26px;
-    color: #9a9a9a;
-    line-height: 1;
   }
 
+  .detail-edit-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    display: block;
+  }
   .detail-image-wrap {
     text-align: center;
     margin-bottom: 20px;
@@ -209,20 +214,20 @@
     <span>商品情報</span>
   </p>
 
-  <div class="detail-header">
-    <h1 class="detail-title">商品情報</h1>
+  <div class="detail-image-area">
 
-    <a href="{% url 'inventory:inventory_edit' item.pk %}" class="edit-icon-link" aria-label="商品編集">
-      ✎
+    <div class="detail-image-wrap">
+      {% if item.image %}
+        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="detail-image">
+      {% else %}
+        <div class="detail-image-placeholder">PHOTO</div>
+      {% endif %}
+    </div>
+
+    <a href="{% url 'inventory:inventory_edit' object.pk %}" class="detail-edit-link" aria-label="編集">
+      <img src="{% static 'images/edit.png' %}" alt="編集" class="detail-edit-icon">
     </a>
-  </div>
 
-  <div class="detail-image-wrap">
-    {% if item.image %}
-      <img src="{{ item.image.url }}" alt="{{ item.name }}" class="detail-image">
-    {% else %}
-      <div class="detail-image-placeholder">PHOTO</div>
-    {% endif %}
   </div>
 
   <div class="detail-fields">
@@ -258,7 +263,7 @@
     <div class="detail-row">
       <div class="detail-label">(消費・賞味)期限</div>
       <div class="detail-value">
-        {% if item.expiry_date %}{{ item.expiry_date|date:"Y/m/d" }}{% else %}-{% endif %}
+        {% if item.expiry_date %}{{ item.expiry_date|date:"Y/m" }}{% else %}-{% endif %}
       </div>
     </div>
 
@@ -270,17 +275,19 @@
     </div>
   </div>
 
-  <div class="detail-actions">
-    <form method="post" action="{% url 'inventory:inventory_duplicate' item.pk %}">
-      {% csrf_token %}
-      <button type="submit" class="btn-duplicate">複製</button>
-    </form>
+  <div class="action-button-wrap">
+    <a href="{% url 'inventory:inventory_duplicate' object.pk %}" class="action-button action-button-copy">
+      複製
+    </a>
   </div>
 
-  <div class="detail-delete">
-    <button type="button" class="btn-delete-outline" onclick="openDeleteModal()">
+  <hr class="detail-divider">
+
+  <div class="delete-button-wrap">
+    <a href="{% url 'inventory:inventory_delete' object.pk %}" class="action-button action-button-delete">
+      <span class="delete-icon">🗑</span>
       この商品を削除
-    </button>
+    </a>
   </div>
 </div>
 
