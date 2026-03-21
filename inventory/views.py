@@ -1460,54 +1460,62 @@ class MemoListView(LoginRequiredMixin, HouseholdRequiredMixin, ListView):
         household = self.request.user.household
         qs = Memo.objects.filter(household=household)
 
-        # ✅ 検索（title）
+        # 検索（タイトルではなく本文で検索）
         q = (self.request.GET.get("q") or "").strip()
         if q:
-            qs = qs.filter(title__icontains=q)
+            qs = qs.filter(body__icontains=q)
 
-        # ✅ 並び替え（テンプレの value と一致させる）
-        sort = self.request.GET.get("sort") or "created_desc"
+        # 並び替え
+        sort = self.request.GET.get("sort") or "updated_desc"
 
-        if sort == "created_asc":
+        if sort == "updated_asc":
             qs = qs.order_by("created_at")
-        elif sort == "created_desc":
+        elif sort == "updated_desc":
             qs = qs.order_by("-created_at")
+        elif sort == "user_asc":
+            qs = qs.order_by("user__username", "-created_at")
+        elif sort == "user_desc":
+            qs = qs.order_by("-user__username", "-created_at")
         else:
-            # updated_* はモデルに updated_at が無いので、created_at にフォールバック
             qs = qs.order_by("-created_at")
 
         return qs
-        
+            
 # メモ追加（ログイン必須）
 class MemoCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView):
     model = Memo
-    fields = ["title", "body"]
+    fields = ["body"]
     template_name = "memo/form.html"
     success_url = reverse_lazy("inventory:memo_list")
 
     def form_valid(self, form):
-        # household を自動セット（NOT NULL対策）
         form.instance.household = self.request.user.household
-        # 作成者を自動セット
         form.instance.user = self.request.user
-        return super().form_valid(form)
 
+        body = (form.instance.body or "").strip()
+        form.instance.title = body[:20] if body else "メモ"
+
+        return super().form_valid(form)
+    
 # メモ編集（ログイン必須）
 class MemoUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
     model = Memo
-    fields = ["title", "body"]
+    fields = ["body"]
     template_name = "memo/form.html"
     success_url = reverse_lazy("inventory:memo_list")
 
     def get_queryset(self):
         return Memo.objects.filter(household=self.request.user.household)
 
-    
     def form_valid(self, form):
         form.instance.household = self.request.user.household
         form.instance.user = self.request.user
-        return super().form_valid(form)
 
+        body = (form.instance.body or "").strip()
+        form.instance.title = body[:20] if body else "メモ"
+
+        return super().form_valid(form)
+    
 # メモ削除（ログイン必須）
 class MemoDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, DeleteView):
     model = Memo

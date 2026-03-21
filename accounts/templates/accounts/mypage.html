@@ -84,16 +84,28 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 240px;
-    height: 56px;
-    padding: 0 24px;
-    border: 1px solid #d1d5db;
-    border-radius: 18px;
+    width: 180px;
+    height: 44px;
+    padding: 0 20px;
+    border: 1px solid #bfc5ce;
+    border-radius: 999px;
     background: #fff;
     color: #ef4444;
     font-size: 18px;
     font-weight: 700;
     cursor: pointer;
+  }
+
+  .mypage-save-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 180px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    font-size: 18px;
+    font-weight: 700;
   }
 
   .mypage-modal-backdrop {
@@ -165,6 +177,86 @@
     font-weight: 700;
     cursor: pointer;
   }
+
+  .custom-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 900;
+  }
+
+  .custom-modal-backdrop.is-open {
+    display: block;
+  }
+
+  .custom-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    background: #fff;
+    border: 1px solid #666;
+    border-radius: 12px;
+    padding: 18px 14px 16px;
+    box-sizing: border-box;
+    z-index: 901;
+    box-shadow: none;
+  }
+
+  .custom-modal.is-open {
+    display: block;
+  }
+
+  .custom-modal-title {
+    margin: 0 0 12px;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    color: #ef4444;
+  }
+
+  .custom-modal-text {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    color: #333;
+  }
+
+  .custom-modal-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .custom-modal-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 72px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .custom-modal-btn-cancel {
+    background: #4f8df7;
+    color: #fff;
+  }
+
+  .custom-modal-btn-danger {
+    background: #ef6b63;
+    color: #fff;
+  }
+
 </style>
 
 <div class="mypage-page">
@@ -222,20 +314,48 @@
     </p>
 
     <div class="form-submit-center">
-      <button type="submit" class="btn-primary-mid">保存</button>
+      <button type="submit" class="btn-primary-mid mypage-save-btn">保存</button>
     </div>
   </form>
 
   <hr class="mypage-divider">
 
   <div class="mypage-logout-wrap">
-    <form method="post" action="{% url 'logout' %}"
-          onsubmit="return confirm('ログアウトしますか？');">
-      {% csrf_token %}
-      <button type="submit" class="mypage-logout-btn">ログアウト</button>
-    </form>
+    <button
+      type="button"
+      class="mypage-logout-btn"
+      id="logoutOpenBtn"
+      onclick="openLogoutModal(); return false;"
+    >
+      ログアウト
+    </button>
   </div>
 
+  <div class="custom-modal-backdrop" id="logoutModalBackdrop"></div>
+
+  <div class="custom-modal" id="logoutModal">
+    <h2 class="custom-modal-title">ログアウト確認</h2>
+    <p class="custom-modal-text">
+      本当にログアウトしますか？
+    </p>
+
+    <div class="custom-modal-actions">
+      <button
+        type="button"
+        class="custom-modal-btn custom-modal-btn-cancel"
+        id="logoutCancelBtn"
+      >
+        いいえ
+      </button>
+
+      <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" class="custom-modal-btn custom-modal-btn-danger">
+          はい
+        </button>
+      </form>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -245,13 +365,17 @@
   const mypageModalClose = document.getElementById("mypageModalClose");
 
   function openMypageModal() {
-    mypageModal.classList.add("is-open");
-    mypageModalBackdrop.classList.add("is-open");
+    if (mypageModal && mypageModalBackdrop) {
+      mypageModal.classList.add("is-open");
+      mypageModalBackdrop.classList.add("is-open");
+    }
   }
 
   function closeMypageModal() {
-    mypageModal.classList.remove("is-open");
-    mypageModalBackdrop.classList.remove("is-open");
+    if (mypageModal && mypageModalBackdrop) {
+      mypageModal.classList.remove("is-open");
+      mypageModalBackdrop.classList.remove("is-open");
+    }
   }
 
   if (mypageMenuBtn) {
@@ -264,6 +388,32 @@
 
   if (mypageModalClose) {
     mypageModalClose.addEventListener("click", closeMypageModal);
+  }
+
+  const logoutModal = document.getElementById("logoutModal");
+  const logoutModalBackdrop = document.getElementById("logoutModalBackdrop");
+  const logoutCancelBtn = document.getElementById("logoutCancelBtn");
+
+  function openLogoutModal() {
+    if (logoutModal && logoutModalBackdrop) {
+      logoutModal.classList.add("is-open");
+      logoutModalBackdrop.classList.add("is-open");
+    }
+  }
+
+  function closeLogoutModal() {
+    if (logoutModal && logoutModalBackdrop) {
+      logoutModal.classList.remove("is-open");
+      logoutModalBackdrop.classList.remove("is-open");
+    }
+  }
+
+  if (logoutCancelBtn) {
+    logoutCancelBtn.addEventListener("click", closeLogoutModal);
+  }
+
+  if (logoutModalBackdrop) {
+    logoutModalBackdrop.addEventListener("click", closeLogoutModal);
   }
 </script>
 {% endblock %}

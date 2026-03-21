@@ -74,8 +74,6 @@
   <span>{% if object %}分類編集{% else %}分類登録{% endif %}</span>
 </p>
 
-<h1 class="page-title">分類を追加</h1>
-
 <form method="post" class="category-form-page">
   {% csrf_token %}
 
@@ -156,6 +154,6 @@
   </div>
 </form>
 
-<p><a href="{% url 'inventory:settings_tabs' %}?tab=category">一覧へ戻る</a></p>
+
 
 {% endblock %}

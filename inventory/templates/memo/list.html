@@ -4,104 +4,417 @@
 {% block title %}メモ一覧{% endblock %}
 {% block content %}
 
-<p class="breadcrumb">
-  <span>メモ</span>
-</p>
+<style>
+  .memo-page {
+    max-width: 360px;
+    margin: 0 auto;
+    padding: 8px 16px 24px;
+  }
 
-<form method="get" class="memo-toolbar">
-  <div class="memo-search-wrap">
-    <input
-      type="text"
-      name="q"
-      value="{{ request.GET.q|default:'' }}"
-      placeholder="キーワード検索"
+  .memo-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .memo-search-wrap {
+    flex: 1;
+  }
+
+  .memo-search-wrap input {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #c8ced8;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 16px;
+    box-sizing: border-box;
+    background: #fff;
+  }
+
+  .memo-icon-btn,
+  .memo-fab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .memo-fab {
+    border-radius: 50%;
+    background: #d9a63a;
+    color: #fff;
+    font-size: 34px;
+    line-height: 1;
+  }
+
+  .memo-icon-btn img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+  }
+
+  .memo-table-wrap {
+    margin-top: 14px;
+    border: 1px solid #bfbfbf;
+    background: #fff;
+  }
+
+  .memo-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .memo-table th,
+  .memo-table td {
+    border: 1px solid #bfbfbf;
+    padding: 8px 6px;
+    vertical-align: top;
+    font-size: 14px;
+    color: #333;
+    background: #fff;
+    word-break: break-word;
+  }
+
+  .memo-table th {
+    text-align: center;
+    font-weight: 700;
+    background: #f7f7f7;
+  }
+
+  .memo-col-check {
+    width: 44px;
+    text-align: center;
+  }
+
+  .memo-col-date {
+    width: 92px;
+    text-align: center;
+  }
+
+  .memo-col-user {
+    width: 88px;
+    text-align: center;
+  }
+
+  .memo-col-body {
+    width: auto;
+  }
+
+  .memo-checkbox {
+    width: 18px;
+    height: 18px;
+  }
+
+  .memo-date-link {
+    color: #222;
+    font-weight: 700;
+    text-decoration: underline;
+  }
+
+  .memo-user-cell {
+    text-align: center;
+    font-weight: 700;
+  }
+
+  .memo-body-cell {
+    vertical-align: top !important;
+    text-align: left;
+    padding-top: 8px !important;
+  }
+
+  .memo-body-content {
+    display: block;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .memo-empty {
+    margin-top: 16px;
+    color: #555;
+  }
+
+  .memo-delete-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 900;
+  }
+
+  .memo-delete-backdrop.is-open {
+    display: block;
+  }
+
+  .memo-delete-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    background: #fff;
+    border: 1px solid #666;
+    border-radius: 12px;
+    padding: 18px 14px 16px;
+    box-sizing: border-box;
+    z-index: 901;
+  }
+
+  .memo-delete-modal.is-open {
+    display: block;
+  }
+
+  .memo-delete-title {
+    margin: 0 0 12px;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    color: #ef4444;
+  }
+
+  .memo-delete-text {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: center;
+    color: #333;
+  }
+
+  .memo-delete-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .memo-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .memo-delete-btn-danger {
+    background: #ef6b63;
+  }
+
+  .memo-delete-btn-cancel {
+    background: #4f8df7;
+  }
+</style>
+
+<div class="memo-page">
+  <p class="breadcrumb">
+    <span>メモ一覧</span>
+  </p>
+
+  <form method="get" class="memo-toolbar">
+    <div class="memo-search-wrap">
+      <input
+        type="text"
+        name="q"
+        value="{{ request.GET.q|default:'' }}"
+        placeholder="キーワード検索"
+      >
+    </div>
+
+    <button type="submit" class="memo-icon-btn" aria-label="検索">
+      <img src="{% static 'images/検索.png' %}" alt="検索">
+    </button>
+
+    <a href="{% url 'inventory:memo_add' %}" class="memo-fab" aria-label="メモを追加">
+      +
+    </a>
+
+    <button
+      type="button"
+      id="memoDeleteOpenBtn"
+      class="memo-icon-btn"
+      aria-label="選択メモを削除"
+      title="選択メモを削除"
     >
+      <img src="{% static 'images/trash.png' %}" alt="削除">
+    </button>
+  </form>
+
+  <form id="bulkDeleteForm" method="post" action="{% url 'inventory:memo_bulk_delete' %}">
+    {% csrf_token %}
+
+    {% if object_list %}
+      <div class="memo-table-wrap">
+        <table class="memo-table">
+          <thead>
+            <tr>
+              <th class="memo-col-check">選択</th>
+              <th class="memo-col-date">
+                <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}sort={% if request.GET.sort == 'updated_asc' %}updated_desc{% else %}updated_asc{% endif %}">
+                  更新日▽
+                </a>
+              </th>
+              <th class="memo-col-user">
+                <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}sort={% if request.GET.sort == 'user_asc' %}user_desc{% else %}user_asc{% endif %}">
+                  ユーザー名▽
+                </a>
+              </th>
+              <th class="memo-col-body">メモ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for memo in object_list %}
+              <tr>
+                <td class="memo-col-check">
+                  <input
+                    type="checkbox"
+                    class="memo-checkbox"
+                    name="selected_ids"
+                    value="{{ memo.pk }}"
+                  >
+                </td>
+
+                <td class="memo-col-date">
+                  <a href="{% url 'inventory:memo_edit' memo.pk %}" class="memo-date-link">
+                    {% if memo.updated_at %}
+                      {{ memo.updated_at|date:"Y/m/d" }}
+                    {% elif memo.created_at %}
+                      {{ memo.created_at|date:"Y/m/d" }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </a>
+                </td>
+
+                <td class="memo-user-cell">
+                  {% if memo.user %}
+                    {{ memo.user.username }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+
+                <td class="memo-body-cell">
+                  {% if memo.body %}
+                    <div class="memo-body-content">{{ memo.body|linebreaksbr }}</div>
+                  {% else %}
+                    <div class="memo-body-content">-</div>
+                  {% endif %}
+                </td>
+
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="memo-empty">メモがまだありません。</p>
+    {% endif %}
+  </form>
+
+  <div class="memo-delete-backdrop" id="memoDeleteModalBackdrop"></div>
+
+  <div class="memo-delete-modal" id="memoDeleteModal">
+    <h2 class="memo-delete-title">削除確認</h2>
+    <p class="memo-delete-text">
+      このメモを削除すると<br>
+      元に戻せません。<br>
+      本当に削除しますか？
+    </p>
+
+    <div class="memo-delete-actions">
+      <button
+        type="button"
+        class="memo-delete-btn memo-delete-btn-danger"
+        id="memoDeleteSubmitBtn"
+      >
+        はい
+      </button>
+
+      <button
+        type="button"
+        class="memo-delete-btn memo-delete-btn-cancel"
+        id="memoDeleteCancelBtn"
+      >
+        いいえ
+      </button>
+    </div>
   </div>
-
-  <button type="submit" class="search-icon-btn" aria-label="検索">
-    <img src="{% static 'images/検索.png' %}" alt="検索">
-  </button>
-
-  <a href="{% url 'inventory:memo_add' %}" class="fab" aria-label="メモを追加">
-    +
-  </a>
-
-  <button type="submit"
-          form="bulkDeleteForm"
-          class="icon-btn"
-          aria-label="選択メモを削除"
-          title="選択メモを削除"
-          onclick="return confirm('選択したメモを削除しますか？');">
-    <img src="{% static 'images/trash.png' %}" alt="削除">
-  </button>
-</form>
-
-<form method="get" class="memo-sort-form">
-  <select name="sort" onchange="this.form.submit()">
-    <option value="created_desc" {% if request.GET.sort == "created_desc" or not request.GET.sort %}selected{% endif %}>
-      作成日：新しい順
-    </option>
-    <option value="created_asc" {% if request.GET.sort == "created_asc" %}selected{% endif %}>
-      作成日：古い順
-    </option>
-  </select>
-  {% if request.GET.q %}
-    <input type="hidden" name="q" value="{{ request.GET.q }}">
-  {% endif %}
-</form>
-
-<form id="bulkDeleteForm" method="post" action="{% url 'inventory:memo_bulk_delete' %}">
-  {% csrf_token %}
-</form>
-
-<hr>
+</div>
 
 <script>
-  // チェックされた memo の id を hidden に詰めて POST 送信
-  document.getElementById("bulkDeleteForm").addEventListener("submit", function(e){
+  const bulkDeleteForm = document.getElementById("bulkDeleteForm");
+  const memoDeleteOpenBtn = document.getElementById("memoDeleteOpenBtn");
+  const memoDeleteModal = document.getElementById("memoDeleteModal");
+  const memoDeleteModalBackdrop = document.getElementById("memoDeleteModalBackdrop");
+  const memoDeleteCancelBtn = document.getElementById("memoDeleteCancelBtn");
+  const memoDeleteSubmitBtn = document.getElementById("memoDeleteSubmitBtn");
+
+  function openMemoDeleteModal() {
     const checked = document.querySelectorAll('input[name="selected_ids"]:checked');
     if (checked.length === 0) {
-      e.preventDefault();
       alert("削除するメモを選択してください。");
       return;
     }
-    // 既存 hidden を削除（連打対策）
-    this.querySelectorAll('input[type="hidden"][name="selected_ids"]').forEach(x => x.remove());
-    // checked を hidden で詰める
-    checked.forEach(cb => {
-      const h = document.createElement("input");
-      h.type = "hidden";
-      h.name = "selected_ids";
-      h.value = cb.value;
-      this.appendChild(h);
+
+    if (memoDeleteModal && memoDeleteModalBackdrop) {
+      memoDeleteModal.classList.add("is-open");
+      memoDeleteModalBackdrop.classList.add("is-open");
+    }
+  }
+
+  function closeMemoDeleteModal() {
+    if (memoDeleteModal && memoDeleteModalBackdrop) {
+      memoDeleteModal.classList.remove("is-open");
+      memoDeleteModalBackdrop.classList.remove("is-open");
+    }
+  }
+
+  if (memoDeleteOpenBtn) {
+    memoDeleteOpenBtn.addEventListener("click", openMemoDeleteModal);
+  }
+
+  if (memoDeleteCancelBtn) {
+    memoDeleteCancelBtn.addEventListener("click", closeMemoDeleteModal);
+  }
+
+  if (memoDeleteModalBackdrop) {
+    memoDeleteModalBackdrop.addEventListener("click", closeMemoDeleteModal);
+  }
+
+  if (memoDeleteSubmitBtn && bulkDeleteForm) {
+    memoDeleteSubmitBtn.addEventListener("click", function () {
+      const checked = document.querySelectorAll('input[name="selected_ids"]:checked');
+
+      bulkDeleteForm
+        .querySelectorAll('input[type="hidden"][name="selected_ids"]')
+        .forEach(x => x.remove());
+
+      checked.forEach(cb => {
+        const h = document.createElement("input");
+        h.type = "hidden";
+        h.name = "selected_ids";
+        h.value = cb.value;
+        bulkDeleteForm.appendChild(h);
+      });
+
+      bulkDeleteForm.submit();
     });
-  });
-  
+  }
 </script>
-
-<!-- =========================
-     ③ メモ一覧（縦並び）
-     ========================= -->
-{% for memo in object_list %}
-  <div style="margin-bottom:16px; border-bottom:1px solid #eee; padding-bottom:12px; display:block; width:100%;">
-    <label style="display:block;">
-      <input type="checkbox" name="selected_ids" value="{{ memo.pk }}">
-      <strong style="margin-left:6px;">
-        <a href="{% url 'inventory:memo_edit' memo.pk %}">{{ memo.title }}</a>
-      </strong>
-    </label>
-
-    <div style="font-size:12px; margin-top:4px;">
-      {% if memo.created_at %}作成: {{ memo.created_at|date:"Y-m-d H:i" }}{% endif %}
-      {% if memo.user %} / 作成者: {{ memo.user }}{% endif %}
-    </div>
-
-    {% if memo.body %}
-      <p>{{ memo.body|linebreaksbr }}</p>
-    {% endif %}
-  </div>
-{% empty %}
-  <p>メモがまだありません。</p>
-{% endfor %}
 
 {% endblock %}

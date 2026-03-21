@@ -3,14 +3,10 @@
 {% block content %}
 
 <p class="breadcrumb">
-  <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
-  <span>＞</span>
-  <a href="{% url 'inventory:memo_list' %}">メモ</a>
+  <a href="{% url 'inventory:memo_list' %}">メモ一覧</a>
   <span>＞</span>
   <span>メモ登録</span>
 </p>
-
-<h1 class="page-title">メモを追加</h1>
 
 <form method="post">
   {% csrf_token %}
@@ -20,7 +16,5 @@
     <button type="submit" class="btn-primary-mid">登録</button>
   </div>
 </form>
-
-<p><a href="{% url 'inventory:memo_list' %}">一覧に戻る</a></p>
 
 {% endblock %}

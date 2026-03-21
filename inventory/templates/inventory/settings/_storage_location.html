@@ -94,9 +94,10 @@
   }
 </style>
 
-<form method="post" action="{% url 'inventory:settings_tabs' %}">
+<form method="post" action="{% url 'inventory:settings_tabs' %}" id="storageDeleteForm">
   {% csrf_token %}
   <input type="hidden" name="tab" value="storage">
+  <input type="hidden" name="action" value="bulk_delete_storage">
 
   <div class="sn-loc-search-row">
     <div class="sn-loc-search-wrap">
@@ -116,12 +117,10 @@
       <span>＋</span>
     </a>
 
-    <button type="submit"
-            name="action"
-            value="bulk_delete_storage"
+    <button type="button"
             class="icon-btn"
             aria-label="保管場所を削除"
-            onclick="return confirm('選択した保管場所を削除しますか？');">
+            onclick="openDeleteModal()">
       <img src="{% static 'images/trash.png' %}" alt="削除">
     </button>
   </div>
@@ -138,7 +137,6 @@
                 保管場所▽
               </a>
             </th>
-            <th class="sn-loc-col-desc">概要</th>
           </tr>
         </thead>
         <tbody>
@@ -153,13 +151,6 @@
                   {{ loc.name }}
                 </a>
               </td>
-              <td class="sn-loc-col-desc">
-                {% if loc.description %}
-                  {{ loc.description }}
-                {% else %}
-                  未設定
-                {% endif %}
-              </td>
             </tr>
           {% endfor %}
         </tbody>
@@ -169,3 +160,43 @@
     <p class="sn-loc-empty">保管場所はありません。</p>
   {% endif %}
 </form>
+
+<div id="deleteModal" class="modal-backdrop" style="display:none;">
+  <div class="modal-card">
+    <h2 class="modal-title modal-title-danger">削除確認</h2>
+
+    <p class="modal-body">
+      選択した保管場所を削除すると<br>
+      元に戻せません。<br>
+      本当に削除しますか？
+    </p>
+
+    <div class="modal-actions">
+      <button type="button" onclick="submitDelete()" class="modal-btn modal-btn-danger">
+        はい
+      </button>
+      <button type="button" onclick="closeDeleteModal()" class="modal-btn modal-btn-cancel">
+        いいえ
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openDeleteModal() {
+    const checked = document.querySelectorAll('input[name="selected_ids"]:checked');
+    if (checked.length === 0) {
+      alert("削除する保管場所を選択してください。");
+      return;
+    }
+    document.getElementById("deleteModal").style.display = "flex";
+  }
+
+  function closeDeleteModal() {
+    document.getElementById("deleteModal").style.display = "none";
+  }
+
+  function submitDelete() {
+    document.getElementById("storageDeleteForm").submit();
+  }
+</script>
