@@ -276,9 +276,12 @@
   </div>
 
   <div class="action-button-wrap">
-    <a href="{% url 'inventory:inventory_duplicate' object.pk %}" class="action-button action-button-copy">
-      複製
-    </a>
+    <form method="post" action="{% url 'inventory:inventory_duplicate' object.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="action-button action-button-copy">
+        複製
+      </button>
+    </form>
   </div>
 
   <hr class="detail-divider">
