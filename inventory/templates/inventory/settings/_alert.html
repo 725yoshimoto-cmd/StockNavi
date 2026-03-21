@@ -1,53 +1,48 @@
+<p class="alert-top-note">
+  下記設定〜1までは <span class="blue">青字</span>、0は<span class="red">赤字</span> で表示
+</p>
+
 <p class="note">
   ※全在庫一律設定
 </p>
 
-<form method="post" action="{% url 'inventory:settings_tabs' %}">
-  {% csrf_token %}
+<div class="alert-form-wrap">
+  <form method="post" action="{% url 'inventory:settings_tabs' %}">
+    {% csrf_token %}
 
-  <!-- どのタブから送信したか -->
-  <input type="hidden" name="tab" value="alert">
+    <input type="hidden" name="tab" value="alert">
+    <input type="hidden" name="action" value="save_alert_setting">
 
-  <!-- post() の分岐用 -->
-  <input type="hidden" name="action" value="save_alert_setting">
-
-  <div class="form-group">
-    <label for="id_quantity_threshold">個数アラート</label>
-    <div class="input-row">
-      <!--
-        DBに保存されている現在値を表示する
-        まだ無い場合だけ 1 を初期値にする
-      -->
-      <input
-        type="number"
-        id="id_quantity_threshold"
-        name="quantity_threshold"
-        value="{{ alert_setting.quantity_threshold|default_if_none:1 }}"
-        min="0"
-      >
-      <span>個以下</span>
+    <div class="form-group">
+      <label for="id_quantity_threshold">個数アラート</label>
+      <div class="input-row">
+        <input
+          type="number"
+          id="id_quantity_threshold"
+          name="quantity_threshold"
+          value="{{ alert_setting.quantity_threshold|default_if_none:1 }}"
+          min="0"
+        >
+        <span>個以下</span>
+      </div>
     </div>
-  </div>
 
-  <div class="form-group">
-    <label for="id_expiry_days">期限アラート</label>
-    <div class="input-row">
-      <!--
-        DBに保存されている現在値を表示する
-        まだ無い場合だけ 30 を初期値にする
-      -->
-      <input
-        type="number"
-        id="id_expiry_days"
-        name="expiry_days"
-        value="{{ alert_setting.expiry_days|default_if_none:30 }}"
-        min="0"
-      >
-      <span>日以内</span>
+    <div class="form-group">
+      <label for="id_expiry_days">期限アラート</label>
+      <div class="input-row">
+        <input
+          type="number"
+          id="id_expiry_days"
+          name="expiry_days"
+          value="{{ alert_setting.expiry_days|default_if_none:30 }}"
+          min="0"
+        >
+        <span>日以内</span>
+      </div>
     </div>
-  </div>
 
-  <div class="form-submit-center">
-    <button type="submit" class="btn-primary-mid">保存</button>
-  </div>
-</form>
+    <div class="form-submit-center">
+      <button type="submit" class="btn-primary-mid">保存</button>
+    </div>
+  </form>
+</div>
