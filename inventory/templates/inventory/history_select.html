@@ -26,10 +26,14 @@
     在庫一覧に複製
   </button>
 
-  <button type="submit" class="icon-btn" aria-label="削除">
+  <button type="submit"
+          class="icon-btn"
+          aria-label="削除"
+          form="historyBulkForm"
+          formaction="{% url 'inventory:inventory_history_delete' %}"
+          onclick="return confirm('選択した履歴を削除しますか？');">
     <img src="{% static 'images/trash.png' %}" alt="削除">
   </button>
-
 </div>
 
 <form id="historyBulkForm" method="post">
