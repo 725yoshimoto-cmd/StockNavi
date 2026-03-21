@@ -340,6 +340,13 @@
     </p>
 
     <div class="custom-modal-actions">
+      <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" class="custom-modal-btn custom-modal-btn-danger">
+          はい
+        </button>
+      </form>
+
       <button
         type="button"
         class="custom-modal-btn custom-modal-btn-cancel"
@@ -347,13 +354,6 @@
       >
         いいえ
       </button>
-
-      <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-        {% csrf_token %}
-        <button type="submit" class="custom-modal-btn custom-modal-btn-danger">
-          はい
-        </button>
-      </form>
     </div>
   </div>
 </div>
