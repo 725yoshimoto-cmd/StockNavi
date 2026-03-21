@@ -784,14 +784,22 @@ class InventoryHistoryDeleteView(LoginRequiredMixin, HouseholdRequiredMixin, Vie
     def post(self, request):
         selected_ids = request.POST.getlist("selected_ids")
 
+        deleted_count = InventoryItem.objects.filter(
+            household=request.user.household,
+            id__in=selected_ids,
+            is_deleted=True
+        ).count()
+
         InventoryItem.objects.filter(
             household=request.user.household,
             id__in=selected_ids,
             is_deleted=True
         ).delete()
 
-        return redirect("inventory:inventory_history")
+        messages.success(request, f"{deleted_count}件の履歴を削除しました。")
 
+        return redirect("inventory:inventory_history")
+    
 # 履歴複製画面（HistoryDuplicateView）（ログイン必須）
 class InventoryHistoryDuplicateView(LoginRequiredMixin, HouseholdRequiredMixin, View):
     def get(self, request, pk):
