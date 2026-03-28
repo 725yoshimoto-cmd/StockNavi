@@ -3,27 +3,82 @@
 # Django基本
 from django.contrib import messages
 from django.contrib.auth import login, get_user_model
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
+
+# 追加：
+# パスワード再設定URLを作るときに使う安全なトークン生成
+from django.contrib.auth.tokens import default_token_generator
+
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
+
+# 追加：
+# ユーザーIDをURLに安全に入れるために使う
+from django.utils.http import urlsafe_base64_encode
+
+# 追加：
+# ユーザーIDをバイト列に変換するために使う
+from django.utils.encoding import force_bytes
+
 from django.utils import timezone
 from django.views import View
-from django.views.generic import TemplateView, CreateView
+
+# 既存の TemplateView / CreateView に加えて、
+# 追加で FormView を使う
+from django.views.generic import TemplateView, CreateView, FormView
+
 from django.db import transaction
 
+# 追加：
+# パスワード再設定メールを実際に送るために使う
+from django.core.mail import send_mail
+
 # 自アプリ
-from .forms import AlertSettingForm, UserUpdateForm, SignUpForm
+from .forms import (
+    AlertSettingForm,
+    UserUpdateForm,
+    SignUpForm,
+    EmailAuthenticationForm,
+
+    # 追加：
+    # メールアドレス入力だけのパスワード再設定用フォーム
+    PasswordResetRequestForm,
+)
 from .models import AlertSetting, Household
 
 # 既存：世帯必須のMixin（プロジェクトにあるやつ）
 from inventory.mixins import HouseholdRequiredMixin
 from inventory.models import InviteToken   # ← InviteToken の場所に合わせて修正
 
-
 User = get_user_model()
 
+class CustomLoginView(LoginView):
+    """
+    ログイン画面
+
+    目的
+    ----
+    Django標準のログイン処理に、
+    自作した EmailAuthenticationForm をつなぐ。
+
+    これにより、
+    - 画面では「メールアドレス」「パスワード」と表示できる
+    - 認証は accounts/backends.py の EmailBackend を使える
+    """
+
+    template_name = "registration/login.html"
+    authentication_form = EmailAuthenticationForm
+
+    def get_success_url(self):
+        """
+        ログイン成功後の遷移先
+        settings.py の LOGIN_REDIRECT_URL を使ってもよいが、
+        ここで明示しておくと後で見返したとき分かりやすい
+        """
+        return reverse_lazy("inventory:inventory_list")
+    
 class MemberListView(LoginRequiredMixin, HouseholdRequiredMixin, TemplateView):
     template_name = "accounts/member_list.html"
 
@@ -182,3 +237,68 @@ class SignUpView(CreateView):
         messages.success(self.request, "アカウント登録が完了しました。")
 
         return redirect(self.success_url)
+    
+class CustomPasswordResetRequestView(FormView):
+    """
+    パスワード再設定メール送信画面
+
+    目的
+    ----
+    Django標準の PasswordResetView を避けて、
+    自前で再設定URLを作ってメール送信する。
+
+    理由
+    ----
+    今回は SMTP 自体は動いているため、
+    再設定メール送信処理をシンプルにして確実に通すため。
+    """
+    template_name = "accounts/password_reset_form.html"
+    form_class = PasswordResetRequestForm
+    success_url = reverse_lazy("accounts:password_reset_done")
+
+    def form_valid(self, form):
+        """
+        メールアドレスが存在するユーザーに対してだけ
+        パスワード再設定URLを送る
+        """
+        email = form.cleaned_data["email"]
+
+        # 大文字小文字を無視してメール一致ユーザーを探す
+        # is_active=True のみ対象にする
+        users = User.objects.filter(email__iexact=email, is_active=True)
+
+        for user in users:
+            # トークン発行
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+
+            # 本番URLを組み立てる
+            reset_url = self.request.build_absolute_uri(
+                reverse_lazy(
+                    "accounts:password_reset_confirm",
+                    kwargs={"uidb64": uid, "token": token},
+                )
+            )
+
+            # 件名
+            subject = "【StockNavi】パスワード再設定"
+
+            # 本文
+            message = (
+                "StockNavi パスワード再設定\n\n"
+                "以下のURLからパスワードを変更してください\n\n"
+                f"{reset_url}\n"
+            )
+
+            # 実際にメール送信
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=None,   # settings.py の DEFAULT_FROM_EMAIL を使う
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+        # メールアドレスが存在しなくても、画面上は同じ完了画面へ
+        # （セキュリティ上、存在有無を見せないため）
+        return super().form_valid(form)

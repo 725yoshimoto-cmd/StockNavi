@@ -226,3 +226,28 @@ class SignUpForm(UserCreationForm):
             user.save()
 
         return user
+    
+class PasswordResetRequestForm(forms.Form):
+    """
+    パスワード再設定メール送信用フォーム
+
+    目的
+    ----
+    Django標準の PasswordResetView をそのまま使わず、
+    メール送信部分を自前で制御するための最小フォーム
+    """
+
+    email = forms.EmailField(
+        required=True,
+        label="メールアドレス",
+        widget=forms.EmailInput(
+            attrs={
+                "placeholder": "メールアドレスを入力",
+                "autocomplete": "email",
+            }
+        ),
+        error_messages={
+            "required": "メールアドレスを入力してください。",
+            "invalid": "メールアドレスの形式で入力してください。",
+        },
+    )

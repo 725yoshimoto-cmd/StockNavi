@@ -1,11 +1,26 @@
 from django.urls import path, reverse_lazy
 from . import views
 from django.contrib.auth import views as auth_views
-from .views import SignUpView
+from .views import SignUpView, CustomLoginView, CustomPasswordResetRequestView
 
 app_name = "accounts"
 
 urlpatterns = [
+    # ----------------------------
+    # ログイン / ログアウト
+    # ----------------------------
+    # ここが今回の最重要
+    # django.contrib.auth.urls の標準 login ではなく、
+    # 自作した CustomLoginView を先に定義して使う
+    path("login/", CustomLoginView.as_view(), name="login"),
+
+    # ログアウトは Django標準のままでOK
+    path(
+        "logout/",
+        auth_views.LogoutView.as_view(),
+        name="logout",
+    ),
+
     path("mypage/", views.MyPageView.as_view(), name="mypage"),
     path("alert_setting/", views.AlertSettingView.as_view(), name="alert_setting"),
     path("members/", views.MemberListView.as_view(), name="member_list"),
@@ -18,12 +33,7 @@ urlpatterns = [
     # メールアドレス入力画面
     path(
         "password-reset/",
-        auth_views.PasswordResetView.as_view(
-            template_name="accounts/password_reset_form.html",
-            email_template_name="accounts/password_reset_email.txt",
-            subject_template_name="accounts/password_reset_subject.txt",
-            success_url=reverse_lazy("accounts:password_reset_done"),
-        ),
+        CustomPasswordResetRequestView.as_view(),
         name="password_reset",
     ),
 
