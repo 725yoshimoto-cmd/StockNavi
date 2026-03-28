@@ -2,7 +2,7 @@
 # accountsアプリ専用のフォーム定義ファイル（User作成フォームなど）
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
 
 from .models import CustomUser
@@ -19,6 +19,7 @@ class CustomUserCreationForm(UserCreationForm):
     もともと inventory/views.py などで
     CustomUserCreationForm を import しているため残しておく
     """
+
     class Meta:
         model = CustomUser
         fields = ("username",)
@@ -30,6 +31,7 @@ class UserUpdateForm(forms.ModelForm):
 
     accounts/views.py で import されているため必要
     """
+
     class Meta:
         model = User
         fields = ("username", "email")
@@ -66,6 +68,62 @@ class AlertSettingForm(forms.ModelForm):
             "expiry_days": "期限アラート",
         }
 
+
+class EmailAuthenticationForm(AuthenticationForm):
+    """
+    ログイン用フォーム（メールアドレス + パスワード）
+
+    目的
+    ----
+    Django標準の AuthenticationForm は username という名前の入力欄を使うが、
+    今回のアプリでは「メールアドレスでログイン」に寄せたい。
+
+    ポイント
+    --------
+    - フィールド名そのものは username のまま使う
+      → Django標準の LoginView とつながりやすい
+    - ただし画面上の見た目やラベルは「メールアドレス」に変える
+    - 実際の認証は accounts/backends.py の EmailBackend が担当する
+    """
+
+    username = forms.EmailField(
+        required=True,
+        label="メールアドレス",
+        widget=forms.EmailInput(
+            attrs={
+                "placeholder": "メールアドレスを入力",
+                "autocomplete": "email",
+            }
+        ),
+        error_messages={
+            "required": "メールアドレスを入力してください。",
+            "invalid": "メールアドレスの形式で入力してください。",
+        },
+    )
+
+    password = forms.CharField(
+        required=True,
+        label="パスワード",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "パスワードを入力",
+                "autocomplete": "current-password",
+            }
+        ),
+        error_messages={
+            "required": "パスワードを入力してください。",
+        },
+    )
+
+    # フォーム全体のエラーメッセージ
+    # 例：メールアドレスかパスワードが違うとき
+    error_messages = {
+        "invalid_login": "メールアドレスまたはパスワードが正しくありません。",
+        "inactive": "このアカウントは現在利用できません。",
+    }
+
+
 class SignUpForm(UserCreationForm):
     """
     サインアップ用フォーム
@@ -78,12 +136,81 @@ class SignUpForm(UserCreationForm):
 
     email = forms.EmailField(
         required=True,
-        label="メールアドレス"
+        label="メールアドレス",
+        widget=forms.EmailInput(
+            attrs={
+                "placeholder": "メールアドレスを入力",
+                "autocomplete": "email",
+            }
+        ),
+        error_messages={
+            "required": "メールアドレスを入力してください。",
+            "invalid": "メールアドレスの形式で入力してください。",
+        },
+    )
+
+    username = forms.CharField(
+        required=True,
+        label="ユーザー名",
+        error_messages={
+            "required": "ユーザー名を入力してください。",
+        },
+    )
+
+    password1 = forms.CharField(
+        required=True,
+        label="パスワード",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "パスワードを入力",
+                "autocomplete": "new-password",
+            }
+        ),
+        error_messages={
+            "required": "パスワードを入力してください。",
+        },
+    )
+
+    password2 = forms.CharField(
+        required=True,
+        label="パスワード（確認用）",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "確認用パスワードを入力",
+                "autocomplete": "new-password",
+            }
+        ),
+        error_messages={
+            "required": "確認用パスワードを入力してください。",
+        },
     )
 
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
+
+    def clean_email(self):
+        """
+        メールアドレスの重複チェック
+
+        なぜ必要？
+        ----------
+        同じメールアドレスで複数登録できてしまうと、
+        後で「メールアドレスでログイン」するときに
+        どのユーザーか決められず困るため
+        """
+        email = self.cleaned_data.get("email")
+
+        if not email:
+            return email
+
+        # 大文字小文字の違いを無視して重複チェック
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("このメールアドレスは既に登録されています。")
+
+        return email
 
     def save(self, commit=True):
         """
