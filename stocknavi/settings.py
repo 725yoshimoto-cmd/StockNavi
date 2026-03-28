@@ -144,10 +144,21 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+# =========================
+# Static files (CSS, JavaScript, Images)
+# =========================
+# ブラウザから /static/ で参照されるURL
 STATIC_URL = '/static/'
+
+# 開発中の静的ファイル置き場
+# 今は inventory/static を使っている
 STATICFILES_DIRS = [
     BASE_DIR / 'inventory' / 'static',
 ]
+
+# collectstatic で「本番用に全部まとめる先」
+# PythonAnywhere ではこのフォルダに集約されたものを配信する
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
