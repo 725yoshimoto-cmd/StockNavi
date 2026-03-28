@@ -1,45 +1,19 @@
 {% extends "base.html" %}
 {% load static %}
 
-{# ---------------------------------
-  タブタイトル
---------------------------------- #}
 {% block title %}ログイン | StockNavi{% endblock %}
-
-{# ---------------------------------
-  認証画面用クラス
-  → base.html 側で共通ヘッダー・下ナビを消す
---------------------------------- #}
 {% block body_class %}auth-page{% endblock %}
-
-{# ---------------------------------
-  ログイン画面では共通ヘッダー不要
---------------------------------- #}
 {% block app_header %}{% endblock %}
-
-
-{# ---------------------------------
-  ログイン画面では下ナビ不要
---------------------------------- #}
 {% block bottom_nav %}{% endblock %}
 
 {% block content %}
 <style>
-
-  /* ---------------------------------
-     ログイン内容の本体
-     四角い囲み枠は作らず、
-     中央の細い幅だけ作る
-  --------------------------------- */
   .login-container {
     width: 100%;
     max-width: 340px;
     margin: 0 auto;
   }
 
-    /* ---------------------------------
-     ロゴ
-  --------------------------------- */
   .login-logo-wrap {
     text-align: center;
     margin: 0 0 18px;
@@ -50,10 +24,7 @@
     width: auto;
     display: inline-block;
   }
-  
-  /* ---------------------------------
-     見出し
-  --------------------------------- */
+
   .login-heading {
     margin: 0 0 28px;
     font-size: 12px;
@@ -62,9 +33,6 @@
     text-align: left;
   }
 
-  /* ---------------------------------
-     入力ブロック
-  --------------------------------- */
   .login-form-group {
     margin-bottom: 24px;
   }
@@ -82,15 +50,12 @@
     height: 46px;
     padding: 10px 14px;
     border: 1px solid #8f8f8f;
-    border-radius: 0;
     background: #ffffff;
     font-size: 16px;
     color: #111;
+    box-sizing: border-box;
   }
 
-  /* ---------------------------------
-     パスワード欄
-  --------------------------------- */
   .password-wrap {
     position: relative;
   }
@@ -110,11 +75,14 @@
     font-size: 18px;
     color: #6b7280;
     padding: 0;
+    line-height: 1;
   }
 
-  /* ---------------------------------
-     オートログイン欄
-  --------------------------------- */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+
   .auto-login-row {
     display: flex;
     align-items: center;
@@ -136,9 +104,6 @@
     color: #555;
   }
 
-  /* ---------------------------------
-     ログインボタン
-  --------------------------------- */
   .login-btn-wrap {
     text-align: center;
     margin-bottom: 54px;
@@ -156,9 +121,6 @@
     cursor: pointer;
   }
 
-  /* ---------------------------------
-     下のリンク群
-  --------------------------------- */
   .login-links {
     text-align: center;
   }
@@ -190,9 +152,6 @@
     font-weight: 400;
   }
 
-  /* ---------------------------------
-     ログイン失敗メッセージ
-  --------------------------------- */
   .login-error-box {
     margin-bottom: 18px;
     padding: 12px;
@@ -203,11 +162,15 @@
     line-height: 1.5;
   }
 
+  .field-error {
+    margin-top: 6px;
+    color: #b91c1c;
+    font-size: 13px;
+    line-height: 1.4;
+  }
 </style>
 
 <div class="login-page">
-
-  <!-- ロゴは画面の一番上 -->
   <div class="login-logo-wrap">
     <img
       src="{% static 'images/stocknavi_logo.png' %}"
@@ -217,48 +180,50 @@
   </div>
 
   <div class="login-container">
-
     <h1 class="login-heading">ログイン</h1>
 
-    {% if form.errors %}
+    {% if form.non_field_errors %}
       <div class="login-error-box">
-        ログイン失敗。<br>
-        メールアドレスとパスワードが一致しません。
+        {% for error in form.non_field_errors %}
+          {{ error }}{% if not forloop.last %}<br>{% endif %}
+        {% endfor %}
       </div>
     {% endif %}
 
     <form method="post">
       {% csrf_token %}
 
-      <!-- アカウント名 -->
       <div class="login-form-group">
-        <label for="{{ form.username.id_for_label }}" class="login-label">
-          アカウント名
-        </label>
+        <label for="id_username" class="login-label">メールアドレス</label>
         <input
-          type="text"
-          name="{{ form.username.html_name }}"
-          id="{{ form.username.id_for_label }}"
-          value="{{ form.username.value|default_if_none:'' }}"
+          type="email"
+          name="username"
+          id="id_username"
           class="login-input"
-          placeholder="アカウント名"
-          autocomplete="username"
+          placeholder="メールアドレスを入力"
+          autocomplete="email"
+          value="{{ form.username.value|default_if_none:'' }}"
+          required
         >
+        {% if form.username.errors %}
+          <div class="field-error">
+            {% for error in form.username.errors %}
+              {{ error }}{% if not forloop.last %}<br>{% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
       </div>
 
-      <!-- パスワード -->
       <div class="login-form-group">
-        <label for="{{ form.password.id_for_label }}" class="login-label">
-          パスワード
-        </label>
-
+        <label for="id_password" class="login-label">パスワード</label>
         <div class="password-wrap">
           <input
             type="password"
-            name="{{ form.password.html_name }}"
-            id="{{ form.password.id_for_label }}"
+            name="password"
+            id="id_password"
             class="login-input"
             autocomplete="current-password"
+            required
           >
           <button
             type="button"
@@ -269,9 +234,15 @@
             👁
           </button>
         </div>
+        {% if form.password.errors %}
+          <div class="field-error">
+            {% for error in form.password.errors %}
+              {{ error }}{% if not forloop.last %}<br>{% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
       </div>
 
-      <!-- オートログイン -->
       <div class="auto-login-row">
         <input type="checkbox" id="rememberEmail">
         <label for="rememberEmail" class="auto-login-label">
@@ -279,13 +250,11 @@
         </label>
       </div>
 
-      <!-- ログインボタン -->
       <div class="login-btn-wrap">
         <button type="submit" class="login-btn">ログイン</button>
       </div>
     </form>
 
-    <!-- 下リンク -->
     <div class="login-links">
       <p class="login-links-register">
         <a href="{% url 'accounts:signup' %}" class="login-link-register">
@@ -298,41 +267,39 @@
         <a href="{% url 'accounts:password_reset' %}">こちら</a>
       </p>
     </div>
-
   </div>
 </div>
 
 <script>
-  // パスワード表示切替
-  const passwordInput = document.getElementById("{{ form.password.id_for_label }}");
+  const passwordInput = document.getElementById("id_password");
   const passwordToggle = document.getElementById("passwordToggle");
 
   if (passwordInput && passwordToggle) {
     passwordToggle.addEventListener("click", function () {
-      if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-      } else {
-        passwordInput.type = "password";
-      }
+      passwordInput.type = passwordInput.type === "password" ? "text" : "password";
     });
   }
 
-  // オートログイン（簡易版）
-  // アカウント名を保存する
+  const usernameInput = document.getElementById("id_username");
+  const rememberEmail = document.getElementById("rememberEmail");
+  const loginForm = document.querySelector(".login-container form");
+
   const savedUsername = localStorage.getItem("stocknavi_saved_username");
   const savedRemember = localStorage.getItem("stocknavi_remember_username");
 
-  if (savedRemember === "true" && usernameInput) {
+  if (savedRemember === "true" && usernameInput && rememberEmail) {
     rememberEmail.checked = true;
     usernameInput.value = savedUsername || "";
   }
 
-  ...
-  localStorage.setItem("stocknavi_saved_username", usernameInput.value);
-  localStorage.setItem("stocknavi_remember_username", "true");
-  ...
-  localStorage.removeItem("stocknavi_saved_username");
-  localStorage.removeItem("stocknavi_remember_username");
+  if (loginForm && usernameInput && rememberEmail) {
+    loginForm.addEventListener("submit", function () {
+      if (rememberEmail.checked) {
+        localStorage.setItem("stocknavi_saved_username", usernameInput.value);
+        localStorage.setItem("stocknavi_remember_username", "true");
+      } else {
+        localStorage.removeItem("stocknavi_saved_username");
+        localStorage.removeItem("stocknavi_remember_username");
       }
     });
   }
