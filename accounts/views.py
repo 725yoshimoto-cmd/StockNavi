@@ -33,7 +33,7 @@ from django.db import transaction
 
 # 追加：
 # パスワード再設定メールを実際に送るために使う
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection
 
 # 自アプリ
 from .forms import (
@@ -290,13 +290,28 @@ class CustomPasswordResetRequestView(FormView):
                 f"{reset_url}\n"
             )
 
-            # 実際にメール送信
+            # =========================
+            # Gmail SMTP 接続をここで明示する
+            # 理由：
+            # - shell テストで成功した条件を、そのままWeb画面送信にも使いたい
+            # - settings.py / WSGI の読み込み差異を避けるため
+            # =========================
+            connection = get_connection(
+                backend="django.core.mail.backends.smtp.EmailBackend",
+                host="smtp.gmail.com",
+                port=587,
+                username=os.environ.get("EMAIL_HOST_USER"),
+                password=os.environ.get("EMAIL_HOST_PASSWORD"),
+                use_tls=True,
+            )
+
             send_mail(
                 subject=subject,
                 message=message,
-                from_email=None,   # settings.py の DEFAULT_FROM_EMAIL を使う
+                from_email=os.environ.get("EMAIL_HOST_USER"),
                 recipient_list=[user.email],
                 fail_silently=False,
+                connection=connection,
             )
 
         # メールアドレスが存在しなくても、画面上は同じ完了画面へ
