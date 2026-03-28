@@ -1,5 +1,6 @@
 # accounts/views.py
 import os
+import logging
 
 # Django基本
 from django.contrib import messages
@@ -54,6 +55,7 @@ from inventory.mixins import HouseholdRequiredMixin
 from inventory.models import InviteToken   # ← InviteToken の場所に合わせて修正
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 class CustomLoginView(LoginView):
     """
@@ -297,24 +299,41 @@ class CustomPasswordResetRequestView(FormView):
             # - shell テストで成功した条件を、そのままWeb画面送信にも使いたい
             # - settings.py / WSGI の読み込み差異を避けるため
             # =========================
-            connection = get_connection(
-                backend="django.core.mail.backends.smtp.EmailBackend",
-                host="smtp.gmail.com",
-                port=587,
-                username=os.environ.get("EMAIL_HOST_USER"),
-                password=os.environ.get("EMAIL_HOST_PASSWORD"),
-                use_tls=True,
-            )
+            try:
+                connection = get_connection(
+                    backend="django.core.mail.backends.smtp.EmailBackend",
+                    host="smtp.gmail.com",
+                    port=587,
+                    username=os.environ.get("EMAIL_HOST_USER"),
+                    password=os.environ.get("EMAIL_HOST_PASSWORD"),
+                    use_tls=True,
+                )
 
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=os.environ.get("EMAIL_HOST_USER"),
-                recipient_list=[user.email],
-                fail_silently=False,
-                connection=connection,
-            )
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=os.environ.get("EMAIL_HOST_USER"),
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                    connection=connection,
+                )
 
+            except OSError as e:
+                # PythonAnywhere無料枠で Gmail SMTP に到達できないときの保険
+                logger.exception("Password reset mail send failed: %s", e)
+
+                # 画面は落とさず、完了画面へ進める
+                messages.warning(
+                    self.request,
+                    "現在メール送信環境の都合により、再設定メールの送信が不安定です。"
+                )
+
+            except Exception as e:
+                logger.exception("Unexpected password reset mail error: %s", e)
+                messages.warning(
+                    self.request,
+                    "現在メール送信環境の都合により、再設定メールの送信が不安定です。"
+                )
         # メールアドレスが存在しなくても、画面上は同じ完了画面へ
         # （セキュリティ上、存在有無を見せないため）
         return super().form_valid(form)
