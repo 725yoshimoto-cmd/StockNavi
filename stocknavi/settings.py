@@ -24,9 +24,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-^rp!pxd#5f+%4qd_f1nav_0p3p)^!i7t@0_h0=k199n6y5k#oh'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# ローカル開発中は True でOK
+# PythonAnywhere本番では、最終的には False にするのが望ましい
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# =========================
+# アクセスを許可するホスト名
+# =========================
+# ローカルだけでなく、PythonAnywhere本番URLでも開けるようにする
+# ここが空配列のままだと、本番で困る原因になりやすい
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "725yoshimoto.pythonanywhere.com",
+]
 
 
 # Application definition
@@ -86,12 +97,21 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
+# =========================
+# パスワードの入力ルール
+# =========================
+# 「短すぎる」「よくあるパスワード」「数字だけ」などを防ぐ
+# 講師レビューの“バリデーション”対応にも関係する大事な設定
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
+        # 最低文字数ルール
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,   # 8文字以上にする
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -105,12 +125,19 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# =========================
+# 言語・時刻設定
+# =========================
+# 画面やバリデーションメッセージを日本語寄りにするための設定
+LANGUAGE_CODE = "ja"
 
-TIME_ZONE = 'UTC'
+# 日本時間で動かす
+TIME_ZONE = "Asia/Tokyo"
 
+# Djangoの翻訳機能を有効化
 USE_I18N = True
 
+# タイムゾーン対応を有効化
 USE_TZ = True
 
 
@@ -128,12 +155,83 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/inventory/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"    # ログアウト後
 
-
+# カスタムユーザーモデルを使う設定
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# メール送信（開発用）
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "StockNavi <no-reply@example.com>"
+
+# =========================
+# メール送信設定
+# =========================
+# ここが今回の最重要ポイント
+#
+# 目的：
+# - ローカルでは今まで通り「コンソール出力」で安全に確認
+# - PythonAnywhere本番では Gmail SMTP で実際にメール送信
+#
+# 使い方：
+# - ローカルでは環境変数 USE_GMAIL_SMTP を入れなければ console のまま
+# - 本番では USE_GMAIL_SMTP=1 を入れて Gmail SMTP を使う
+#
+# 環境変数で切り替える理由：
+# - Gmailアドレスやアプリパスワードを settings.py に直書きしないため
+# - 後で見返したときに「ローカル」「本番」の違いが分かりやすいため
+
+USE_GMAIL_SMTP = os.environ.get("USE_GMAIL_SMTP", "") == "1"
+
+if USE_GMAIL_SMTP:
+    # =========================
+    # 本番用：Gmail SMTP で実送信
+    # =========================
+    # DjangoのSMTPバックエンドを使う
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+    # GmailのSMTPサーバー
+    EMAIL_HOST = "smtp.gmail.com"
+
+    # TLS通信で使うポート
+    EMAIL_PORT = 587
+
+    # 暗号化通信を有効化
+    EMAIL_USE_TLS = True
+
+    # 送信元Gmailアドレス
+    # 例: yourname@gmail.com
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+
+    # Gmail通常パスワードではなく
+    # Googleの「アプリパスワード」を入れる
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+
+    # 受信メールに表示される差出人
+    DEFAULT_FROM_EMAIL = f"StockNavi <{EMAIL_HOST_USER}>"
+
+    # Django内部の通知メール送信元
+    SERVER_EMAIL = EMAIL_HOST_USER
+
+else:
+    # =========================
+    # 開発用：コンソールにメール本文を表示
+    # =========================
+    # 実際には送られず、ターミナルに本文が出る
+    # ローカルで画面遷移の確認をするときに便利
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    DEFAULT_FROM_EMAIL = "StockNavi <no-reply@example.com>"
+    SERVER_EMAIL = "no-reply@example.com"
+
+
+# =========================
+# 認証方法の設定
+# =========================
+# ここで「メールアドレス + パスワード」でログインできるようにする
+# ただし、実際に動かすには別途 accounts/backends.py の作成が必要
+#
+# 順番の意味：
+# 1. まず自作の EmailBackend で「emailログイン」を試す
+# 2. 次に Django 標準の認証も使えるようにしておく
+AUTHENTICATION_BACKENDS = [
+    "accounts.backends.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
