@@ -56,31 +56,42 @@
   /* =========================================================
      3. ヘッダー / ロゴ
      ========================================================= */
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .app-shell {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
   .app-header {
-    position: sticky;
-    top: 0;
-    background: #fff;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 8px 16px;
-    z-index: 100;
-  }
-
-  .app-header-title {
-    text-align: center;
-    line-height: 1;
-  }
-
-  .app-logo {
-    display: inline-flex;
+    width: 100%;
+    height: 62px;
+    margin: 0;
+    padding: 0;
+    display: flex;
     align-items: center;
     justify-content: center;
-    text-decoration: none;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
-  .app-logo-img {
+  .app-header-logo {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .app-header-logo img {
+    display: block;
+    width: auto;
     height: 50px;
     width: auto;
-    display: block;
+    object-fit: contain;
   }
 
   /* =========================================================
@@ -1301,13 +1312,16 @@
 
     <!-- ヘッダー -->
     {% block app_header %}
-    <header class="app-header">
       <div class="app-header-title">
-        <a href="{% if request.user.is_authenticated %}{% url 'inventory:inventory_list' %}{% else %}/inventory/portfolio/{% endif %}">
-          StockNavi
-        </a>
+
+    {% load static %}
+
+    <header class="app-header">
+      <div class="app-header-logo">
+        <img src="{% static 'images/stocknavi_logo.png' %}" alt="StockNavi">
       </div>
     </header>
+
     {% endblock %}
 
     <!-- メインコンテンツ -->
