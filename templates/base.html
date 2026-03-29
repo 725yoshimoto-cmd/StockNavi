@@ -1303,8 +1303,8 @@
     {% block app_header %}
     <header class="app-header">
       <div class="app-header-title">
-        <a href="{% url 'portfolio' %}" class="app-logo">
-          <img src="{% static 'images/stocknavi_logo.png' %}" alt="StockNavi" class="app-logo-img">
+        <a href="{% if request.user.is_authenticated %}{% url 'inventory:inventory_list' %}{% else %}/inventory/portfolio/{% endif %}">
+          StockNavi
         </a>
       </div>
     </header>

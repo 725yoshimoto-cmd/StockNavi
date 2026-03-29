@@ -1065,7 +1065,7 @@
     <div class="sort-modal-list">
       <a class="sort-modal-link"
          href="{% url 'inventory:inventory_list' %}?q={{ q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort=expiry&select_mode=0">
-        賞味期限の近い順
+        消費・期限の近い順
       </a>
 
       <a class="sort-modal-link"
@@ -1141,9 +1141,9 @@
                   <span>数量：{{ item.quantity }}</span>
 
                   {% if item.expiry_date %}
-                    <span>賞味期限：{{ item.expiry_date|date:"Y/m/d" }}</span>
+                    <span>消費・賞味期限：{{ item.expiry_date|date:"Y/m/d" }}</span>
                   {% else %}
-                    <span>賞味期限：未設定</span>
+                    <span>消費・賞味期限：未設定</span>
                   {% endif %}
 
                   {% if item.days_left is not None %}
@@ -1199,9 +1199,9 @@
                 <span>数量：{{ item.quantity }}</span>
 
                 {% if item.expiry_date %}
-                  <span>賞味期限：{{ item.expiry_date|date:"Y/m/d" }}</span>
+                  <span>消費・賞味期限：{{ item.expiry_date|date:"Y/m/d" }}</span>
                 {% else %}
-                  <span>賞味期限：未設定</span>
+                  <span>消費・賞味期限：未設定</span>
                 {% endif %}
 
                 {% if item.days_left is not None %}

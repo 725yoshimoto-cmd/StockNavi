@@ -244,7 +244,7 @@
     </div>
 
     <div class="detail-row">
-      <div class="detail-label">★内容量</div>
+      <div class="detail-label">内容量</div>
       <div class="detail-value">{{ item.content_amount }}</div>
     </div>
 
@@ -254,14 +254,14 @@
     </div>
 
     <div class="detail-row">
-      <div class="detail-label">★購入日</div>
+      <div class="detail-label">購入日</div>
       <div class="detail-value">
         {% if item.purchase_date %}{{ item.purchase_date|date:"Y/m" }}{% else %}-{% endif %}
       </div>
     </div>
 
     <div class="detail-row">
-      <div class="detail-label">(消費・賞味)期限</div>
+      <div class="detail-label">消費・賞味期限</div>
       <div class="detail-value">
         {% if item.expiry_date %}{{ item.expiry_date|date:"Y/m" }}{% else %}-{% endif %}
       </div>

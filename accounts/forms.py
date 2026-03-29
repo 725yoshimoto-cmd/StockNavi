@@ -194,30 +194,22 @@ class SignUpForm(UserCreationForm):
     def clean_email(self):
         """
         メールアドレスの重複チェック
-
-        なぜ必要？
-        ----------
-        同じメールアドレスで複数登録できてしまうと、
-        後で「メールアドレスでログイン」するときに
-        どのユーザーか決められず困るため
         """
-        email = self.cleaned_data.get("email")
+        email = (self.cleaned_data.get("email") or "").strip().lower()
 
         if not email:
-            return email
+            raise forms.ValidationError("メールアドレスを入力してください。")
 
-        # 大文字小文字の違いを無視して重複チェック
         if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("このメールアドレスは既に登録されています。")
+            raise forms.ValidationError(
+                "このメールアドレスはすでに登録されています。"
+            )
 
         return email
 
     def save(self, commit=True):
         """
         user に email をセットして保存する
-
-        ※ household はここでは入れない
-        ※ household は view 側で作成してからセットする
         """
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]

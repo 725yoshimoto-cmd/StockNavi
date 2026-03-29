@@ -17,6 +17,20 @@
     </p>
   {% endif %}
 
+  {% if form.errors %}
+    <div style="margin: 12px 0 16px; padding: 10px 12px; border: 1px solid #e57373; border-radius: 8px; background: #fff5f5;">
+      {% for field in form %}
+        {% for error in field.errors %}
+          <p style="margin: 4px 0; color: #c62828; font-size: 14px; line-height: 1.5;">{{ error }}</p>
+        {% endfor %}
+      {% endfor %}
+
+      {% for error in form.non_field_errors %}
+        <p style="margin: 4px 0; color: #c62828; font-size: 14px; line-height: 1.5;">{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
   <div class="item-form-wrap">
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
@@ -59,7 +73,6 @@
       <!-- 注意書き -->
       <div class="item-form-note-row">
         <span class="item-form-note-required">緑字：入力必須</span>
-        <span>★：一覧表示無し</span>
       </div>
 
       <!-- 商品名 -->
@@ -106,7 +119,7 @@
 
       <!-- 購入日 -->
       <div class="edit-row no-link">
-        <div class="edit-label edit-label-optional">★購入日<br><span style="font-size:12px; font-weight:400;">YYYY/MM</span></div>
+        <div class="edit-label edit-label-optional">購入日<br><span style="font-size:12px; font-weight:400;">YYYY/MM</span></div>
         <div class="edit-field">
           {{ form.purchase_month }}
           {{ form.purchase_month.errors }}
@@ -114,10 +127,10 @@
         <div class="edit-link-spacer"></div>
       </div>
 
-      <!-- 賞味期限 -->
+      <!-- 消費・賞味期限 -->
       <div class="edit-row no-link">
         <div class="edit-label edit-label-optional">
-          ★賞味期限
+          消費・賞味期限
           <div class="item-date-subtext">YYYY/MM</div>
         </div>
 
