@@ -16,7 +16,7 @@ class InventoryItemForm(forms.ModelForm):
     )
 
     expiry_date = forms.DateField(
-        required=False,
+        required=True,
         input_formats=["%Y-%m"],
         widget=forms.DateInput(
             format="%Y-%m",
@@ -73,6 +73,18 @@ class InventoryItemForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # 必須設定（購入日だけ任意）
+        self.fields["name"].required = True
+        self.fields["category"].required = True
+        self.fields["content_amount"].required = True
+        self.fields["content_unit"].required = True
+        self.fields["quantity"].required = True
+        self.fields["quantity_unit"].required = True
+        self.fields["expiry_date"].required = True
+        self.fields["storage_location"].required = True
+        self.fields["image"].required = True
+        self.fields["purchase_month"].required = False
+
         # 既存データ編集時：購入月を YYYY-MM で初期表示
         if self.instance and self.instance.pk and self.instance.purchase_date:
             self.initial["purchase_month"] = self.instance.purchase_date.strftime("%Y-%m")
@@ -97,3 +109,4 @@ class InventoryItemForm(forms.ModelForm):
             self.save_m2m()
 
         return instance
+    

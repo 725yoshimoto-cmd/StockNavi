@@ -21,6 +21,13 @@
     width: 72px;
     flex: 0 0 auto;
   }
+
+  .form-error-text {
+    margin: 4px 0 0;
+    color: #c62828;
+    font-size: 14px;
+    line-height: 1.5;
+  }
 </style>
 
   {% if form.instance.pk %}
@@ -35,19 +42,7 @@
     </p>
   {% endif %}
 
-  {% if form.errors %}
-    <div style="margin: 12px 0 16px; padding: 10px 12px; border: 1px solid #e57373; border-radius: 8px; background: #fff5f5;">
-      {% for field in form %}
-        {% for error in field.errors %}
-          <p style="margin: 4px 0; color: #c62828; font-size: 14px; line-height: 1.5;">{{ error }}</p>
-        {% endfor %}
-      {% endfor %}
 
-      {% for error in form.non_field_errors %}
-        <p style="margin: 4px 0; color: #c62828; font-size: 14px; line-height: 1.5;">{{ error }}</p>
-      {% endfor %}
-    </div>
-  {% endif %}
 
   <div class="item-form-wrap">
     <form method="post" enctype="multipart/form-data">
@@ -91,7 +86,9 @@
 
       {% if form.image.errors %}
         <div class="item-image-errors">
-          {{ form.image.errors }}
+          {% for error in form.image.errors %}
+            <p class="form-error-text">{{ error }}</p>
+          {% endfor %}
         </div>
       {% endif %}
 
@@ -105,7 +102,13 @@
         <div class="edit-label edit-label-required">商品名</div>
         <div class="edit-field">
           {{ form.name }}
-          {{ form.name.errors }}
+          {% if form.name.errors %}
+            <div class="form-error">
+              {% for error in form.name.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
         <div class="edit-link-spacer"></div>
       </div>
@@ -115,7 +118,13 @@
         <div class="edit-label edit-label-required">分類</div>
         <div class="edit-field">
           {{ form.category }}
-          {{ form.category.errors }}
+          {% if form.category.errors %}
+            <div class="form-error">
+              {% for error in form.category.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
         <div class="edit-link">
           <a href="{% url 'inventory:settings_tabs' %}?tab=category">登録・変更</a>
@@ -175,7 +184,13 @@
         <div class="edit-label edit-label-optional">購入日<br><span style="font-size:12px; font-weight:400;">YYYY/MM</span></div>
         <div class="edit-field">
           {{ form.purchase_month }}
-          {{ form.purchase_month.errors }}
+          {% if form.purchase_month.errors %}
+            <div class="form-error">
+              {% for error in form.purchase_month.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
         <div class="edit-link-spacer"></div>
       </div>
@@ -192,7 +207,9 @@
 
           {% if form.expiry_date.errors %}
             <div class="form-error">
-              {{ form.expiry_date.errors }}
+              {% for error in form.expiry_date.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
             </div>
           {% endif %}
         </div>
@@ -205,7 +222,13 @@
         <div class="edit-label edit-label-required">保管場所</div>
         <div class="edit-field">
           {{ form.storage_location }}
-          {{ form.storage_location.errors }}
+          {% if form.storage_location.errors %}
+            <div class="form-error">
+              {% for error in form.storage_location.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
         <div class="edit-link">
           <a href="{% url 'inventory:settings_tabs' %}?tab=storage">登録・変更</a>
@@ -258,5 +281,4 @@
     });
   });
 </script>
-
 {% endblock %}
