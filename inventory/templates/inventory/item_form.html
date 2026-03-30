@@ -60,13 +60,20 @@
           <div class="item-image-left-spacer"></div>
 
           <div class="item-image-main">
-            {% if form.instance.image %}
-              <div class="item-image-preview">
-                <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}">
-              </div>
-            {% else %}
-              <div class="item-image-preview">PHOTO</div>
-            {% endif %}
+            <div class="item-image-preview" id="image_preview_box">
+              <img
+                id="image_preview"
+                src="{% if form.instance.image %}{{ form.instance.image.url }}{% endif %}"
+                alt="{% if form.instance.name %}{{ form.instance.name }}{% else %}商品画像{% endif %}"
+                style="{% if form.instance.image %}display:block;{% else %}display:none;{% endif %}"
+              >
+              <span
+                id="image_preview_placeholder"
+                style="{% if form.instance.image %}display:none;{% else %}display:inline;{% endif %}"
+              >
+                PHOTO
+              </span>
+            </div>
           </div>
 
           <div class="item-image-link-col">
@@ -82,12 +89,12 @@
         </div>
       </div>
 
-        {% if form.image.errors %}
-          <div class="item-image-errors">
-            {{ form.image.errors }}
-          </div>
-        {% endif %}
-      </div>
+      {% if form.image.errors %}
+        <div class="item-image-errors">
+          {{ form.image.errors }}
+        </div>
+      {% endif %}
+
       <!-- 注意書き -->
       <div class="item-form-note-row">
         <span class="item-form-note-required">緑字：入力必須</span>
@@ -219,5 +226,37 @@
           </a>
         </div>
       {% endif %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.getElementById("id_image_custom");
+    const previewImg = document.getElementById("image_preview");
+    const placeholder = document.getElementById("image_preview_placeholder");
+
+    if (!fileInput || !previewImg || !placeholder) return;
+
+    fileInput.addEventListener("change", function (event) {
+      const file = event.target.files && event.target.files[0];
+
+      if (!file) {
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        alert("画像ファイルを選択してください。");
+        fileInput.value = "";
+        previewImg.src = "";
+        previewImg.style.display = "none";
+        placeholder.style.display = "inline";
+        return;
+      }
+
+      const imageUrl = URL.createObjectURL(file);
+      previewImg.src = imageUrl;
+      previewImg.style.display = "block";
+      placeholder.style.display = "none";
+    });
+  });
+</script>
 
 {% endblock %}

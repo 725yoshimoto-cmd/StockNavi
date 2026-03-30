@@ -6,14 +6,28 @@ import datetime, calendar
 
 
 class InventoryItemForm(forms.ModelForm):
-    purchase_month = forms.CharField(
+    purchase_month = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={"type": "month"})
+        input_formats=["%Y-%m"],
+        widget=forms.DateInput(
+            format="%Y-%m",
+            attrs={"type": "month"}
+        )
+    )
+
+    expiry_date = forms.DateField(
+        required=False,
+        input_formats=["%Y-%m"],
+        widget=forms.DateInput(
+            format="%Y-%m",
+            attrs={"type": "month"}
+        )
     )
 
     """
     在庫登録/編集フォーム
-    - 購入月は YYYY-MM で受け取って purchase_date に入れる
+    - 購入月は YYYY-MM で受け取り、purchase_date に入れる
+    - 消費・賞味期限も YYYY-MM で受け取り、expiry_date に入れる
     - 内容量の単位 / 個数の単位を選べるようにする
     """
 
@@ -52,7 +66,6 @@ class InventoryItemForm(forms.ModelForm):
             "content_unit": forms.Select(),
             "quantity": forms.NumberInput(attrs={"min": "0"}),
             "quantity_unit": forms.Select(),
-            "expiry_date": forms.DateInput(attrs={"type": "month"}),
             "storage_location": forms.Select(),
             "image": forms.ClearableFileInput(),
         }
@@ -64,21 +77,19 @@ class InventoryItemForm(forms.ModelForm):
         if self.instance and self.instance.pk and self.instance.purchase_date:
             self.initial["purchase_month"] = self.instance.purchase_date.strftime("%Y-%m")
 
+        # 既存データ編集時：消費・賞味期限を YYYY-MM で初期表示
+        if self.instance and self.instance.pk and self.instance.expiry_date:
+            self.initial["expiry_date"] = self.instance.expiry_date.strftime("%Y-%m")
+
         # 新規登録時：設計図寄せの初期値
         if not self.instance.pk:
             self.fields["content_unit"].initial = "L"
             self.fields["quantity_unit"].initial = "本"
 
-    def clean_purchase_month(self):
-        purchase_month = self.cleaned_data.get("purchase_month")
-        if not purchase_month:
-            return None
-
-        year, month = map(int, purchase_month.split("-"))
-        return datetime.date(year, month, 1)
-
     def save(self, commit=True):
         instance = super().save(commit=False)
+
+        # purchase_month は非モデル項目なので、purchase_date に入れ替える
         instance.purchase_date = self.cleaned_data.get("purchase_month")
 
         if commit:
