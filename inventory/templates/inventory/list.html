@@ -559,10 +559,19 @@
   ========================= */
   .inv-topbar {
     display: grid;
-    grid-template-columns: 32px 1fr 40px 52px 32px;
+    grid-template-columns: 28px 28px 1fr 36px 48px 28px;
     align-items: center;
-    column-gap: 10px;
+    column-gap: 8px;
     margin: 12px 0 18px;
+  }
+
+  .inv-topbar-search-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .inv-topbar-search-input::placeholder {
+    font-size: 14px;
   }
 
   .inv-topbar-icon-link,
@@ -838,20 +847,22 @@
         <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
         <input type="hidden" name="select_mode" value="1">
 
-        <div style="width:100%; min-width:0;">
+        <div class="inv-topbar-search-wrap">
           <input
             type="text"
             name="q"
             value="{{ q }}"
-            placeholder="商品名で検索"
+            placeholder="商品名"
+            class="inv-topbar-search-input"
             style="
               width:100%;
+              min-width:0;
               height:40px;
-              padding:0 14px;
+              padding:0 10px;
               border:1px solid #bfc7d4;
               border-radius:12px;
               background:#fff;
-              font-size:16px;
+              font-size:14px;
               color:#333;
               box-sizing:border-box;
             "
@@ -940,7 +951,8 @@
             type="text"
             name="q"
             value="{{ q }}"
-            placeholder="商品名で検索"
+            placeholder="商品名"
+            class="inv-topbar-search-input"
             style="
               width:100%;
               height:40px;
