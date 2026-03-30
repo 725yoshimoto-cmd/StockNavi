@@ -235,7 +235,7 @@ class SignUpView(CreateView):
         user.save()
 
         # ログイン
-        login(self.request, user)
+        login(self.request, user, backend="accounts.backends.EmailBackend")
 
         messages.success(self.request, "アカウント登録が完了しました。")
 
