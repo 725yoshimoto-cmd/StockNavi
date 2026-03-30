@@ -5,6 +5,24 @@
 
 {% block content %}
 
+<style>
+  .sn-inline-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sn-inline-field input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sn-inline-field select {
+    width: 72px;
+    flex: 0 0 auto;
+  }
+</style>
+
   {% if form.instance.pk %}
     <p class="breadcrumb" style="margin: 0 0 16px; font-size: 14px;">
       <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞
@@ -100,19 +118,47 @@
       <!-- 内容量 -->
       <div class="edit-row no-link">
         <div class="edit-label edit-label-required">内容量</div>
-        <div class="edit-field">
-          {{ form.content_amount }}
-          {{ form.content_amount.errors }}
+        <div class="form-group">
+          <div class="sn-inline-field">
+            {{ form.content_amount }}
+            {{ form.content_unit }}
+          </div>
+
+          {% if form.content_amount.errors %}
+            <div class="form-error">
+              {{ form.content_amount.errors }}
+            </div>
+          {% endif %}
+
+          {% if form.content_unit.errors %}
+            <div class="form-error">
+              {{ form.content_unit.errors }}
+            </div>
+          {% endif %}
         </div>
         <div class="edit-link-spacer"></div>
-      </div>    
+      </div>
 
       <!-- 個数 -->
       <div class="edit-row no-link">
         <div class="edit-label edit-label-required">個数</div>
-        <div class="edit-field">
-          {{ form.quantity }}
-          {{ form.quantity.errors }}
+        <div class="form-group">
+          <div class="sn-inline-field">
+            {{ form.quantity }}
+            {{ form.quantity_unit }}
+          </div>
+
+          {% if form.quantity.errors %}
+            <div class="form-error">
+              {{ form.quantity.errors }}
+            </div>
+          {% endif %}
+
+          {% if form.quantity_unit.errors %}
+            <div class="form-error">
+              {{ form.quantity_unit.errors }}
+            </div>
+          {% endif %}
         </div>
         <div class="edit-link-spacer"></div>
       </div>
@@ -129,18 +175,24 @@
 
       <!-- 消費・賞味期限 -->
       <div class="edit-row no-link">
-        <div class="edit-label edit-label-optional">
-          消費・賞味期限
-          <div class="item-date-subtext">YYYY/MM</div>
+        <div class="edit-label edit-label-required">
+          消費・賞味期限<br>
+          <span style="font-size: 12px; color: #555;">YYYY/MM</span>
         </div>
 
-        <div class="edit-field">
-          {{ form.expiry_month }}
-          {{ form.expiry_month.errors }}
+        <div class="form-group">
+          {{ form.expiry_date }}
+
+          {% if form.expiry_date.errors %}
+            <div class="form-error">
+              {{ form.expiry_date.errors }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="edit-link-spacer"></div>
       </div>
+
       <!-- 保管場所 -->
       <div class="edit-row">
         <div class="edit-label edit-label-required">保管場所</div>

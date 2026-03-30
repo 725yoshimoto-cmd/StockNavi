@@ -5,6 +5,17 @@ import uuid
 from django.utils import timezone
 from datetime import timedelta
 
+CONTENT_UNIT_CHOICES = [
+    ("L", "L"),
+    ("個", "個"),
+]
+
+QUANTITY_UNIT_CHOICES = [
+    ("本", "本"),
+    ("個", "個"),
+]
+
+
 class InventoryItem(models.Model):
     """
     InventoryItem（在庫）
@@ -33,12 +44,25 @@ class InventoryItem(models.Model):
     )
 
     name = models.CharField("在庫名", max_length=100)
+
     quantity = models.IntegerField("数量", default=0)
-    
+    quantity_unit = models.CharField(
+        "個数の単位",
+        max_length=10,
+        choices=QUANTITY_UNIT_CHOICES,
+        default="個",
+    )
+
     # 画面設計図の「内容量」：内容量 × 個数で集計するために追加
     # 例）水 2L、缶詰 1個 など
     # 既存データがあっても落ちないよう default を入れる
     content_amount = models.FloatField(default=1.0)
+    content_unit = models.CharField(
+        "内容量の単位",
+        max_length=10,
+        choices=CONTENT_UNIT_CHOICES,
+        default="個",
+    )
 
     # ★購入日・期限日（アラート判定用）
     purchase_date = models.DateField(
@@ -46,7 +70,7 @@ class InventoryItem(models.Model):
         null=True,   # 既存データがあるため必須にしない
         blank=True   # フォーム未入力を許可
     )
-    
+
     expiry_date = models.DateField(
         "賞味期限",
         null=True,   # 既存データがあるため必須にしない
@@ -55,11 +79,7 @@ class InventoryItem(models.Model):
 
     # 保存されるたびに自動で今の時刻が入る（履歴にも使える）
     updated_at = models.DateTimeField("更新日時", auto_now=True)
-    
-    # もし unit を今すぐ増やすと工数増えるので、今回は最小で content_amount のみ追加
-    def __str__(self):
-        return self.name
-    
+
     # 商品画像保存フィールド
     image = models.ImageField(
         upload_to="inventory_images/",
@@ -67,10 +87,13 @@ class InventoryItem(models.Model):
         null=True,
         verbose_name="商品画像"
     )
-    
+
     # 在庫を論理削除するためのフラグ
     is_deleted = models.BooleanField(default=False)
-        
+
+    def __str__(self):
+        return self.name
+            
 class Category(models.Model):
     """
     Category（カテゴリ）マスタ
