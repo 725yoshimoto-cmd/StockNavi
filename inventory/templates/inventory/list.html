@@ -187,13 +187,39 @@
   }
 
   .item-card {
-    display: flex;
-    gap: 12px;
     border: 1px solid #ddd;
     border-radius: 12px;
-    padding: 12px;
     margin-bottom: 12px;
     background: #fff;
+    overflow: hidden;
+  }
+
+  .item-card-select {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .item-card-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .item-card-link:hover .item-name,
+  .item-card-link:focus .item-name {
+    text-decoration: underline;
+  }
+
+  .item-card-link:focus {
+    outline: 2px solid #f4a259;
+    outline-offset: -2px;
   }
 
   .item-thumb {
@@ -1095,7 +1121,7 @@
       <div class="item-card">
 
         {% if request.GET.select_mode == "1" %}
-          <div style="display:flex; align-items:flex-start; gap:10px;">
+          <div class="item-card-select">
             <div style="padding-top:8px; flex:0 0 auto;">
               <input
                 type="checkbox"
@@ -1162,60 +1188,63 @@
 
         {% else %}
 
-          {% if item.image %}
-            <img src="{{ item.image.url }}" class="item-thumb" alt="{{ item.name }}">
-          {% else %}
-            <div class="item-thumb">No Image</div>
-          {% endif %}
+          <a href="{% url 'inventory:inventory_detail' item.pk %}"
+            class="item-card-link"
+            aria-label="{{ item.name }} の詳細を見る">
 
-          <div class="item-main">
-            <div class="item-body
-              {% if item.is_alert_red %} alert-red
-              {% elif item.is_alert_blue %} alert-blue
-              {% endif %}
-            ">
-              <div class="item-top" style="display:flex; align-items:center; gap:8px; min-width:0; flex-wrap:wrap;">
+            {% if item.image %}
+              <img src="{{ item.image.url }}" class="item-thumb" alt="{{ item.name }}">
+            {% else %}
+              <div class="item-thumb">No Image</div>
+            {% endif %}
 
-                {% if item.category %}
-                  <span class="cat-tag" style="background: {{ item.category.color|default:'#f1e8ff' }};">
-                    {{ item.category.name }}
-                  </span>
-                {% else %}
-                  <span class="cat-tag" style="background:#eee;">未分類</span>
+            <div class="item-main">
+              <div class="item-body
+                {% if item.is_alert_red %} alert-red
+                {% elif item.is_alert_blue %} alert-blue
                 {% endif %}
+              ">
+                <div class="item-top" style="display:flex; align-items:center; gap:8px; min-width:0; flex-wrap:wrap;">
 
-                {% if item.is_alert_red %}
-                  <span class="alert-icon" title="アラート（在庫0 または 期限0日）">🔔</span>
-                {% elif item.is_alert_blue %}
-                  <span class="alert-icon" title="注意（設定した個数・期限内）">🔔</span>
-                {% endif %}
+                  {% if item.category %}
+                    <span class="cat-tag" style="background: {{ item.category.color|default:'#f1e8ff' }};">
+                      {{ item.category.name }}
+                    </span>
+                  {% else %}
+                    <span class="cat-tag" style="background:#eee;">未分類</span>
+                  {% endif %}
 
-                <a href="{% url 'inventory:inventory_detail' item.pk %}" class="item-name">
-                  {{ item.name }}
-                </a>
-              </div>
+                  {% if item.is_alert_red %}
+                    <span class="alert-icon" title="アラート（在庫0 または 期限0日）">🔔</span>
+                  {% elif item.is_alert_blue %}
+                    <span class="alert-icon" title="注意（設定した個数・期限内）">🔔</span>
+                  {% endif %}
 
-              <div class="meta">
-                <span>数量：{{ item.quantity }}</span>
+                  <span class="item-name">{{ item.name }}</span>
+                </div>
 
-                {% if item.expiry_date %}
-                  <span>消費・賞味期限：{{ item.expiry_date|date:"Y/m/d" }}</span>
-                {% else %}
-                  <span>消費・賞味期限：未設定</span>
-                {% endif %}
+                <div class="meta">
+                  <span>数量：{{ item.quantity }}</span>
 
-                {% if item.days_left is not None %}
-                  <span>残り：{{ item.days_left }}日</span>
-                {% endif %}
+                  {% if item.expiry_date %}
+                    <span>消費・賞味期限：{{ item.expiry_date|date:"Y/m/d" }}</span>
+                  {% else %}
+                    <span>消費・賞味期限：未設定</span>
+                  {% endif %}
 
-                {% if item.storage_location %}
-                  <span>保管：{{ item.storage_location.name }}</span>
-                {% else %}
-                  <span>保管：未設定</span>
-                {% endif %}
+                  {% if item.days_left is not None %}
+                    <span>残り：{{ item.days_left }}日</span>
+                  {% endif %}
+
+                  {% if item.storage_location %}
+                    <span>保管：{{ item.storage_location.name }}</span>
+                  {% else %}
+                    <span>保管：未設定</span>
+                  {% endif %}
+                </div>
               </div>
             </div>
-          </div>
+          </a>
 
         {% endif %}
       </div>
