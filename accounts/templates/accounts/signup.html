@@ -220,6 +220,7 @@
           id="{{ form.username.id_for_label }}"
           value="{{ form.username.value|default_if_none:'' }}"
           class="signup-input"
+          placeholder="アカウント名を入力"
         >
         {% if form.username.errors %}
           <div class="signup-field-error">
@@ -233,11 +234,12 @@
             メールアドレス
         </label>
         <input
-            type="email"
-            name="{{ form.email.html_name }}"
-            id="{{ form.email.id_for_label }}"
-            value="{{ form.email.value|default_if_none:'' }}"
-            class="signup-input"
+          type="email"
+          name="{{ form.email.html_name }}"
+          id="{{ form.email.id_for_label }}"
+          value="{{ form.email.value|default_if_none:'' }}"
+          class="signup-input"
+          placeholder="メールアドレスを入力"
         >
         {% if form.email.errors %}
             <div class="signup-field-error">
@@ -257,6 +259,7 @@
             name="{{ form.password1.html_name }}"
             id="{{ form.password1.id_for_label }}"
             class="signup-input js-password"
+            placeholder="8文字以上・英数字を含む"
           >
           <button type="button" class="password-toggle js-toggle-password" aria-label="パスワードを表示">
             👁
@@ -285,6 +288,7 @@
             name="{{ form.password2.html_name }}"
             id="{{ form.password2.id_for_label }}"
             class="signup-input js-password"
+            placeholder="確認用パスワードを入力"
           >
           <button type="button" class="password-toggle js-toggle-password" aria-label="確認用パスワードを表示">
             👁
