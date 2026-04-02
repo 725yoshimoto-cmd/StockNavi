@@ -6,6 +6,9 @@ import datetime, calendar
 
 
 class InventoryItemForm(forms.ModelForm):
+    # =========================
+    # 購入月
+    # =========================
     purchase_month = forms.DateField(
         required=False,
         input_formats=["%Y-%m"],
@@ -15,6 +18,11 @@ class InventoryItemForm(forms.ModelForm):
         )
     )
 
+    # =========================
+    # 賞味・消費期限
+    # ※ 設計図どおり month入力
+    # 必須にしたい場合は required=True のまま
+    # =========================
     expiry_date = forms.DateField(
         required=True,
         input_formats=["%Y-%m"],
@@ -24,22 +32,13 @@ class InventoryItemForm(forms.ModelForm):
         )
     )
 
-    """
-    在庫登録/編集フォーム
-    - 購入月は YYYY-MM で受け取り、purchase_date に入れる
-    - 消費・賞味期限も YYYY-MM で受け取り、expiry_date に入れる
-    - 内容量の単位 / 個数の単位を選べるようにする
-    """
-
     class Meta:
         model = InventoryItem
         fields = [
             "name",
             "category",
             "content_amount",
-            "content_unit",
             "quantity",
-            "quantity_unit",
             "purchase_month",
             "expiry_date",
             "storage_location",
@@ -47,66 +46,139 @@ class InventoryItemForm(forms.ModelForm):
         ]
 
         labels = {
-            "category": "分類",
-            "storage_location": "保管場所",
             "name": "商品名",
-            "quantity": "個数",
-            "quantity_unit": "個数の単位",
+            "category": "分類",
             "content_amount": "内容量",
-            "content_unit": "内容量の単位",
-            "purchase_date": "購入日",
-            "expiry_date": "賞味期限",
+            "quantity": "個数",
+            "purchase_month": "購入日",
+            "expiry_date": "賞味・消費期限",
+            "storage_location": "保管場所",
             "image": "商品画像",
         }
 
         widgets = {
-            "name": forms.TextInput(),
+            "name": forms.TextInput(attrs={
+                "placeholder": "例：水",
+            }),
+            "content_amount": forms.NumberInput(attrs={
+                "step": "1",
+                "min": "1",   # フロントでも 1未満を入れにくくする
+            }),
+            "quantity": forms.NumberInput(attrs={
+                "step": "1",
+                "min": "1",   # フロントでも 1未満を入れにくくする
+            }),
             "category": forms.Select(),
-            "content_amount": forms.NumberInput(attrs={"step": "0.1", "min": "0"}),
-            "content_unit": forms.Select(),
-            "quantity": forms.NumberInput(attrs={"min": "0"}),
-            "quantity_unit": forms.Select(),
             "storage_location": forms.Select(),
             "image": forms.ClearableFileInput(),
         }
 
     def __init__(self, *args, **kwargs):
+        """
+        フォーム表示時の初期設定
+        - 画像は任意にする
+        - 個数の初期値を1にする
+        - 必須項目の設定をここでそろえる
+        """
         super().__init__(*args, **kwargs)
 
-        # 必須設定（購入日だけ任意）
-        self.fields["name"].required = True
+        # =========================
+        # 画像は任意
+        # =========================
+        self.fields["image"].required = False
+
+        # =========================
+        # 分類・保管場所も必須にする
+        # ※ model側が blank=True でも、フォーム側で必須にできる
+        # ※ 提出直前なので、まずは安全なフォーム制御で対応
+        # =========================
         self.fields["category"].required = True
-        self.fields["content_amount"].required = True
-        self.fields["content_unit"].required = True
-        self.fields["quantity"].required = True
-        self.fields["quantity_unit"].required = True
-        self.fields["expiry_date"].required = True
         self.fields["storage_location"].required = True
-        self.fields["image"].required = True
-        self.fields["purchase_month"].required = False
 
-        # 既存データ編集時：購入月を YYYY-MM で初期表示
-        if self.instance and self.instance.pk and self.instance.purchase_date:
-            self.initial["purchase_month"] = self.instance.purchase_date.strftime("%Y-%m")
-
-        # 既存データ編集時：消費・賞味期限を YYYY-MM で初期表示
-        if self.instance and self.instance.pk and self.instance.expiry_date:
-            self.initial["expiry_date"] = self.instance.expiry_date.strftime("%Y-%m")
-
-        # 新規登録時：設計図寄せの初期値
+        # =========================
+        # 個数の初期値を 1 にする
+        # 既存編集時はDBの値が優先されるので壊れない
+        # =========================
         if not self.instance.pk:
-            self.fields["content_unit"].initial = "L"
-            self.fields["quantity_unit"].initial = "本"
+            self.fields["quantity"].initial = 1
+            
+        # =========================
+        # 分かりやすい必須メッセージに統一
+        # =========================
+        self.fields["name"].error_messages = {
+            "required": "商品名を入力してください。"
+        }
+        self.fields["category"].error_messages = {
+            "required": "分類を選択してください。"
+        }
+        self.fields["content_amount"].error_messages = {
+            "required": "内容量を入力してください。"
+        }
+        self.fields["quantity"].error_messages = {
+            "required": "個数を入力してください。"
+        }
+        self.fields["expiry_date"].error_messages = {
+            "required": "賞味・消費期限を入力してください。",
+            "invalid": "賞味・消費期限を正しく入力してください。"
+        }
+        self.fields["storage_location"].error_messages = {
+            "required": "保管場所を選択してください。"
+        }
 
-    def save(self, commit=True):
-        instance = super().save(commit=False)
+    def clean_quantity(self):
+        """
+        個数チェック
+        - 未入力は required メッセージに任せる
+        - 0以下は禁止
+        """
+        quantity = self.cleaned_data.get("quantity")
 
-        # purchase_month は非モデル項目なので、purchase_date に入れ替える
-        instance.purchase_date = self.cleaned_data.get("purchase_month")
+        if quantity is None:
+            return quantity
 
-        if commit:
-            instance.save()
-            self.save_m2m()
+        if quantity <= 0:
+            raise forms.ValidationError("個数は1以上で入力してください。")
 
-        return instance
-    
+        return quantity
+
+    def clean_content_amount(self):
+        """
+        内容量チェック
+        - 未入力は required メッセージに任せる
+        - 0以下は禁止
+        """
+        content_amount = self.cleaned_data.get("content_amount")
+
+        if content_amount is None:
+            return content_amount
+
+        try:
+            value = Decimal(str(content_amount))
+        except (InvalidOperation, TypeError):
+            raise forms.ValidationError("内容量を正しく入力してください。")
+
+        if value <= 0:
+            raise forms.ValidationError("内容量は1以上で入力してください。")
+
+        return value
+
+    def clean(self):
+        """
+        フォーム全体の変換処理
+        purchase_month(YYYY-MM) を purchase_date に入れたい場合に使う
+        既存の実装を壊さないように最低限だけ残す
+        """
+        cleaned_data = super().clean()
+
+        purchase_month = cleaned_data.get("purchase_month")
+        if purchase_month:
+            # その月の1日を purchase_date に入れる
+            cleaned_data["purchase_date"] = purchase_month.replace(day=1)
+
+        expiry_date = cleaned_data.get("expiry_date")
+        if expiry_date:
+            # YYYY-MM 入力の場合、その月の末日として保存したいならここで変換
+            last_day = calendar.monthrange(expiry_date.year, expiry_date.month)[1]
+            cleaned_data["expiry_date"] = expiry_date.replace(day=last_day)
+
+        return cleaned_data

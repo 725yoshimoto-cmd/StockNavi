@@ -28,6 +28,51 @@
     font-size: 14px;
     line-height: 1.5;
   }
+
+  .field-error {
+    margin-top: 6px;
+    color: #d93025;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .field-error p {
+    margin: 0;
+  }
+
+  .form-global-error {
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #fff5f5;
+  }
+
+  .form-error-text {
+    margin: 0;
+  }
+
+  .field-error {
+    margin-top: 6px;
+    color: #d93025;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .field-error p,
+  .form-error-text {
+    margin: 0;
+  }
+
+  .edit-label-required {
+    color: #00a63a;
+    font-weight: 700;
+  }
+
+  .edit-label-optional {
+    color: #333;
+    font-weight: 700;
+  }
+
 </style>
 
   {% if form.instance.pk %}
@@ -45,9 +90,15 @@
 
 
   <div class="item-form-wrap">
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" novalidate>
       {% csrf_token %}
-      {{ form.non_field_errors }}
+      {% if form.non_field_errors %}
+        <div class="field-error form-global-error">
+          {% for error in form.non_field_errors %}
+            <p class="form-error-text">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
 
       <!-- 商品画像（中央寄せ版） -->
       <div class="item-image-section">
@@ -85,7 +136,7 @@
       </div>
 
       {% if form.image.errors %}
-        <div class="item-image-errors">
+        <div class="field-error item-image-errors">
           {% for error in form.image.errors %}
             <p class="form-error-text">{{ error }}</p>
           {% endfor %}
@@ -100,32 +151,38 @@
       <!-- 商品名 -->
       <div class="edit-row no-link">
         <div class="edit-label edit-label-required">商品名</div>
+
         <div class="edit-field">
           {{ form.name }}
+
           {% if form.name.errors %}
-            <div class="form-error">
+            <div class="field-error">
               {% for error in form.name.errors %}
                 <p class="form-error-text">{{ error }}</p>
               {% endfor %}
             </div>
           {% endif %}
         </div>
+
         <div class="edit-link-spacer"></div>
       </div>
 
       <!-- 分類 -->
       <div class="edit-row">
         <div class="edit-label edit-label-required">分類</div>
+
         <div class="edit-field">
           {{ form.category }}
+
           {% if form.category.errors %}
-            <div class="form-error">
+            <div class="field-error">
               {% for error in form.category.errors %}
                 <p class="form-error-text">{{ error }}</p>
               {% endfor %}
             </div>
           {% endif %}
         </div>
+
         <div class="edit-link">
           <a href="{% url 'inventory:settings_tabs' %}?tab=category">登録・変更</a>
         </div>
@@ -141,16 +198,21 @@
           </div>
 
           {% if form.content_amount.errors %}
-            <div class="form-error">
-              {{ form.content_amount.errors }}
+            <div class="field-error">
+              {% for error in form.content_amount.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
             </div>
           {% endif %}
 
           {% if form.content_unit.errors %}
-            <div class="form-error">
-              {{ form.content_unit.errors }}
+            <div class="field-error">
+              {% for error in form.content_unit.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
             </div>
           {% endif %}
+          
         </div>
         <div class="edit-link-spacer"></div>
       </div>
@@ -165,14 +227,18 @@
           </div>
 
           {% if form.quantity.errors %}
-            <div class="form-error">
-              {{ form.quantity.errors }}
+            <div class="field-error">
+              {% for error in form.quantity.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
             </div>
           {% endif %}
 
           {% if form.quantity_unit.errors %}
-            <div class="form-error">
-              {{ form.quantity_unit.errors }}
+            <div class="field-error">
+              {% for error in form.quantity_unit.errors %}
+                <p class="form-error-text">{{ error }}</p>
+              {% endfor %}
             </div>
           {% endif %}
         </div>
