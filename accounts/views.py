@@ -319,21 +319,11 @@ class CustomPasswordResetRequestView(FormView):
                 )
 
             except OSError as e:
-                # PythonAnywhere無料枠で Gmail SMTP に到達できないときの保険
+                # ログには残すが、ユーザーには出さない
                 logger.exception("Password reset mail send failed: %s", e)
-
-                # 画面は落とさず、完了画面へ進める
-                messages.warning(
-                    self.request,
-                    "現在メール送信環境の都合により、再設定メールの送信が不安定です。"
-                )
-
+                
             except Exception as e:
                 logger.exception("Unexpected password reset mail error: %s", e)
-                messages.warning(
-                    self.request,
-                    "現在メール送信環境の都合により、再設定メールの送信が不安定です。"
-                )
-        # メールアドレスが存在しなくても、画面上は同じ完了画面へ
+                
         # （セキュリティ上、存在有無を見せないため）
         return super().form_valid(form)

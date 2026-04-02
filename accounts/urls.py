@@ -34,7 +34,7 @@ urlpatterns = [
     path(
         "password-reset/",
         CustomPasswordResetRequestView.as_view(),
-        name="password_reset",
+        name="password_reset"
     ),
 
     # メール送信完了画面

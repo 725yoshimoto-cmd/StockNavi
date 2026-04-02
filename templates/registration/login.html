@@ -78,6 +78,13 @@
     line-height: 1;
   }
 
+  .password-toggle-icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+    object-fit: contain;
+  }  
+
   input[type="password"]::-ms-reveal,
   input[type="password"]::-ms-clear {
     display: none;
@@ -230,9 +237,16 @@
             type="button"
             class="password-toggle"
             id="passwordToggle"
-            aria-label="パスワード表示切替"
+            aria-label="パスワードを表示"
+            aria-pressed="false"
           >
-            👁
+            <img
+              id="passwordToggleIcon"
+              src="{% static 'images/eye_open.png' %}"
+              alt=""
+              aria-hidden="true"
+              class="password-toggle-icon"
+            >
           </button>
         </div>
         {% if form.password.errors %}
@@ -274,11 +288,29 @@
 <script>
   const passwordInput = document.getElementById("id_password");
   const passwordToggle = document.getElementById("passwordToggle");
+  const passwordToggleIcon = document.getElementById("passwordToggleIcon");
 
-  if (passwordInput && passwordToggle) {
+  if (passwordInput && passwordToggle && passwordToggleIcon) {
+    function updatePasswordToggle() {
+      const isHidden = passwordInput.type === "password";
+
+      if (isHidden) {
+        passwordToggleIcon.src = "{% static 'images/eye_open.png' %}";
+        passwordToggle.setAttribute("aria-label", "パスワードを表示");
+        passwordToggle.setAttribute("aria-pressed", "false");
+      } else {
+        passwordToggleIcon.src = "{% static 'images/eye_off.png' %}";
+        passwordToggle.setAttribute("aria-label", "パスワードを非表示");
+        passwordToggle.setAttribute("aria-pressed", "true");
+      }
+    }
+
     passwordToggle.addEventListener("click", function () {
       passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+      updatePasswordToggle();
     });
+
+    updatePasswordToggle();
   }
 
   const usernameInput = document.getElementById("id_username");
