@@ -124,11 +124,16 @@
     transform: translateY(-50%);
     border: none;
     background: transparent;
-    font-size: 20px;
-    line-height: 1;
     cursor: pointer;
-    color: #666;
     padding: 0;
+    line-height: 1;
+  }
+
+  .password-toggle-icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+    object-fit: contain;
   }
 
   .signup-help {
@@ -261,8 +266,18 @@
             class="signup-input js-password"
             placeholder="8文字以上・英数字を含む"
           >
-          <button type="button" class="password-toggle js-toggle-password" aria-label="パスワードを表示">
-            👁
+          <button
+            type="button"
+            class="password-toggle js-toggle-password"
+            aria-label="パスワードを表示"
+            aria-pressed="false"
+          >
+            <img
+              src="{% static 'images/eye_open.png' %}"
+              alt=""
+              aria-hidden="true"
+              class="password-toggle-icon js-toggle-icon"
+            >
           </button>
         </div>
 
@@ -290,8 +305,18 @@
             class="signup-input js-password"
             placeholder="確認用パスワードを入力"
           >
-          <button type="button" class="password-toggle js-toggle-password" aria-label="確認用パスワードを表示">
-            👁
+          <button
+            type="button"
+            class="password-toggle js-toggle-password"
+            aria-label="確認用パスワードを表示"
+            aria-pressed="false"
+          >
+            <img
+              src="{% static 'images/eye_open.png' %}"
+              alt=""
+              aria-hidden="true"
+              class="password-toggle-icon js-toggle-icon"
+            >
           </button>
         </div>
 
@@ -325,13 +350,22 @@
       button.addEventListener("click", function () {
         const wrapper = button.closest(".password-wrap");
         const input = wrapper.querySelector(".js-password");
+        const icon = button.querySelector(".js-toggle-icon");
+
+        if (!input || !icon) {
+          return;
+        }
 
         if (input.type === "password") {
           input.type = "text";
-          button.textContent = "🙈";
+          icon.src = "{% static 'images/eye_off.png' %}";
+          button.setAttribute("aria-pressed", "true");
+          button.setAttribute("aria-label", "パスワードを非表示");
         } else {
           input.type = "password";
-          button.textContent = "👁";
+          icon.src = "{% static 'images/eye_open.png' %}";
+          button.setAttribute("aria-pressed", "false");
+          button.setAttribute("aria-label", "パスワードを表示");
         }
       });
     });
