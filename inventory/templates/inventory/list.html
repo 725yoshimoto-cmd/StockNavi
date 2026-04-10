@@ -555,6 +555,38 @@
   }
 
     /* =========================
+     選択モードの複製・削除ボタン
+  ========================= */
+  .bulk-action-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .bulk-action-btn img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .bulk-action-btn:hover {
+    opacity: 0.9;
+  }
+
+  .bulk-action-btn:focus {
+    outline: 2px solid #f4a259;
+    outline-offset: 2px;
+  }
+
+    /* =========================
      在庫一覧 上部検索バー
   ========================= */
   .inv-topbar {
@@ -880,26 +912,22 @@
         </button>
       </form>
 
-      <button type="submit" form="bulkForm" formaction="{% url 'inventory:inventory_bulk_duplicate' %}"
+      <button type="submit"
+              form="bulkForm"
+              formaction="{% url 'inventory:inventory_bulk_duplicate' %}"
               aria-label="複製"
-              style="
-                width:32px; height:40px; border:none; background:transparent;
-                display:flex; align-items:center; justify-content:center;
-                padding:0; margin:0; cursor:pointer;
-              ">
-        <img src="{% static 'images/copy.png' %}" alt="複製"
-             style="width:26px; height:26px; object-fit:contain; display:block;">
+              title="選択商品を複製"
+              class="bulk-action-btn bulk-action-btn-copy">
+        <img src="{% static 'images/COPY.png' %}" alt="複製">
       </button>
 
-      <button type="submit" form="bulkForm" formaction="{% url 'inventory:inventory_bulk_delete' %}"
+      <button type="submit"
+              form="bulkForm"
+              formaction="{% url 'inventory:inventory_bulk_delete' %}"
               aria-label="削除"
-              style="
-                width:32px; height:40px; border:none; background:transparent;
-                display:flex; align-items:center; justify-content:center;
-                padding:0; margin:0; cursor:pointer;
-              ">
-        <img src="{% static 'images/trash.png' %}" alt="削除"
-             style="width:26px; height:26px; object-fit:contain; display:block;">
+              title="選択商品を削除"
+              class="bulk-action-btn bulk-action-btn-delete">
+        <img src="{% static 'images/trash.png' %}" alt="削除">
       </button>
     </div>
 
