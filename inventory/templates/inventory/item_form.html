@@ -109,9 +109,10 @@
             <div class="item-image-preview" id="image_preview_box">
               <img
                 id="image_preview"
-                src="{% if form.instance.image %}{{ form.instance.image.url }}{% endif %}"
-                alt="{% if form.instance.name %}{{ form.instance.name }}{% else %}商品画像{% endif %}"
+                {% if form.instance.image %}src="{{ form.instance.image.url }}"{% endif %}
+                alt=""
                 style="{% if form.instance.image %}display:block;{% else %}display:none;{% endif %}"
+                onerror="this.style.display='none'; document.getElementById('image_preview_placeholder').style.display='inline';"
               >
               <span
                 id="image_preview_placeholder"
@@ -247,12 +248,12 @@
 
       <!-- 購入日 -->
       <div class="edit-row no-link">
-        <div class="edit-label edit-label-optional">購入日<br><span style="font-size:12px; font-weight:400;">YYYY/MM</span></div>
+        <div class="edit-label edit-label-optional">購入日<br><span style="font-size:12px; font-weight:400;">YYYY/MM/DD</span></div>
         <div class="edit-field">
-          {{ form.purchase_month }}
-          {% if form.purchase_month.errors %}
+          {{ form.purchase_date }}
+          {% if form.purchase_date.errors %}
             <div class="form-error">
-              {% for error in form.purchase_month.errors %}
+              {% for error in form.purchase_date.errors %}
                 <p class="form-error-text">{{ error }}</p>
               {% endfor %}
             </div>
@@ -265,7 +266,7 @@
       <div class="edit-row no-link">
         <div class="edit-label edit-label-required">
           消費・賞味期限<br>
-          <span style="font-size: 12px; color: #555;">YYYY/MM</span>
+          <span style="font-size: 12px; color: #555;">YYYY/MM/DD</span>
         </div>
 
         <div class="form-group">
@@ -324,26 +325,43 @@
 
     if (!fileInput || !previewImg || !placeholder) return;
 
+    function showPlaceholder() {
+      previewImg.style.display = "none";
+      previewImg.removeAttribute("src");
+      placeholder.style.display = "inline";
+    }
+
+    function showImage(src) {
+      previewImg.src = src;
+      previewImg.style.display = "block";
+      placeholder.style.display = "none";
+    }
+
+    // 初期表示
+    if (previewImg.getAttribute("src")) {
+      previewImg.style.display = "block";
+      placeholder.style.display = "none";
+    } else {
+      showPlaceholder();
+    }
+
     fileInput.addEventListener("change", function (event) {
       const file = event.target.files && event.target.files[0];
 
       if (!file) {
+        showPlaceholder();
         return;
       }
 
       if (!file.type.startsWith("image/")) {
         alert("画像ファイルを選択してください。");
         fileInput.value = "";
-        previewImg.src = "";
-        previewImg.style.display = "none";
-        placeholder.style.display = "inline";
+        showPlaceholder();
         return;
       }
 
       const imageUrl = URL.createObjectURL(file);
-      previewImg.src = imageUrl;
-      previewImg.style.display = "block";
-      placeholder.style.display = "none";
+      showImage(imageUrl);
     });
   });
 </script>

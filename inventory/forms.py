@@ -7,28 +7,27 @@ import datetime, calendar
 
 class InventoryItemForm(forms.ModelForm):
     # =========================
-    # 購入月
+    # 購入日
     # =========================
-    purchase_month = forms.DateField(
+    purchase_date = forms.DateField(
         required=False,
-        input_formats=["%Y-%m"],
+        input_formats=["%Y-%m-%d"],
         widget=forms.DateInput(
-            format="%Y-%m",
-            attrs={"type": "month"}
+            format="%Y-%m-%d",
+            attrs={"type": "date"}
         )
     )
 
     # =========================
-    # 賞味・消費期限
-    # ※ 設計図どおり month入力
-    # 必須にしたい場合は required=True のまま
+    # 消費・賞味期限
+    # 日付まで入力できるようにする
     # =========================
     expiry_date = forms.DateField(
         required=True,
-        input_formats=["%Y-%m"],
+        input_formats=["%Y-%m-%d"],
         widget=forms.DateInput(
-            format="%Y-%m",
-            attrs={"type": "month"}
+            format="%Y-%m-%d",
+            attrs={"type": "date"}
         )
     )
 
@@ -38,8 +37,10 @@ class InventoryItemForm(forms.ModelForm):
             "name",
             "category",
             "content_amount",
+            "content_unit",
             "quantity",
-            "purchase_month",
+            "quantity_unit",
+            "purchase_date",
             "expiry_date",
             "storage_location",
             "image",
@@ -49,9 +50,11 @@ class InventoryItemForm(forms.ModelForm):
             "name": "商品名",
             "category": "分類",
             "content_amount": "内容量",
+            "content_unit": "内容量の単位",
             "quantity": "個数",
-            "purchase_month": "購入日",
-            "expiry_date": "賞味・消費期限",
+            "quantity_unit": "個数の単位",
+            "purchase_date": "購入日",
+            "expiry_date": "消費・賞味期限",
             "storage_location": "保管場所",
             "image": "商品画像",
         }
@@ -121,8 +124,9 @@ class InventoryItemForm(forms.ModelForm):
             "required": "賞味・消費期限を入力してください。",
             "invalid": "賞味・消費期限を正しく入力してください。"
         }
-        self.fields["storage_location"].error_messages = {
-            "required": "保管場所を選択してください。"
+        self.fields["expiry_date"].error_messages = {
+            "required": "消費・賞味期限を入力してください。",
+            "invalid": "消費・賞味期限を正しく入力してください。"
         }
 
     def clean_quantity(self):
@@ -164,21 +168,8 @@ class InventoryItemForm(forms.ModelForm):
 
     def clean(self):
         """
-        フォーム全体の変換処理
-        purchase_month(YYYY-MM) を purchase_date に入れたい場合に使う
-        既存の実装を壊さないように最低限だけ残す
+        フォーム全体の共通バリデーション
+        日付入力はそのまま使う
         """
         cleaned_data = super().clean()
-
-        purchase_month = cleaned_data.get("purchase_month")
-        if purchase_month:
-            # その月の1日を purchase_date に入れる
-            cleaned_data["purchase_date"] = purchase_month.replace(day=1)
-
-        expiry_date = cleaned_data.get("expiry_date")
-        if expiry_date:
-            # YYYY-MM 入力の場合、その月の末日として保存したいならここで変換
-            last_day = calendar.monthrange(expiry_date.year, expiry_date.month)[1]
-            cleaned_data["expiry_date"] = expiry_date.replace(day=last_day)
-
         return cleaned_data
