@@ -15,17 +15,6 @@
   column-gap:10px;
   margin:12px 0 18px;
 ">
-  <!-- 戻る（選択モード解除） -->
-  <a href="{% url 'inventory:inventory_history' %}?q={{ q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort|default:'' }}"
-     aria-label="戻る"
-     style="
-       width:32px; height:40px;
-       display:flex; align-items:center; justify-content:center;
-       text-decoration:none;
-       padding:0; margin:0;
-     ">
-    戻る
-  </a>
 
   <!-- 検索 -->
   <form method="get" action="{% url 'inventory:inventory_history_select' %}" style="display:contents;">
