@@ -329,7 +329,7 @@
         <button type="submit" class="action-button action-button-save">保存</button>
       </div>
 
-      {% if form.instance.pk %}
+      {% if form.instance.pk and not form.instance.is_deleted %}
         <hr class="item-form-divider">
 
         <div class="delete-button-wrap">
