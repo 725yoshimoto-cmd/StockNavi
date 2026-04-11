@@ -312,16 +312,19 @@
     </form>
   </div>
 
-  <hr class="detail-divider">
+  {% if not object.is_deleted %}
+    <hr class="detail-divider">
 
-  <div class="delete-button-wrap">
-    <a href="{% url 'inventory:inventory_delete' object.pk %}" class="action-button action-button-delete">
-      <span class="delete-icon">🗑</span>
-      この商品を削除
-    </a>
-  </div>
+    <div class="delete-button-wrap">
+      <a href="{% url 'inventory:inventory_delete' object.pk %}" class="action-button action-button-delete">
+        <span class="delete-icon">🗑</span>
+        この商品を削除
+      </a>
+    </div>
+  {% endif %}
 </div>
 
+{% if not object.is_deleted %}
 <div id="deleteModal" class="delete-modal-overlay">
   <div class="delete-modal-box">
     <h2 class="delete-modal-title">削除確認</h2>
@@ -347,6 +350,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <script>
   function openDeleteModal() {
