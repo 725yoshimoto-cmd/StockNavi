@@ -75,17 +75,33 @@
 
 </style>
 
-  {% if form.instance.pk %}
+{% if form.instance.pk %}
+  {% if request.GET.from == "history" %}
     <p class="breadcrumb" style="margin: 0 0 16px; font-size: 14px;">
-      <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞
-      <a href="{% url 'inventory:inventory_detail' form.instance.pk %}">商品情報</a> ＞
-      商品編集
+      <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+      <span>＞</span>
+      <a href="{% url 'inventory:inventory_history' %}">過去の登録履歴</a>
+      <span>＞</span>
+      <a href="{% url 'inventory:inventory_detail' form.instance.pk %}?from=history">過去の商品情報</a>
+      <span>＞</span>
+      <span>過去の商品編集</span>
     </p>
   {% else %}
     <p class="breadcrumb" style="margin: 0 0 16px; font-size: 14px;">
-      <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a> ＞ 在庫を追加
+      <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+      <span>＞</span>
+      <a href="{% url 'inventory:inventory_detail' form.instance.pk %}">商品情報</a>
+      <span>＞</span>
+      <span>商品編集</span>
     </p>
   {% endif %}
+{% else %}
+  <p class="breadcrumb" style="margin: 0 0 16px; font-size: 14px;">
+    <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+    <span>＞</span>
+    <span>在庫追加</span>
+  </p>
+{% endif %}
 
 
 

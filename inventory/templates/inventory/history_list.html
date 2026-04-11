@@ -156,6 +156,7 @@
 
 {% for item in items %}
   <div style="
+    position:relative;
     display:flex;
     align-items:flex-start;
     gap:14px;
@@ -163,6 +164,18 @@
     border-bottom:1px solid #e5e5e5;
     color:#11b57c;
   ">
+    <a href="{% url 'inventory:inventory_detail' item.id %}"
+       aria-label="{{ item.name }}の詳細へ"
+       style="
+         position:absolute;
+         inset:0;
+         z-index:1;
+         text-indent:-9999px;
+         overflow:hidden;
+       ">
+      {{ item.name }}
+    </a>
+
     <div style="
       width:72px;
       height:72px;

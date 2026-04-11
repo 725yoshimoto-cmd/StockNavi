@@ -10,11 +10,24 @@
 
 <div style="
   display:grid;
-  grid-template-columns: 1fr 40px 32px 32px;
+  grid-template-columns: 32px 1fr 40px 32px 32px;
   align-items:center;
   column-gap:10px;
   margin:12px 0 18px;
 ">
+  <!-- 戻る（選択モード解除） -->
+  <a href="{% url 'inventory:inventory_history' %}?q={{ q|urlencode }}&category={{ selected_category }}&storage={{ selected_storage }}&sort={{ request.GET.sort|default:'' }}"
+     aria-label="戻る"
+     style="
+       width:32px; height:40px;
+       display:flex; align-items:center; justify-content:center;
+       text-decoration:none;
+       padding:0; margin:0;
+     ">
+    戻る
+  </a>
+
+  <!-- 検索 -->
   <form method="get" action="{% url 'inventory:inventory_history_select' %}" style="display:contents;">
     <input type="hidden" name="category" value="{{ selected_category }}">
     <input type="hidden" name="storage" value="{{ selected_storage }}">
@@ -51,6 +64,7 @@
     </button>
   </form>
 
+  <!-- 複製 -->
   <button type="submit" form="historyBulkForm"
           formaction="{% url 'inventory:inventory_history_bulk_duplicate' %}"
           aria-label="複製"
@@ -63,6 +77,7 @@
          style="width:26px; height:26px; object-fit:contain; display:block;">
   </button>
 
+  <!-- 削除 -->
   <button type="button"
           id="openDeleteModal"
           aria-label="削除"

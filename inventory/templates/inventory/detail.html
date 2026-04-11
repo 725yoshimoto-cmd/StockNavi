@@ -208,11 +208,21 @@
 </style>
 
 <div class="detail-page">
-  <p class="detail-breadcrumb">
-    <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
-    <span>＞</span>
-    <span>商品情報</span>
-  </p>
+  {% if object.is_deleted %}
+    <p class="detail-breadcrumb">
+      <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+      <span>＞</span>
+      <a href="{% url 'inventory:inventory_history' %}">過去の登録履歴</a>
+      <span>＞</span>
+      <span>過去の商品情報</span>
+    </p>
+  {% else %}
+    <p class="detail-breadcrumb">
+      <a href="{% url 'inventory:inventory_list' %}">在庫一覧</a>
+      <span>＞</span>
+      <span>商品情報</span>
+    </p>
+  {% endif %}
 
   <div class="detail-image-area">
 
@@ -224,9 +234,15 @@
       {% endif %}
     </div>
 
-    <a href="{% url 'inventory:inventory_edit' object.pk %}" class="detail-edit-link" aria-label="編集">
-      <img src="{% static 'images/edit.png' %}" alt="編集" class="detail-edit-icon">
-    </a>
+    {% if object.is_deleted %}
+      <a href="{% url 'inventory:inventory_edit' object.pk %}?from=history" class="detail-edit-link" aria-label="編集">
+        <img src="{% static 'images/edit.png' %}" alt="編集" class="detail-edit-icon">
+      </a>
+    {% else %}
+      <a href="{% url 'inventory:inventory_edit' object.pk %}" class="detail-edit-link" aria-label="編集">
+        <img src="{% static 'images/edit.png' %}" alt="編集" class="detail-edit-icon">
+      </a>
+    {% endif %}
 
   </div>
 
@@ -245,12 +261,24 @@
 
     <div class="detail-row">
       <div class="detail-label">内容量</div>
-      <div class="detail-value">{{ item.content_amount }}</div>
+      <div class="detail-value">
+        {% if item.content_amount %}
+          {{ item.content_amount }}{% if item.content_unit %} {{ item.content_unit }}{% endif %}
+        {% else %}
+          -
+        {% endif %}
+      </div>
     </div>
 
     <div class="detail-row">
       <div class="detail-label">個数</div>
-      <div class="detail-value">{{ item.quantity }}</div>
+      <div class="detail-value">
+        {% if item.quantity %}
+          {{ item.quantity }}{% if item.quantity_unit %} {{ item.quantity_unit }}{% endif %}
+        {% else %}
+          -
+        {% endif %}
+      </div>
     </div>
 
     <div class="detail-row">
