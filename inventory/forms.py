@@ -1,14 +1,14 @@
 from django import forms
 from .models import InventoryItem
 from decimal import Decimal, InvalidOperation
-import datetime, calendar
-
 
 
 class InventoryItemForm(forms.ModelForm):
     # =========================
     # 購入日
-    # 設計図どおり「年月」入力にする
+    # text入力に戻す
+    # - 見た目は YYYY/MM/DD
+    # - ただし YYYY-MM-DD でも受けられるようにする
     # =========================
     purchase_date = forms.DateField(
         required=False,
@@ -17,14 +17,16 @@ class InventoryItemForm(forms.ModelForm):
             format="%Y/%m/%d",
             attrs={
                 "type": "text",
-                "placeholder": "YYYY/MM/DD"
+                "placeholder": "YYYY/MM/DD",
             }
         )
     )
 
     # =========================
     # 消費・賞味期限
-    # 設計図どおり「年月」入力にする
+    # text入力に戻す
+    # - 見た目は YYYY/MM/DD
+    # - ただし YYYY-MM-DD でも受けられるようにする
     # =========================
     expiry_date = forms.DateField(
         required=True,
@@ -33,11 +35,11 @@ class InventoryItemForm(forms.ModelForm):
             format="%Y/%m/%d",
             attrs={
                 "type": "text",
-                "placeholder": "YYYY/MM/DD"
+                "placeholder": "YYYY/MM/DD",
             }
         )
     )
-    
+
     class Meta:
         model = InventoryItem
         fields = [
@@ -71,12 +73,12 @@ class InventoryItemForm(forms.ModelForm):
                 "placeholder": "例：水",
             }),
             "content_amount": forms.NumberInput(attrs={
-                "step": "1",
-                "min": "1",   # フロントでも 1未満を入れにくくする
+                "step": "0.1",
+                "min": "0.1",
             }),
             "quantity": forms.NumberInput(attrs={
                 "step": "1",
-                "min": "1",   # フロントでも 1未満を入れにくくする
+                "min": "1",
             }),
             "category": forms.Select(),
             "storage_location": forms.Select(),
@@ -86,35 +88,21 @@ class InventoryItemForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         """
         フォーム表示時の初期設定
-        - 画像は任意にする
-        - 個数の初期値を1にする
-        - 必須項目の設定をここでそろえる
         """
         super().__init__(*args, **kwargs)
 
-        # =========================
         # 画像は任意
-        # =========================
         self.fields["image"].required = False
 
-        # =========================
-        # 分類・保管場所も必須にする
-        # ※ model側が blank=True でも、フォーム側で必須にできる
-        # ※ 提出直前なので、まずは安全なフォーム制御で対応
-        # =========================
+        # 分類・保管場所は必須
         self.fields["category"].required = True
         self.fields["storage_location"].required = True
 
-        # =========================
-        # 個数の初期値を 1 にする
-        # 既存編集時はDBの値が優先されるので壊れない
-        # =========================
+        # 個数の初期値は新規時だけ 1
         if not self.instance.pk:
             self.fields["quantity"].initial = 1
-            
-        # =========================
-        # 分かりやすい必須メッセージに統一
-        # =========================
+
+        # 分かりやすい必須メッセージ
         self.fields["name"].error_messages = {
             "required": "商品名を入力してください。"
         }
@@ -127,9 +115,8 @@ class InventoryItemForm(forms.ModelForm):
         self.fields["quantity"].error_messages = {
             "required": "個数を入力してください。"
         }
-        self.fields["expiry_date"].error_messages = {
-            "required": "賞味・消費期限を入力してください。",
-            "invalid": "賞味・消費期限を正しく入力してください。"
+        self.fields["purchase_date"].error_messages = {
+            "invalid": "購入日を正しく入力してください。"
         }
         self.fields["expiry_date"].error_messages = {
             "required": "消費・賞味期限を入力してください。",
@@ -139,8 +126,6 @@ class InventoryItemForm(forms.ModelForm):
     def clean_quantity(self):
         """
         個数チェック
-        - 未入力は required メッセージに任せる
-        - 0以下は禁止
         """
         quantity = self.cleaned_data.get("quantity")
 
@@ -155,8 +140,8 @@ class InventoryItemForm(forms.ModelForm):
     def clean_content_amount(self):
         """
         内容量チェック
-        - 未入力は required メッセージに任せる
-        - 0以下は禁止
+        - 0は禁止
+        - 0.5はOK
         """
         content_amount = self.cleaned_data.get("content_amount")
 
@@ -169,14 +154,13 @@ class InventoryItemForm(forms.ModelForm):
             raise forms.ValidationError("内容量を正しく入力してください。")
 
         if value <= 0:
-            raise forms.ValidationError("内容量は1以上で入力してください。")
+            raise forms.ValidationError("内容量は0より大きい値を入力してください。")
 
         return value
 
     def clean(self):
         """
         フォーム全体の共通バリデーション
-        日付入力はそのまま使う
         """
         cleaned_data = super().clean()
         return cleaned_data

@@ -73,6 +73,13 @@
     font-weight: 700;
   }
 
+  .edit-field input[type="date"],
+  .form-group input[type="date"] {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 16px;
+  } 
 </style>
 
 {% if form.instance.pk %}
