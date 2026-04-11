@@ -10,43 +10,60 @@
 
 <div style="
   display:grid;
-  grid-template-columns: 32px 1fr 40px 32px 32px;
+  grid-template-columns: 32px minmax(0, 1fr) 32px 32px;
   align-items:center;
   column-gap:10px;
   margin:12px 0 18px;
 ">
 
+  <!-- 在庫一覧の選択モードと位置をそろえるための空列 -->
+  <div aria-hidden="true" style="width:32px; height:1px;"></div>
+
   <!-- 検索 -->
-  <form method="get" action="{% url 'inventory:inventory_history_select' %}" style="display:contents;">
+  <form method="get" action="{% url 'inventory:inventory_history_select' %}"
+        style="
+          display:grid;
+          grid-template-columns:minmax(0, 1fr) 40px;
+          column-gap:10px;
+          align-items:center;
+          min-width:0;
+          margin:0;
+        ">
     <input type="hidden" name="category" value="{{ selected_category }}">
     <input type="hidden" name="storage" value="{{ selected_storage }}">
     <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
 
-    <div style="width:100%; min-width:0;">
-      <input
-        type="text"
-        name="q"
-        value="{{ q }}"
-        placeholder="商品名で検索"
-        style="
-          width:100%;
-          height:40px;
-          padding:0 14px;
-          border:1px solid #bfc7d4;
-          border-radius:12px;
-          background:#fff;
-          font-size:16px;
-          color:#333;
-          box-sizing:border-box;
-        "
-      >
-    </div>
+    <input
+      type="text"
+      name="q"
+      value="{{ q }}"
+      placeholder="商品名で検索"
+      style="
+        width:100%;
+        min-width:0;
+        height:40px;
+        padding:0 14px;
+        border:1px solid #bfc7d4;
+        border-radius:12px;
+        background:#fff;
+        font-size:16px;
+        color:#333;
+        box-sizing:border-box;
+      "
+    >
 
     <button type="submit" aria-label="検索"
             style="
-              width:40px; height:40px; border:none; background:transparent;
-              display:flex; align-items:center; justify-content:center;
-              padding:0; margin:0; cursor:pointer;
+              width:40px;
+              height:40px;
+              border:none;
+              background:transparent;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              padding:0;
+              margin:0;
+              cursor:pointer;
             ">
       <img src="{% static 'images/検索.png' %}" alt="検索"
            style="width:26px; height:26px; object-fit:contain; display:block;">
@@ -58,9 +75,16 @@
           formaction="{% url 'inventory:inventory_history_bulk_duplicate' %}"
           aria-label="複製"
           style="
-            width:32px; height:40px; border:none; background:transparent;
-            display:flex; align-items:center; justify-content:center;
-            padding:0; margin:0; cursor:pointer;
+            width:32px;
+            height:40px;
+            border:none;
+            background:transparent;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:0;
+            margin:0;
+            cursor:pointer;
           ">
     <img src="{% static 'images/copy.png' %}" alt="複製"
          style="width:26px; height:26px; object-fit:contain; display:block;">
@@ -71,9 +95,16 @@
           id="openDeleteModal"
           aria-label="削除"
           style="
-            width:32px; height:40px; border:none; background:transparent;
-            display:flex; align-items:center; justify-content:center;
-            padding:0; margin:0; cursor:pointer;
+            width:32px;
+            height:40px;
+            border:none;
+            background:transparent;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:0;
+            margin:0;
+            cursor:pointer;
           ">
     <img src="{% static 'images/trash.png' %}" alt="削除"
          style="width:26px; height:26px; object-fit:contain; display:block;">
