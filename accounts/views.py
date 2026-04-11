@@ -299,31 +299,12 @@ class CustomPasswordResetRequestView(FormView):
             # - shell テストで成功した条件を、そのままWeb画面送信にも使いたい
             # - settings.py / WSGI の読み込み差異を避けるため
             # =========================
-            try:
-                connection = get_connection(
-                    backend="django.core.mail.backends.smtp.EmailBackend",
-                    host="smtp.gmail.com",
-                    port=587,
-                    username=os.environ.get("EMAIL_HOST_USER"),
-                    password=os.environ.get("EMAIL_HOST_PASSWORD"),
-                    use_tls=True,
-                )
-
-                send_mail(
-                    subject=subject,
-                    message=message,
-                    from_email=os.environ.get("EMAIL_HOST_USER"),
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                    connection=connection,
-                )
-
-            except OSError as e:
-                # ログには残すが、ユーザーには出さない
-                logger.exception("Password reset mail send failed: %s", e)
-                
-            except Exception as e:
-                logger.exception("Unexpected password reset mail error: %s", e)
-                
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=None,  # settingsのDEFAULT_FROM_EMAILを使う
+                recipient_list=[user.email],
+                fail_silently=False,
+            )  
         # （セキュリティ上、存在有無を見せないため）
         return super().form_valid(form)
