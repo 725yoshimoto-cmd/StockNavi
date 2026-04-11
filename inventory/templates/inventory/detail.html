@@ -284,14 +284,14 @@
     <div class="detail-row">
       <div class="detail-label">購入日</div>
       <div class="detail-value">
-        {% if item.purchase_date %}{{ item.purchase_date|date:"Y/m" }}{% else %}-{% endif %}
+        {% if item.purchase_date %}{{ item.purchase_date|date:"Y/m/d" }}{% else %}-{% endif %}
       </div>
     </div>
 
     <div class="detail-row">
       <div class="detail-label">消費・賞味期限</div>
       <div class="detail-value">
-        {% if item.expiry_date %}{{ item.expiry_date|date:"Y/m" }}{% else %}-{% endif %}
+        {% if item.expiry_date %}{{ item.expiry_date|date:"Y/m/d" }}{% else %}-{% endif %}
       </div>
     </div>
 

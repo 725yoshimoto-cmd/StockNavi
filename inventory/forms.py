@@ -8,29 +8,36 @@ import datetime, calendar
 class InventoryItemForm(forms.ModelForm):
     # =========================
     # 購入日
+    # 設計図どおり「年月」入力にする
     # =========================
     purchase_date = forms.DateField(
         required=False,
-        input_formats=["%Y-%m-%d"],
+        input_formats=["%Y-%m-%d", "%Y/%m/%d"],
         widget=forms.DateInput(
-            format="%Y-%m-%d",
-            attrs={"type": "date"}
+            format="%Y/%m/%d",
+            attrs={
+                "type": "text",
+                "placeholder": "YYYY/MM/DD"
+            }
         )
     )
 
     # =========================
     # 消費・賞味期限
-    # 日付まで入力できるようにする
+    # 設計図どおり「年月」入力にする
     # =========================
     expiry_date = forms.DateField(
         required=True,
-        input_formats=["%Y-%m-%d"],
+        input_formats=["%Y-%m-%d", "%Y/%m/%d"],
         widget=forms.DateInput(
-            format="%Y-%m-%d",
-            attrs={"type": "date"}
+            format="%Y/%m/%d",
+            attrs={
+                "type": "text",
+                "placeholder": "YYYY/MM/DD"
+            }
         )
     )
-
+    
     class Meta:
         model = InventoryItem
         fields = [
