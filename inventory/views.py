@@ -42,7 +42,7 @@ from django.contrib import messages
 from django.db.models import Sum, Count
 
 # 在庫sort 処理
-from django.db import models
+from django.db import models, IntegrityError
 
 
 # バランス確認
@@ -995,20 +995,40 @@ class CategoryCreateView(LoginRequiredMixin, HouseholdRequiredMixin, CreateView)
     カテゴリ追加ページ
     - household はユーザーに入力させず、自動でログインユーザーの世帯をセットする
     - 他世帯カテゴリを誤作成する事故を防ぐ
+    - 同じ世帯で同名カテゴリがある場合は、500ではなく画面でエラー表示する
     """
-    
+
     fields = ["name", "description", "color", "goal_amount", "goal_unit"]
     template_name = "category/form.html"
-    
+
     def get_success_url(self):
         return reverse("inventory:settings_tabs") + "?tab=category"
 
     def form_valid(self, form):
         """
-        保存前に household を自動セットする（世帯ひも付け漏れ防止）
+        保存前に household を自動セットする
+        さらに、同じ世帯内の重複カテゴリ名を画面で止める
         """
         form.instance.household = self.request.user.household
-        return super().form_valid(form)
+
+        # ① まず入力値を見やすく整える
+        name = (form.cleaned_data.get("name") or "").strip()
+
+        # ② 先に重複チェック
+        if Category.objects.filter(
+            household=self.request.user.household,
+            name=name
+        ).exists():
+            form.add_error("name", "この分類名はすでに登録されています。")
+            return self.form_invalid(form)
+
+        # ③ 保存時の保険
+        # もし同時操作などでDB側の重複が起きても500にしない
+        try:
+            return super().form_valid(form)
+        except IntegrityError:
+            form.add_error("name", "この分類名はすでに登録されています。")
+            return self.form_invalid(form)
 
 # 分類（Category）編集（ログイン必須）
 class CategoryUpdateView(LoginRequiredMixin, HouseholdRequiredMixin, UpdateView):
